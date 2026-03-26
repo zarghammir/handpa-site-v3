@@ -1,19 +1,19 @@
-import { getCalApi } from "@calcom/embed-react"
-import { useEffect } from "react"
+import { getCalApi } from "@calcom/embed-react";
+import { useEffect } from "react";
 
 const SignupForm = () => {
   useEffect(() => {
     (async function () {
-      const cal = await getCalApi({ namespace: "45min" })
+      const cal = await getCalApi({ namespace: "45min" });
       cal("ui", {
         theme: "light",
         cssVarsPerTheme: {
           light: { "cal-brand": "#E67E22" },
-          dark: { "cal-brand": "#faf" }
+          dark: { "cal-brand": "#faf" },
         },
         hideEventTypeDetails: false,
         layout: "month_view",
-      })
+      });
       cal("inline", {
         elementOrSelector: "#cal-booking",
         calLink: "medya/45min",
@@ -21,15 +21,14 @@ const SignupForm = () => {
           layout: "month_view",
           useSlotsViewOnSmallScreen: "true",
           theme: "light",
-        }
-      })
-    })()
-  }, [])
+        },
+      });
+    })();
+  }, []);
 
   return (
     <section id="signup" className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
       <div className="max-w-7xl mx-auto space-y-6 md:space-y-10">
-
         {/* Heading */}
         <div className="text-center space-y-3 px-2">
           <div className="flex justify-center">
@@ -46,23 +45,20 @@ const SignupForm = () => {
         </div>
 
         {/* Calendar — contained card on both mobile and desktop */}
-        <div
-          className="rounded-3xl overflow-hidden border border-sand shadow-sm bg-white"
-          style={{ height: "520px" }}
-        >
+        <div className="rounded-3xl overflow-hidden border border-sand shadow-sm bg-white">
           <div
             id="cal-booking"
-            className="w-full h-full overflow-y-auto"
+            className="w-full"
+            style={{ minHeight: "500px" }}
           />
         </div>
 
         <p className="text-center text-forest/30 text-xs">
           No credit card required. No spam. Ever!
         </p>
-
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default SignupForm
+export default SignupForm;
