@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@theme {
+  --color-forest: #2D3B1F;    /* Deep dark green — headlines & nav */
+  --color-sage: #A6B28B;      /* Your sage — accents & borders */
+  --color-orange: #E67E22;    /* Your orange — CTA buttons only */
+  --color-sand: #EBD5AB;      /* Your cream — section backgrounds */
+  --color-cream: #FAFAF5;     /* Near white — main page background */
+}
