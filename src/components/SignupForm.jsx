@@ -27,29 +27,37 @@ const SignupForm = () => {
   }, [])
 
   return (
-    <section id="signup" className="py-20 px-8 bg-cream">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <section id="signup" className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
+      <div className="max-w-7xl mx-auto space-y-6 md:space-y-10">
 
-        <div className="text-center space-y-3">
-          <span className="inline-block px-4 py-2 bg-sage/20 text-forest text-sm font-semibold uppercase tracking-wide rounded-full border border-sage/40">
-            Get Started
-          </span>
-          <h2 className="text-4xl font-black text-forest">
+        {/* Heading */}
+        <div className="text-center space-y-3 px-2">
+          <div className="flex justify-center">
+            <span className="inline-block px-5 py-2.5 bg-forest text-cream text-xs font-bold uppercase tracking-widest rounded-full">
+              Get Started
+            </span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-black text-forest">
             Claim your <span className="text-sage">free session</span>
           </h2>
-          <p className="text-forest/50 text-base">
+          <p className="text-forest/50 text-sm md:text-base max-w-sm mx-auto">
             Book your free 45-minute intro session directly with Medya.
           </p>
         </div>
 
+        {/* Calendar — contained card on both mobile and desktop */}
         <div
-          id="cal-booking"
-          className="rounded-3xl overflow-hidden w-full"
-          style={{ minHeight: "500px" }}
-        />
+          className="rounded-3xl overflow-hidden border border-sand shadow-sm bg-white"
+          style={{ height: "520px" }}
+        >
+          <div
+            id="cal-booking"
+            className="w-full h-full overflow-y-auto"
+          />
+        </div>
 
         <p className="text-center text-forest/30 text-xs">
-          No credit card required. No spam. Ever! 
+          No credit card required. No spam. Ever!
         </p>
 
       </div>

@@ -4,8 +4,8 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed top-4 left-0 right-0 z-50 px-8">
-      <nav className="max-w-7xl mx-auto bg-cream border border-sand rounded-2xl shadow-sm px-6 py-3 flex items-center justify-between">
+    <div className="fixed top-4 left-0 right-0 z-50 px-4 sm:px-8">
+      <nav className="max-w-7xl mx-auto bg-cream border border-sand rounded-2xl shadow-sm px-4 sm:px-6 py-3 flex items-center justify-between">
         {/* Left — Logo + Links */}
         <div className="hidden md:flex items-center gap-8">
           <a
@@ -46,7 +46,7 @@ const Navbar = () => {
         {/* Mobile Logo */}
         <a
           href="#"
-          className="md:hidden flex items-center gap-2 text-lg font-black text-forest"
+          className="md:hidden flex items-center gap-2 text-base font-black text-forest"
         >
           🎵{" "}
           <span>
@@ -72,7 +72,7 @@ const Navbar = () => {
 
         {/* Mobile menu button */}
         <button
-          className="md:hidden text-forest"
+          className="md:hidden text-forest p-1"
           onClick={() => setOpen(!open)}
         >
           <svg
@@ -103,31 +103,46 @@ const Navbar = () => {
       {/* Mobile menu */}
       {open && (
         <div className="md:hidden mt-2 bg-cream border border-sand rounded-2xl shadow-sm px-6 py-4 flex flex-col gap-4">
-          <a href="#" className="text-forest/60 text-sm font-medium">
+          <a
+            href="#"
+            onClick={() => setOpen(false)}
+            className="text-forest/60 text-sm font-medium hover:text-forest transition-colors"
+          >
             Home
           </a>
-          <a href="#video" className="text-forest/60 text-sm font-medium">
+          <a
+            href="#video"
+            onClick={() => setOpen(false)}
+            className="text-forest/60 text-sm font-medium hover:text-forest transition-colors"
+          >
             Lessons
           </a>
           <a
             href="#testimonials"
-            className="text-forest/60 text-sm font-medium"
+            onClick={() => setOpen(false)}
+            className="text-forest/60 text-sm font-medium hover:text-forest transition-colors"
           >
             Students
           </a>
-          <a href="#about" className="text-forest/60 text-sm font-medium">
+          <a
+            href="#about"
+            onClick={() => setOpen(false)}
+            className="text-forest/60 text-sm font-medium hover:text-forest transition-colors"
+          >
             About
           </a>
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 border-t border-sand">
             <a
               href="#signup"
-              className="flex-1 text-center px-5 py-2 border border-forest/20 text-forest text-sm font-medium rounded-xl"
+              onClick={() => setOpen(false)}
+              className="flex-1 text-center px-4 py-2.5 border border-forest/20 text-forest text-sm font-medium rounded-xl hover:bg-sand transition-all"
             >
               Contact
             </a>
             <a
               href="#signup"
-              className="flex-1 text-center px-5 py-2 bg-orange text-white text-sm font-bold rounded-xl"
+              onClick={() => setOpen(false)}
+              className="flex-1 text-center px-4 py-2.5 bg-orange text-white text-sm font-bold rounded-xl hover:bg-orange/90 transition-all"
             >
               Book a Session
             </a>

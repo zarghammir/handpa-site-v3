@@ -41,7 +41,7 @@ const testimonials = [
 
 const Testimonials = () => {
   const [page, setPage] = useState(0)
-  const [direction, setDirection] = useState(null) // 'left' | 'right'
+  const [direction, setDirection] = useState(null)
   const [animating, setAnimating] = useState(false)
   const [displayed, setDisplayed] = useState(0)
 
@@ -76,10 +76,9 @@ const Testimonials = () => {
     : 'opacity-100 translate-x-0'
 
   const Card = ({ text, name, country }) => (
-    <div className="bg-sand/50 border border-sand rounded-3xl p-8 space-y-5">
-      <span className="text-orange text-5xl font-black leading-none">"</span>
-      <p className="text-forest/70 text-base leading-relaxed -mt-4">{text}</p>
-      
+    <div className="bg-sand/50 border border-sand rounded-3xl p-5 md:p-8 space-y-4 md:space-y-5">
+      <span className="text-orange text-4xl md:text-5xl font-black leading-none">"</span>
+      <p className="text-forest/70 text-sm md:text-base leading-relaxed -mt-4">{text}</p>
       <div>
         <p className="font-bold text-forest text-sm">{name}</p>
         <p className="text-forest/40 text-sm">{country}</p>
@@ -88,67 +87,52 @@ const Testimonials = () => {
   )
 
   return (
-    <section className="py-20 px-8 bg-cream">
+    <section className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
       <div className="max-w-7xl mx-auto">
 
-        <div className="grid md:grid-cols-2 gap-8 items-start">
-
-          {/* Left */}
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-black text-forest leading-tight">
-                Testimonials from <br /> our students
-              </h2>
-              <div className="w-24 h-1 bg-orange mt-3 rounded-full" />
-            </div>
-
-            <div className={`transition-all duration-300 ease-in-out ${slideClass}`}>
-              <Card {...current[0]} />
-            </div>
-          </div>
-
-          {/* Right */}
-          <div className="space-y-6">
-
-            {/* Arrows */}
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => navigate('left')}
-                className="w-10 h-10 rounded-full border-2 border-forest/20 flex items-center justify-center text-forest text-xl hover:border-orange hover:text-orange transition-colors"
-              >
-                ‹
-              </button>
-              <button
-                onClick={() => navigate('right')}
-                className="w-10 h-10 rounded-full border-2 border-forest/20 flex items-center justify-center text-forest text-xl hover:border-orange hover:text-orange transition-colors"
-              >
-                ›
-              </button>
-            </div>
-
-            <div className={`transition-all duration-300 ease-in-out ${slideClass}`}>
-              <Card {...current[1]} />
-            </div>
-
-            <div className={`transition-all duration-300 ease-in-out ${slideClass}`}>
-              <Card {...current[1]} />
-            </div>
-
-          </div>
+        {/* Heading */}
+        <div className="text-center md:text-left mb-8 md:mb-10">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-forest leading-tight">
+            Testimonials from <br className="hidden sm:block" /> our students
+          </h2>
+          <div className="w-24 h-1 bg-orange mt-3 rounded-full mx-auto md:mx-0" />
         </div>
 
-        {/* Dots */}
-        <div className="flex justify-center gap-2 mt-10">
-          {testimonials.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                if (i > page) navigate('right')
-                else if (i < page) navigate('left')
-              }}
-              className={`h-2 rounded-full transition-all duration-300 ${i === displayed ? 'bg-orange w-6' : 'bg-forest/20 w-2'}`}
-            />
-          ))}
+        {/* Cards */}
+        <div className={`grid md:grid-cols-2 gap-4 md:gap-8 transition-all duration-300 ease-in-out ${slideClass}`}>
+          <Card {...current[0]} />
+          <Card {...current[1]} />
+        </div>
+
+        {/* Arrows + Dots */}
+        <div className="flex items-center justify-center gap-4 mt-8 md:mt-10">
+          <button
+            onClick={() => navigate('left')}
+            className="w-10 h-10 rounded-full border-2 border-forest/20 flex items-center justify-center text-forest text-xl hover:border-orange hover:text-orange transition-colors"
+          >
+            ‹
+          </button>
+
+          {/* Dots */}
+          <div className="flex gap-2">
+            {testimonials.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  if (i > page) navigate('right')
+                  else if (i < page) navigate('left')
+                }}
+                className={`h-2 rounded-full transition-all duration-300 ${i === displayed ? 'bg-orange w-6' : 'bg-forest/20 w-2'}`}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={() => navigate('right')}
+            className="w-10 h-10 rounded-full border-2 border-forest/20 flex items-center justify-center text-forest text-xl hover:border-orange hover:text-orange transition-colors"
+          >
+            ›
+          </button>
         </div>
 
       </div>
