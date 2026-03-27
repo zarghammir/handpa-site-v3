@@ -13,7 +13,6 @@ function App() {
     <div className="App">
 
       <Helmet>
-        <meta name="google-site-verification" content="Lrtfn58adcX7r0xyF2V9Fs9HpVq3L6jT_g74pCfKn1s" />
         <title>Medya Handpan — Learn Handpan Online</title>
         <meta name="description" content="Learn handpan with Medya. Free 45-minute intro session. 500+ students worldwide. Book your session today." />
         <meta name="keywords" content="handpan lessons, learn handpan online, handpan teacher, handpan course" />
