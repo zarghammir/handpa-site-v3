@@ -1,16 +1,30 @@
+import { Helmet } from "react-helmet-async";
+import Navbar from "./components/Navbar";
 import Hook from "./components/Hook";
+import Video from "./components/Video";
+import About from "./components/About";
 import Testimonial from "./components/Testimonial";
+import CTA from "./components/CTA";
 import SignupForm from "./components/SignupForm";
 import Footer from "./components/Footer";
-import CTA from "./components/CTA";
-import About from "./components/About";
-import Video from "./components/Video";
-import Navbar from "./components/Navbar";
 
 function App() {
   return (
     <div className="App">
-      <Navbar/>
+
+      <Helmet>
+        <meta name="google-site-verification" content="Lrtfn58adcX7r0xyF2V9Fs9HpVq3L6jT_g74pCfKn1s" />
+        <title>Medya Handpan — Learn Handpan Online</title>
+        <meta name="description" content="Learn handpan with Medya. Free 45-minute intro session. 500+ students worldwide. Book your session today." />
+        <meta name="keywords" content="handpan lessons, learn handpan online, handpan teacher, handpan course" />
+        <link rel="canonical" href="https://handpa-site-v3.vercel.app" />
+        <meta property="og:title" content="Medya Handpan — Learn Handpan Online" />
+        <meta property="og:description" content="Free 45-minute intro session. Book now." />
+        <meta property="og:image" content="https://handpa-site-v3.vercel.app/images/medya.png" />
+        <meta property="og:url" content="https://handpa-site-v3.vercel.app" />
+      </Helmet>
+
+      <Navbar />
       <Hook />
       <Video />
       <About />
@@ -18,7 +32,7 @@ function App() {
       <CTA />
       <SignupForm />
       <Footer />
-   
+
     </div>
   );
 }
