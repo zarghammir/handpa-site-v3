@@ -7,7 +7,7 @@ import Testimonial from "./components/Testimonial";
 import CTA from "./components/CTA";
 import SignupForm from "./components/SignupForm";
 import Footer from "./components/Footer";
-import { Analytics } from '@vercel/analytics/next';
+import { Analytics } from '@vercel/analytics/react';
 
 
 function App() {
