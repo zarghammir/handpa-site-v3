@@ -7,8 +7,6 @@ import Testimonial from "./components/Testimonial";
 import CTA from "./components/CTA";
 import SignupForm from "./components/SignupForm";
 import Footer from "./components/Footer";
-import { Analytics } from '@vercel/analytics/next';
-
 
 function App() {
   return (
@@ -33,7 +31,6 @@ function App() {
       <CTA />
       <SignupForm />
       <Footer />
-      <Analytics/>
 
     </div>
   );
