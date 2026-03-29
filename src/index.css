@@ -7,3 +7,59 @@
   --color-sand: #EBD5AB;      /* Your cream — section backgrounds */
   --color-cream: #FAFAF5;     /* Near white — main page background */
 }
+
+
+/* .global-audio-toggle {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 16px;
+  background: rgba(20, 20, 20, 0.85);
+  color: #fff;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+}
+
+.global-audio-toggle:hover {
+  transform: translateY(-2px);
+}
+
+.global-audio-toggle.playing {
+  background: #E67E22;
+  color: #111;
+}
+
+.global-audio-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.global-audio-text {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 640px) {
+  .global-audio-toggle {
+    right: 14px;
+    bottom: 14px;
+    padding: 10px 14px;
+  }
+
+  .global-audio-text {
+    font-size: 13px;
+  }
+} */
