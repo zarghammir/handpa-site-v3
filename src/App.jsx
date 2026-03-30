@@ -8,6 +8,7 @@ import CTA from "./components/CTA";
 import SignupForm from "./components/SignupForm";
 import Footer from "./components/Footer";
 import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
+import LessonMap from "./components/LessonMap";
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
       <GlobalAudioPlayer />
       <Hook />
       <Video />
+      <LessonMap />
       <About />
       <Testimonial />
       <CTA />
