@@ -16,9 +16,14 @@ export default async function handler(req, res) {
       });
     }
 
+    const emails = process.env.CONTACT_EMAILS
+      .split(",")
+      .map((email) => email.trim())
+      .filter(Boolean);
+
     const { error } = await resend.emails.send({
       from: "Handpan <onboarding@resend.dev>",
-      to: [process.env.CONTACT_EMAIL],
+      to: emails,
       subject: `New message from ${name}`,
       replyTo: email,
       html: `
@@ -31,9 +36,9 @@ export default async function handler(req, res) {
     });
 
     if (error) {
-      console.error(error);
+      console.error("Resend error:", error);
       return res.status(500).json({
-        message: "Email failed to send.",
+        message: error.message || "Email failed to send.",
       });
     }
 
@@ -43,7 +48,7 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error(err);
     return res.status(500).json({
-      message: "Server error.",
+      message: err.message || "Server error.",
     });
   }
 }
