@@ -16,14 +16,9 @@ export default async function handler(req, res) {
       });
     }
 
-    const emails = process.env.CONTACT_EMAILS
-      .split(",")
-      .map((email) => email.trim())
-      .filter(Boolean);
-
     const { error } = await resend.emails.send({
       from: "Handpan <onboarding@resend.dev>",
-      to: emails,
+      to: "zargham.mirzaei2000@gmail.com",
       subject: `New message from ${name}`,
       replyTo: email,
       html: `
