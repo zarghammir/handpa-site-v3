@@ -41,6 +41,12 @@ const Navbar = () => {
           >
             About
           </a>
+          <a
+            href="#contact"
+            className="text-forest/60 hover:text-forest text-sm font-medium transition-colors"
+          >
+            contact
+          </a>
         </div>
 
         {/* Mobile Logo */}

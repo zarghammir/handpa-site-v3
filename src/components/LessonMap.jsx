@@ -2,8 +2,11 @@ import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;;
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
+if (!mapboxgl.accessToken) {
+  console.error("Missing VITE_MAPBOX_TOKEN");
+}
 function createGeoJSONCircle(center, radiusInKm, points = 64) {
   const coords = {
     latitude: center[1],

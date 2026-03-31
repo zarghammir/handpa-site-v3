@@ -9,6 +9,7 @@ import SignupForm from "./components/SignupForm";
 import Footer from "./components/Footer";
 import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
 import LessonMap from "./components/LessonMap";
+import ContactForm from "./components/ContactForm";
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
       <Testimonial />
       <CTA />
       <SignupForm />
+      <ContactForm />
       <Footer />
     </div>
   );
