@@ -102,7 +102,7 @@ export default function LessonMap() {
   }, []);
 
   return (
-    <section className="bg-white px-4 py-12 sm:px-8 md:py-20">
+    <section className="bg-cream px-4 py-12 sm:px-8 md:py-20">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 text-center md:mb-10">
           <div className="mb-4 flex justify-center">

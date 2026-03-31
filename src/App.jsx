@@ -44,10 +44,10 @@ function App() {
       <GlobalAudioPlayer />
       <Hook />
       <Video />
+      <CTA />
       <LessonMap />
       <About />
       <Testimonial />
-      <CTA />
       <SignupForm />
       <ContactForm />
       <Footer />
