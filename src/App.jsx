@@ -1,4 +1,6 @@
 import { Helmet } from "react-helmet-async";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import Navbar from "./components/Navbar";
 import Hook from "./components/Hook";
 import Video from "./components/Video";
@@ -11,37 +13,11 @@ import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
 import LessonMap from "./components/LessonMap";
 import ContactForm from "./components/ContactForm";
 
-function App() {
-  return (
-    <div className="App">
-      <Helmet>
-        <title>Medya Handpan — Learn Handpan Online</title>
-        <meta
-          name="description"
-          content="Learn handpan with Medya. Free 45-minute intro session. 500+ students worldwide. Book your session today."
-        />
-        <meta
-          name="keywords"
-          content="handpan lessons, learn handpan online, handpan teacher, handpan course"
-        />
-        <link rel="canonical" href="https://handpa-site-v3.vercel.app" />
-        <meta
-          property="og:title"
-          content="Medya Handpan — Learn Handpan Online"
-        />
-        <meta
-          property="og:description"
-          content="Free 45-minute intro session. Book now."
-        />
-        <meta
-          property="og:image"
-          content="https://handpa-site-v3.vercel.app/images/medya.png"
-        />
-        <meta property="og:url" content="https://handpa-site-v3.vercel.app" />
-      </Helmet>
+import Signup from "./pages/Signup";
 
-      <Navbar />
-      <GlobalAudioPlayer />
+function HomePage() {
+  return (
+    <>
       <Hook />
       <Video />
       <CTA />
@@ -50,8 +26,51 @@ function App() {
       <Testimonial />
       <SignupForm />
       <ContactForm />
-      <Footer />
-    </div>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <div className="App">
+        <Helmet>
+          <title>Medya Handpan — Learn Handpan Online</title>
+          <meta
+            name="description"
+            content="Learn handpan with Medya. Free 45-minute intro session. 500+ students worldwide. Book your session today."
+          />
+          <meta
+            name="keywords"
+            content="handpan lessons, learn handpan online, handpan teacher, handpan course"
+          />
+          <link rel="canonical" href="https://handpa-site-v3.vercel.app" />
+          <meta
+            property="og:title"
+            content="Medya Handpan — Learn Handpan Online"
+          />
+          <meta
+            property="og:description"
+            content="Free 45-minute intro session. Book now."
+          />
+          <meta
+            property="og:image"
+            content="https://handpa-site-v3.vercel.app/images/medya.png"
+          />
+          <meta property="og:url" content="https://handpa-site-v3.vercel.app" />
+        </Helmet>
+
+        <Navbar />
+        <GlobalAudioPlayer />
+
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/signup" element={<Signup />} />
+        </Routes>
+
+        <Footer />
+      </div>
+    </Router>
   );
 }
 
