@@ -1,16 +1,25 @@
 import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Creates a Supabase server client:
+// 1.connect to Supabase
+// 2.use the stronger server key
+// 3.this happens only on the server
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
 export default async function handler(req, res) {
+  // ccepts only POST requests, means if someone tries to visit this route the wrong way, reject it
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed." });
   }
 
   try {
+    // Reads the form data from the request
     const {
       full_name,
       email,
@@ -30,10 +39,7 @@ export default async function handler(req, res) {
       });
     }
 
-    if (
-      lesson_mode === "in_person" &&
-      !in_person_location_type
-    ) {
+    if (lesson_mode === "in_person" && !in_person_location_type) {
       return res.status(400).json({
         message: "Please choose an in-person location option.",
       });
@@ -45,7 +51,8 @@ export default async function handler(req, res) {
       !student_address
     ) {
       return res.status(400).json({
-        message: "Please enter your address for in-person lessons at your place.",
+        message:
+          "Please enter your address for in-person lessons at your place.",
       });
     }
 
@@ -71,7 +78,7 @@ export default async function handler(req, res) {
         });
       }
     }
-
+    // Inserts data into Supabase, save a new row into the student_intakes table
     const { error } = await supabase.from("student_intakes").insert([
       {
         full_name,
@@ -93,7 +100,40 @@ export default async function handler(req, res) {
         message: "Could not save your form. Please try again.",
       });
     }
+    // 📩 Email to YOU
+    await resend.emails.send({
+      from: "Handpan <onboarding@resend.dev>",
+      to: ["medy.tutoring@gmail.com"],
+      subject: `New student intake from ${full_name}`,
+      html: `
+    <h2>New Student Intake</h2>
+    <p><strong>Name:</strong> ${full_name}</p>
+    <p><strong>Email:</strong> ${email}</p>
+    <p><strong>Phone:</strong> ${phone || "N/A"}</p>
+    <p><strong>Lesson Mode:</strong> ${lesson_mode}</p>
+    <p><strong>Location:</strong> ${in_person_location_type || "N/A"}</p>
+    <p><strong>Address:</strong> ${student_address || "N/A"}</p>
+    <p><strong>Experience:</strong> ${experience_level}</p>
+    <p><strong>Has Handpan:</strong> ${has_handpan ? "Yes" : "No"}</p>
+    <pre>${JSON.stringify(availability_preferences, null, 2)}</pre>
+    <p>${message || ""}</p>
+  `,
+    });
 
+    // 💌 Email to student
+//     await resend.emails.send({
+//       from: "Medya Handpan <onboarding@resend.dev>",
+//       to: [email],
+//       subject: "Your handpan lesson request 🎵",
+//       html: `
+//     <h2>Hi ${full_name},</h2>
+//     <p>Thank you for your interest in handpan lessons 🙏</p>
+//     <p>I’ve received your request and will get back to you shortly.</p>
+//     <p>Looking forward to starting your journey 🎶</p>
+//     <p><strong>Medya</strong></p>
+//   `,
+//     });
+    // after the data is inserted,it sends back JSON
     return res.status(200).json({
       message: "Your request has been submitted successfully.",
     });
