@@ -15,6 +15,12 @@ import ContactForm from "./components/ContactForm";
 
 import Signup from "./pages/Signup";
 
+
+// GENERAL RULE:
+// POST  →  used when the client is sending data to create or change something
+// GET   →  used when the client is reading or requesting something
+
+
 function HomePage() {
   return (
     <>
