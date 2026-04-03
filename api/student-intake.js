@@ -13,7 +13,7 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  // ccepts only POST requests, means if someone tries to visit this route the wrong way, reject it
+  // accepts only POST requests, means if someone tries to visit this route the wrong way, reject it
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed." });
   }
