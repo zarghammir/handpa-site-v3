@@ -1,6 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { randomBytes } from "crypto";
+import { handleCors } from "./_lib/cors.js";
+import { escapeHtml, sanitizeText } from "./_lib/sanitize.js";
+import { checkRateLimit, getClientIp } from "./_lib/rateLimit.js";
+import { ok, err } from "./_lib/response.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -10,57 +14,64 @@ const supabase = createClient(
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
+  if (handleCors(req, res)) return;
+
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed." });
+    return err(res, 405, "Method not allowed.");
+  }
+
+  const ip = getClientIp(req);
+  const { allowed } = await checkRateLimit(ip, "testimonial-submit", 3, 60 * 60); // 3/hour
+  if (!allowed) {
+    return err(res, 429, "Too many requests. Please try again later.");
   }
 
   try {
-    const { name, country, text } = req.body;
+    const name = sanitizeText(req.body?.name, 100);
+    const country = sanitizeText(req.body?.country, 100);
+    const text = sanitizeText(req.body?.text, 500);
 
     if (!name || !country || !text) {
-      return res.status(400).json({ message: "All fields are required." });
+      return err(res, 400, "All fields are required.");
     }
 
     if (text.length > 500) {
-      return res.status(400).json({ message: "Testimonial must be under 500 characters." });
+      return err(res, 400, "Testimonial must be under 500 characters.");
     }
 
     // Generate a random token — 32 bytes turned into a hex string (64 characters).
     // This is what makes the approval link secret and unguessable.
     const approvalToken = randomBytes(32).toString("hex");
 
-    const { error } = await supabase
-      .from("testimonials")
-      .insert([
-        {
-          name: name.trim(),
-          country: country.trim(),
-          text: text.trim(),
-          approved: false,
-          approval_token: approvalToken,
-        },
-      ]);
+    const { error } = await supabase.from("testimonials").insert([
+      {
+        name,
+        country,
+        text,
+        approved: false,
+        approval_token: approvalToken,
+      },
+    ]);
 
     if (error) {
       console.error("Supabase insert error:", error);
-      return res.status(500).json({ message: "Could not save your testimonial." });
+      return err(res, 500, "Could not save your testimonial.");
     }
 
     // Build the approval link.
-    // SITE_URL is an env variable you set in Vercel, e.g. https://your-site.vercel.app
-    // This keeps the link correct in both development and production.
+    // SITE_URL is an env variable set in Vercel, e.g. https://your-site.vercel.app
     const approvalLink = `${process.env.SITE_URL}/api/testimonial-approve?token=${approvalToken}`;
 
     await resend.emails.send({
       from: "Handpan <onboarding@resend.dev>",
       to: "medy.tutoring@gmail.com",
-      subject: `New testimonial from ${name} — approve?`,
+      subject: `New testimonial from ${escapeHtml(name)} — approve?`,
       html: `
         <h2>New Testimonial Submitted</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Country:</strong> ${country}</p>
+        <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+        <p><strong>Country:</strong> ${escapeHtml(country)}</p>
         <p><strong>Message:</strong></p>
-        <p>${text}</p>
+        <p>${escapeHtml(text)}</p>
         <br />
         <a
           href="${approvalLink}"
@@ -83,11 +94,9 @@ export default async function handler(req, res) {
       `,
     });
 
-    return res.status(200).json({
-      message: "Thank you! Your testimonial has been submitted for review.",
-    });
-  } catch (err) {
-    console.error("Server error:", err);
-    return res.status(500).json({ message: "Server error. Please try again." });
+    return ok(res, { message: "Thank you! Your testimonial has been submitted for review." });
+  } catch (e) {
+    console.error("Server error:", e);
+    return err(res, 500, "Server error. Please try again.");
   }
 }

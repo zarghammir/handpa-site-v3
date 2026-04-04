@@ -92,6 +92,9 @@ const Navbar = () => {
         <button
           className="md:hidden text-forest p-1"
           onClick={() => setOpen(!open)}
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          aria-controls="mobile-menu"
         >
           <svg
             className="w-6 h-6"
@@ -120,7 +123,7 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden mt-2 bg-cream border border-sand rounded-2xl shadow-sm px-6 py-4 flex flex-col gap-4">
+        <div id="mobile-menu" className="md:hidden mt-2 bg-cream border border-sand rounded-2xl shadow-sm px-6 py-4 flex flex-col gap-4">
           <Link
             to="/"
             onClick={() => setOpen(false)}

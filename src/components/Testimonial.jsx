@@ -68,7 +68,7 @@ const SubmitForm = ({ onClose }) => {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Your name"
                 required
-                className="w-full rounded-2xl border border-forest/15 bg-white px-4 py-3 text-forest placeholder:text-forest/35 outline-none focus:border-orange transition-colors"
+                className="w-full rounded-2xl border border-forest/15 bg-white px-4 py-3 text-forest placeholder:text-forest/35 focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-1 focus:border-orange transition-colors"
               />
             </div>
             <div>
@@ -79,7 +79,7 @@ const SubmitForm = ({ onClose }) => {
                 onChange={(e) => setForm({ ...form, country: e.target.value })}
                 placeholder="e.g. Canada"
                 required
-                className="w-full rounded-2xl border border-forest/15 bg-white px-4 py-3 text-forest placeholder:text-forest/35 outline-none focus:border-orange transition-colors"
+                className="w-full rounded-2xl border border-forest/15 bg-white px-4 py-3 text-forest placeholder:text-forest/35 focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-1 focus:border-orange transition-colors"
               />
             </div>
           </div>
@@ -98,7 +98,7 @@ const SubmitForm = ({ onClose }) => {
               rows="4"
               maxLength={500}
               required
-              className="w-full rounded-2xl border border-forest/15 bg-white px-4 py-3 text-forest placeholder:text-forest/35 outline-none focus:border-orange transition-colors resize-none"
+              className="w-full rounded-2xl border border-forest/15 bg-white px-4 py-3 text-forest placeholder:text-forest/35 focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-1 focus:border-orange transition-colors resize-none"
             />
           </div>
 
@@ -237,20 +237,24 @@ const Testimonials = () => {
           <div className="flex items-center justify-center gap-4 mt-8 md:mt-10">
             <button
               onClick={() => navigate('left')}
-              className="w-10 h-10 rounded-full border-2 border-forest/20 flex items-center justify-center text-forest text-xl hover:border-orange hover:text-orange transition-colors"
+              aria-label="Previous testimonials"
+              className="w-10 h-10 rounded-full border-2 border-forest/20 flex items-center justify-center text-forest text-xl hover:border-orange hover:text-orange transition-colors focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
             >
               ‹
             </button>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2" role="tablist" aria-label="Testimonial pages">
               {pages.map((_, i) => (
                 <button
                   key={i}
+                  role="tab"
+                  aria-label={`Page ${i + 1}`}
+                  aria-selected={i === displayed}
                   onClick={() => {
                     if (i > page) navigate('right')
                     else if (i < page) navigate('left')
                   }}
-                  className={`h-2 rounded-full transition-all duration-300 ${
+                  className={`h-2 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2 ${
                     i === displayed ? 'bg-orange w-6' : 'bg-forest/20 w-2'
                   }`}
                 />
@@ -259,7 +263,8 @@ const Testimonials = () => {
 
             <button
               onClick={() => navigate('right')}
-              className="w-10 h-10 rounded-full border-2 border-forest/20 flex items-center justify-center text-forest text-xl hover:border-orange hover:text-orange transition-colors"
+              aria-label="Next testimonials"
+              className="w-10 h-10 rounded-full border-2 border-forest/20 flex items-center justify-center text-forest text-xl hover:border-orange hover:text-orange transition-colors focus:outline-none focus:ring-2 focus:ring-orange focus:ring-offset-2"
             >
               ›
             </button>

@@ -1,25 +1,31 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { handleCors } from "./_lib/cors.js";
+import { escapeHtml, sanitizeText } from "./_lib/sanitize.js";
+import { checkRateLimit, getClientIp } from "./_lib/rateLimit.js";
+import { ok, err } from "./_lib/response.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Creates a Supabase server client:
-// 1.connect to Supabase
-// 2.use the stronger server key
-// 3.this happens only on the server
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 export default async function handler(req, res) {
-  // accepts only POST requests, means if someone tries to visit this route the wrong way, reject it
+  if (handleCors(req, res)) return;
+
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed." });
+    return err(res, 405, "Method not allowed.");
+  }
+
+  const ip = getClientIp(req);
+  const { allowed } = await checkRateLimit(ip, "student-intake", 3, 60 * 60 * 24); // 3/day
+  if (!allowed) {
+    return err(res, 429, "Too many requests. Please try again later.");
   }
 
   try {
-    // Reads the form data from the request
     const {
       full_name,
       email,
@@ -31,18 +37,14 @@ export default async function handler(req, res) {
       has_handpan,
       availability_preferences,
       message,
-    } = req.body;
+    } = req.body ?? {};
 
     if (!full_name || !email || !lesson_mode || !experience_level) {
-      return res.status(400).json({
-        message: "Please fill in all required fields.",
-      });
+      return err(res, 400, "Please fill in all required fields.");
     }
 
     if (lesson_mode === "in_person" && !in_person_location_type) {
-      return res.status(400).json({
-        message: "Please choose an in-person location option.",
-      });
+      return err(res, 400, "Please choose an in-person location option.");
     }
 
     if (
@@ -50,97 +52,88 @@ export default async function handler(req, res) {
       in_person_location_type === "student_place" &&
       !student_address
     ) {
-      return res.status(400).json({
-        message:
-          "Please enter your address for in-person lessons at your place.",
-      });
+      return err(res, 400, "Please enter your address for in-person lessons at your place.");
     }
 
     if (
       !Array.isArray(availability_preferences) ||
       availability_preferences.length === 0
     ) {
-      return res.status(400).json({
-        message: "Please choose at least one day and time range.",
-      });
+      return err(res, 400, "Please choose at least one day and time range.");
     }
 
     for (const slot of availability_preferences) {
       if (!slot.day || !slot.start || !slot.end) {
-        return res.status(400).json({
-          message: "Each selected day must include a start and end time.",
-        });
+        return err(res, 400, "Each selected day must include a start and end time.");
       }
-
       if (slot.end <= slot.start) {
-        return res.status(400).json({
-          message: `For ${slot.day}, end time must be later than start time.`,
-        });
+        return err(res, 400, `For ${slot.day}, end time must be later than start time.`);
       }
     }
-    // Inserts data into Supabase, save a new row into the student_intakes table
+
+    const cleanName = sanitizeText(full_name, 100);
+    const cleanEmail = sanitizeText(email, 200);
+    const cleanPhone = sanitizeText(phone, 30);
+    const cleanAddress = sanitizeText(student_address, 300);
+    const cleanMessage = sanitizeText(message, 1000);
+
     const { error } = await supabase.from("student_intakes").insert([
       {
-        full_name,
-        email,
-        phone: phone || null,
+        full_name: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone || null,
         lesson_mode,
         in_person_location_type: in_person_location_type || null,
-        student_address: student_address || null,
+        student_address: cleanAddress || null,
         experience_level,
         has_handpan,
         availability_preferences,
-        message: message || null,
+        message: cleanMessage || null,
       },
     ]);
 
     if (error) {
       console.error("Supabase insert error:", error);
-      return res.status(500).json({
-        message: "Could not save your form. Please try again.",
-      });
+      return err(res, 500, "Could not save your form. Please try again.");
     }
-    // 📩 Email to YOU
+
+    // Email to instructor
     await resend.emails.send({
       from: "Handpan <onboarding@resend.dev>",
       to: ["medy.tutoring@gmail.com"],
-      subject: `New student intake from ${full_name}`,
+      subject: `New student intake from ${escapeHtml(cleanName)}`,
       html: `
-    <h2>New Student Intake</h2>
-    <p><strong>Name:</strong> ${full_name}</p>
-    <p><strong>Email:</strong> ${email}</p>
-    <p><strong>Phone:</strong> ${phone || "N/A"}</p>
-    <p><strong>Lesson Mode:</strong> ${lesson_mode}</p>
-    <p><strong>Location:</strong> ${in_person_location_type || "N/A"}</p>
-    <p><strong>Address:</strong> ${student_address || "N/A"}</p>
-    <p><strong>Experience:</strong> ${experience_level}</p>
-    <p><strong>Has Handpan:</strong> ${has_handpan ? "Yes" : "No"}</p>
-    <pre>${JSON.stringify(availability_preferences, null, 2)}</pre>
-    <p>${message || ""}</p>
-  `,
+        <h2>New Student Intake</h2>
+        <p><strong>Name:</strong> ${escapeHtml(cleanName)}</p>
+        <p><strong>Email:</strong> ${escapeHtml(cleanEmail)}</p>
+        <p><strong>Phone:</strong> ${escapeHtml(cleanPhone) || "N/A"}</p>
+        <p><strong>Lesson Mode:</strong> ${escapeHtml(lesson_mode)}</p>
+        <p><strong>Location:</strong> ${escapeHtml(in_person_location_type || "N/A")}</p>
+        <p><strong>Address:</strong> ${escapeHtml(cleanAddress) || "N/A"}</p>
+        <p><strong>Experience:</strong> ${escapeHtml(experience_level)}</p>
+        <p><strong>Has Handpan:</strong> ${has_handpan ? "Yes" : "No"}</p>
+        <pre>${escapeHtml(JSON.stringify(availability_preferences, null, 2))}</pre>
+        <p>${escapeHtml(cleanMessage)}</p>
+      `,
     });
 
-    // 💌 Email to student
-//     await resend.emails.send({
-//       from: "Medya Handpan <onboarding@resend.dev>",
-//       to: [email],
-//       subject: "Your handpan lesson request 🎵",
-//       html: `
-//     <h2>Hi ${full_name},</h2>
-//     <p>Thank you for your interest in handpan lessons 🙏</p>
-//     <p>I’ve received your request and will get back to you shortly.</p>
-//     <p>Looking forward to starting your journey 🎶</p>
-//     <p><strong>Medya</strong></p>
-//   `,
-//     });
-    // after the data is inserted,it sends back JSON
-    return res.status(200).json({
-      message: "Your request has been submitted successfully.",
+    // Confirmation email to student
+    await resend.emails.send({
+      from: "Medya Handpan <onboarding@resend.dev>",
+      to: [cleanEmail],
+      subject: "Your handpan lesson request received",
+      html: `
+        <h2>Hi ${escapeHtml(cleanName)},</h2>
+        <p>Thank you for your interest in handpan lessons!</p>
+        <p>I've received your request and will get back to you within 1–2 business days.</p>
+        <p>Looking forward to starting your journey.</p>
+        <p><strong>Medya</strong></p>
+      `,
     });
+
+    return ok(res, { message: "Your request has been submitted successfully." });
   } catch (error) {
     console.error("Server error:", error);
-    return res.status(500).json({
-      message: "Server error. Please try again.",
-    });
+    return err(res, 500, "Server error. Please try again.");
   }
 }
