@@ -88,7 +88,7 @@ export default async function handler(req, res) {
 
   // Email the gift code to the gifter
   await resend.emails.send({
-    from: "Medya Handpan <onboarding@resend.dev>",
+    from: "Medya Handpan <zargham.mirzaei2000@gmail.com>",
     to: gifter_email,
     subject: "Your handpan lesson gift code",
     html: `
@@ -109,7 +109,7 @@ export default async function handler(req, res) {
 
   // Notify Medya
   await resend.emails.send({
-    from: "Handpan <onboarding@resend.dev>",
+    from: "Handpan <zargham.mirzaei2000@gmail.com>",
     to: "medy.tutoring@gmail.com",
     subject: `New gift lesson sold — ${gifter_name} → ${recipient_name}`,
     html: `
