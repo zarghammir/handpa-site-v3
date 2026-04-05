@@ -100,6 +100,7 @@ function HomePage() {
       <About />
       <Testimonial />
       <SignupForm />
+      <FAQ />
       <ContactForm />
     </>
   );
