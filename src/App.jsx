@@ -35,7 +35,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Helmet } from "react-helmet-async";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 
 import Navbar from "./components/Navbar";
@@ -53,6 +58,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";
+import GiftLesson from "./GiftLesson";
 
 // lazy() + dynamic import() = code splitting.
 // Vite creates a separate JS chunk for LessonMap that is only loaded when needed.
@@ -176,6 +182,8 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="*" element={<NotFound />} />
+            <Route path="/gift" element={<GiftLesson />} />
+            <Route path="/gift/success" element={<GiftSuccess />} />
           </Routes>
         </ErrorBoundary>
 
