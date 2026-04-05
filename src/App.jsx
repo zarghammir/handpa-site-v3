@@ -52,6 +52,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import FAQ from "./pages/FAQ";
 
 // lazy() + dynamic import() = code splitting.
 // Vite creates a separate JS chunk for LessonMap that is only loaded when needed.
