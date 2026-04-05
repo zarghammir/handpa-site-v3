@@ -96,7 +96,7 @@ const ContactForm = () => {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-sand bg-cream p-6 md:p-8 shadow-sm">
+        <div className="rounded-3xl border border-sand bg-white p-6 md:p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label

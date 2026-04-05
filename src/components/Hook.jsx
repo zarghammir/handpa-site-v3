@@ -12,11 +12,11 @@ const Hook = () => {
             alt="Handpan player"
             className="w-full h-[280px] sm:h-[400px] md:h-[600px] object-cover rounded-3xl shadow-lg ring-2 ring-sage/40"
           />
-          <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 bg-orange px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-lg">
+          {/* <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 bg-orange px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-lg">
             <p className="text-cream font-bold text-xs md:text-sm">
               🎵 <LiveStats type="students" suffix="+" /> students worldwide
             </p>
-          </div>
+          </div> */}
         </div>
 
         <div className="space-y-6 md:space-y-8 order-1 md:order-2 text-center md:text-left">
@@ -38,7 +38,7 @@ const Hook = () => {
           <div className="flex gap-4 sm:gap-8 justify-center md:justify-start">
             <div>
               <p className="text-2xl md:text-3xl font-black text-forest">
-                <LiveStats type="students" suffix="+" />
+                {/* <LiveStats type="students" suffix="+" /> */} 28+
               </p>
               <p className="text-forest/40 text-xs md:text-sm">Students</p>
             </div>
@@ -47,7 +47,7 @@ const Hook = () => {
 
             <div>
               <p className="text-2xl md:text-3xl font-black text-forest">
-                <LiveStats type="lessons" suffix="+" />
+                {/* <LiveStats type="lessons" suffix="+" /> */} 125+
               </p>
               <p className="text-forest/40 text-xs md:text-sm">Lessons</p>
             </div>
@@ -56,7 +56,7 @@ const Hook = () => {
 
             <div>
               <p className="text-2xl md:text-3xl font-black text-forest">
-                <LiveStats type="hours" suffix="+" />
+                {/* <LiveStats type="hours" suffix="+" /> */} 210+
               </p>
               <p className="text-forest/40 text-xs md:text-sm">Class Hours</p>
             </div>

@@ -37,14 +37,12 @@ const Navbar = () => {
           >
             Lessons
           </a>
-
           <a
-            href={homeSectionLink("testimonials")}
+            href={homeSectionLink("faq")}
             className="text-forest/60 hover:text-forest text-sm font-medium transition-colors"
           >
-            Students
+            FAQ
           </a>
-
           <a
             href={homeSectionLink("about")}
             className="text-forest/60 hover:text-forest text-sm font-medium transition-colors"
@@ -52,12 +50,11 @@ const Navbar = () => {
             About
           </a>
           <a
-            href={homeSectionLink("faq")}
+            href={homeSectionLink("testimonials")}
             className="text-forest/60 hover:text-forest text-sm font-medium transition-colors"
           >
-            FAQ
+            Students
           </a>
-
 
           <a
             href={homeSectionLink("contact")}
@@ -130,7 +127,10 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {open && (
-        <div id="mobile-menu" className="md:hidden mt-2 bg-cream border border-sand rounded-2xl shadow-sm px-6 py-4 flex flex-col gap-4">
+        <div
+          id="mobile-menu"
+          className="md:hidden mt-2 bg-cream border border-sand rounded-2xl shadow-sm px-6 py-4 flex flex-col gap-4"
+        >
           <Link
             to="/"
             onClick={() => setOpen(false)}
