@@ -62,7 +62,7 @@ const FAQ = () => {
         {/* Header */}
         <div className="text-center space-y-3">
           <span className="inline-block px-5 py-2.5 bg-forest text-cream text-xs font-bold uppercase tracking-widest rounded-full">
-            Questions
+            Questions?
           </span>
           <h2 className="text-3xl sm:text-4xl font-black text-forest">
             Ask anything

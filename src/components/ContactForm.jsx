@@ -65,7 +65,7 @@ const ContactForm = () => {
   };
 
   return (
-    <section id="contact" className="py-12 md:py-20 px-4 sm:px-8 bg-white">
+    <section id="contact" className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 md:gap-16 items-start">
         <div className="space-y-6 text-center md:text-left">
           <div className="flex justify-center md:justify-start">

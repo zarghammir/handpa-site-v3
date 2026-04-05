@@ -61,7 +61,8 @@ const LessonMap = lazy(() => import("./components/LessonMap"));
 
 // Read the site URL from environment at build time.
 // Falls back to a placeholder if VITE_SITE_URL isn't set.
-const SITE_URL = import.meta.env.VITE_SITE_URL ?? "https://handpan-lessons.vercel.app";
+const SITE_URL =
+  import.meta.env.VITE_SITE_URL ?? "https://handpan-lessons.vercel.app";
 
 function HomePage() {
   return (
@@ -81,7 +82,7 @@ function HomePage() {
         The skeleton matches the approximate height of the map so the layout
         doesn't shift when the real component appears (prevents CLS).
       */}
-      <ErrorBoundary
+      {/* <ErrorBoundary
         fallback={
           <div className="py-12 text-center text-forest/40 text-sm">
             Map unavailable
@@ -95,12 +96,12 @@ function HomePage() {
         >
           <LessonMap />
         </Suspense>
-      </ErrorBoundary>
+      </ErrorBoundary> */}
+      <FAQ />
 
       <About />
       <Testimonial />
       <SignupForm />
-      <FAQ />
       <ContactForm />
     </>
   );
@@ -128,8 +129,14 @@ function App() {
           />
           <meta name="robots" content="index, follow" />
           <link rel="canonical" href={SITE_URL} />
-          <meta property="og:title" content="Medya Handpan — Learn Handpan Online" />
-          <meta property="og:description" content="Free 45-minute intro session. Book now." />
+          <meta
+            property="og:title"
+            content="Medya Handpan — Learn Handpan Online"
+          />
+          <meta
+            property="og:description"
+            content="Free 45-minute intro session. Book now."
+          />
           <meta property="og:image" content={`${SITE_URL}/images/medya.png`} />
           <meta property="og:url" content={SITE_URL} />
         </Helmet>

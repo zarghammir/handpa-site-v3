@@ -27,7 +27,7 @@ const SignupForm = () => {
   }, []);
 
   return (
-    <section id="signup" className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
+    <section id="signup" className="py-12 md:py-20 px-4 sm:px-8 bg-white">
       <div className="max-w-7xl mx-auto space-y-6 md:space-y-10">
         {/* Heading */}
         <div className="text-center space-y-3 px-2">
