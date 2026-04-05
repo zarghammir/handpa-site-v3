@@ -54,13 +54,12 @@ import Footer from "./components/Footer";
 import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
 import ContactForm from "./components/ContactForm";
 import ErrorBoundary from "./components/ErrorBoundary";
+import GiftLesson from "./components/GiftLesson";
+import GiftSuccess from "./components/GiftSuccess";
 
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";
-import GiftLesson from "./GiftLesson";
-import GiftSuccess from "./GiftSuccess";
-
 
 // lazy() + dynamic import() = code splitting.
 // Vite creates a separate JS chunk for LessonMap that is only loaded when needed.
@@ -186,7 +185,6 @@ function App() {
             <Route path="/gift" element={<GiftLesson />} />
             <Route path="/gift/success" element={<GiftSuccess />} />
             <Route path="*" element={<NotFound />} />
-            
           </Routes>
         </ErrorBoundary>
 
