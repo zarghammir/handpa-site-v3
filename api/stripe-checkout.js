@@ -17,7 +17,7 @@ import { ok, err } from "./_lib/response.js";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Price is hardcoded on the server — never trust the frontend for this
-const LESSON_PRICE_CENTS = 50; // $50.00
+const LESSON_PRICE_CENTS = 5000; // $50.00
 
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
