@@ -35,8 +35,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Helmet } from "react-helmet-async";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
 
 import Navbar from "./components/Navbar";
 import Hook from "./components/Hook";
@@ -58,6 +58,24 @@ import FAQ from "./pages/FAQ";
 // Vite creates a separate JS chunk for LessonMap that is only loaded when needed.
 // mapbox-gl is ~900KB — this keeps the initial page load fast.
 const LessonMap = lazy(() => import("./components/LessonMap"));
+
+// Scrolls to the hash section after navigation (e.g. /#about from /signup).
+// React Router handles navigation in JS, so the browser won't auto-scroll.
+function ScrollToHash() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.slice(1);
+    // Small delay lets the target page finish rendering before we scroll.
+    const timer = setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [location]);
+
+  return null;
+}
 
 // Read the site URL from environment at build time.
 // Falls back to a placeholder if VITE_SITE_URL isn't set.
@@ -141,6 +159,7 @@ function App() {
           <meta property="og:url" content={SITE_URL} />
         </Helmet>
 
+        <ScrollToHash />
         <Navbar />
         <GlobalAudioPlayer />
 

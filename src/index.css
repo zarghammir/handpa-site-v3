@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme {
   --color-forest: #2D3B1F;    /* Deep dark green — headlines & nav */
   --color-sage: #A6B28B;      /* Your sage — accents & borders */

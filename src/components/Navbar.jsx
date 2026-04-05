@@ -51,6 +51,13 @@ const Navbar = () => {
           >
             About
           </a>
+          <a
+            href={homeSectionLink("faq")}
+            className="text-forest/60 hover:text-forest text-sm font-medium transition-colors"
+          >
+            FAQ
+          </a>
+
 
           <a
             href={homeSectionLink("contact")}

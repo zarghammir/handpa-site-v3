@@ -2,7 +2,7 @@ import React from 'react'
 
 const Video = () => {
   return (
-    <section className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
+    <section id="video" className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 md:gap-16 items-center">
 
         {/* Left — Text + Testimonial */}
@@ -54,7 +54,7 @@ const Video = () => {
         <div className="relative mt-4 md:mt-0">
 
           {/* Orange border frame */}
-          <div className="absolute -top-3 -right-3 w-full h-full border-2 border-orange/60 rounded-2xl" />
+          {/* <div className="absolute -top-3 -right-3 w-full h-full border-2 border-orange/60 rounded-2xl" /> */}
 
           {/* Video wrapper */}
           <div className="relative rounded-2xl overflow-hidden shadow-lg bg-forest aspect-video">

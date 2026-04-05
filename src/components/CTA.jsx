@@ -10,16 +10,16 @@ const CTA = () => {
           {/* Left — Text */}
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-cream leading-tight max-w-xl">
             Ready for your journey? <br />
-            <span className="text-sage">Enrol now</span> and get one session for free.
+            <span className="text-sage">Enroll now</span> and get one session for free.
           </h2>
 
           {/* Right — Button */}
           <div className="flex items-center justify-center shrink-0 w-full md:w-auto">
             <a
-              href="#signup"
+              href="/signup"
               className="w-full md:w-auto text-center px-10 py-5 bg-orange text-white text-base md:text-lg font-bold rounded-2xl shadow-md hover:bg-orange/90 hover:-translate-y-1 transition-all duration-300 whitespace-nowrap"
             >
-              Enrol for Free →
+              Enroll for Free →
             </a>
           </div>
 
