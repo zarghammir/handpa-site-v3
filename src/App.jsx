@@ -94,39 +94,11 @@ function HomePage() {
   return (
     <>
       <Hook />
-      <Video />
-      <CTA />
-
-      {/*
-        ErrorBoundary wraps LessonMap because Mapbox can fail if:
-          - The token is missing or invalid
-          - The browser doesn't support WebGL
-          - The network request for map tiles fails
-        Instead of crashing the whole page, we show "Map unavailable".
-
-        Suspense handles the loading state while the LessonMap chunk downloads.
-        The skeleton matches the approximate height of the map so the layout
-        doesn't shift when the real component appears (prevents CLS).
-      */}
-      {/* <ErrorBoundary
-        fallback={
-          <div className="py-12 text-center text-forest/40 text-sm">
-            Map unavailable
-          </div>
-        }
-      >
-        <Suspense
-          fallback={
-            <div className="h-96 bg-sand/30 animate-pulse rounded-3xl mx-4 my-8" />
-          }
-        >
-          <LessonMap />
-        </Suspense>
-      </ErrorBoundary> */}
-      <FAQ />
-
       <About />
+      <Video />
       <Testimonial />
+      <FAQ />
+      <CTA />
       <SignupForm />
       <ContactForm />
     </>

@@ -56,7 +56,7 @@ const FAQ = () => {
   };
 
   return (
-    <section id="faq" className="py-16 md:py-24 px-4 sm:px-8 bg-cream">
+    <section id="faq" className="py-16 md:py-24 px-4 sm:px-8 bg-white">
       <div className="max-w-2xl mx-auto space-y-8">
 
         {/* Header */}

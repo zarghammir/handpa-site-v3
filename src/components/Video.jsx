@@ -2,7 +2,7 @@ import React from 'react'
 
 const Video = () => {
   return (
-    <section id="video" className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
+    <section id="video" className="py-12 md:py-20 px-4 sm:px-8 bg-white">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 md:gap-16 items-center">
 
         {/* Left — Text + Testimonial */}
@@ -25,17 +25,15 @@ const Video = () => {
             </div>
 
             {/* Student */}
-            {/* <div className="flex items-center gap-4 pt-2 justify-center md:justify-start">
-              <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop"
-                alt="Kim Azulay"
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover ring-2 ring-orange"
-              />
+            <div className="flex items-center gap-4 pt-2 justify-center md:justify-start">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-sage/30 flex items-center justify-center ring-2 ring-orange shrink-0">
+                <span className="text-forest font-bold text-sm">KA</span>
+              </div>
               <div>
                 <p className="font-bold text-forest text-sm">Kim Azulay</p>
                 <p className="text-forest/50 text-sm">Netherlands</p>
               </div>
-            </div> */}
+            </div>
           </div>
 
           {/* Link */}

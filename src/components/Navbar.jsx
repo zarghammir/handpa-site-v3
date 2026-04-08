@@ -77,13 +77,6 @@ const Navbar = () => {
 
         {/* Right — Buttons */}
         <div className="hidden md:flex items-center gap-3">
-          <Link
-            to="/signup"
-            className="px-5 py-2 border border-forest/20 text-forest text-sm font-medium rounded-xl hover:bg-sand transition-all duration-200"
-          >
-            Sign up
-          </Link>
-
           <a
             href={homeSectionLink("signup")}
             className="px-5 py-2 bg-orange text-white text-sm font-bold rounded-xl hover:bg-orange/90 transition-all duration-200"
@@ -171,19 +164,11 @@ const Navbar = () => {
             Contact
           </a>
 
-          <div className="flex gap-3 pt-2 border-t border-sand">
-            <Link
-              to="/signup"
-              onClick={() => setOpen(false)}
-              className="flex-1 text-center px-4 py-2.5 border border-forest/20 text-forest text-sm font-medium rounded-xl hover:bg-sand transition-all"
-            >
-              Sign up
-            </Link>
-
+          <div className="pt-2 border-t border-sand">
             <a
               href={homeSectionLink("signup")}
               onClick={() => setOpen(false)}
-              className="flex-1 text-center px-4 py-2.5 bg-orange text-white text-sm font-bold rounded-xl hover:bg-orange/90 transition-all"
+              className="block text-center px-4 py-2.5 bg-orange text-white text-sm font-bold rounded-xl hover:bg-orange/90 transition-all"
             >
               Book a Session
             </a>

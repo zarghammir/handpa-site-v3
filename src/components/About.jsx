@@ -4,7 +4,7 @@ import LiveStats from "./LiveStats";
 
 const About = () => {
   return (
-    <section id="about" className="py-12 md:py-20 px-4 sm:px-8 bg-white">
+    <section id="about" className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 md:gap-16 items-start">
         <div className="space-y-6 md:space-y-8 text-center md:text-left order-2 md:order-1">
           <div className="flex justify-center md:justify-start">
