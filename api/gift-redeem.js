@@ -15,7 +15,7 @@ import { ok, err } from "./_lib/response.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
 export default async function handler(req, res) {
@@ -83,11 +83,10 @@ export default async function handler(req, res) {
 
     return ok(res, {
       message: "Gift code redeemed successfully!",
-      code: code, 
+      code: code, // ← this line must be there
       recipient_name: data.recipient_name,
       gifter_name: data.gifter_name,
     });
-
   } catch (e) {
     console.error("Server error:", e);
     return err(res, 500, "Server error. Please try again.");
