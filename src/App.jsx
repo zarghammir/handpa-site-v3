@@ -60,6 +60,7 @@ import GiftSuccess from "./components/GiftSuccess";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import FAQ from "./pages/FAQ";
+import GiftRedeem from "./pages/GiftRedeem";
 
 // lazy() + dynamic import() = code splitting.
 // Vite creates a separate JS chunk for LessonMap that is only loaded when needed.
@@ -184,6 +185,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/gift" element={<GiftLesson />} />
             <Route path="/gift/success" element={<GiftSuccess />} />
+            <Route path="/gift/redeem" element={<GiftRedeem />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </ErrorBoundary>
