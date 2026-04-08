@@ -5,7 +5,6 @@ const GiftRedeem = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState("");
-  const calUrl = `https://cal.com/medya/45min?notes=Gift code: ${success.code}`;
 
   const handleRedeem = async () => {
     if (!code.trim()) return;
@@ -91,7 +90,7 @@ const GiftRedeem = () => {
               automatically included in your booking notes.
             </div>
             <a
-              href={calUrl}
+              href={`https://cal.com/medya/45min?notes=Gift code: ${success.code}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block w-full py-4 bg-orange text-white font-bold rounded-2xl hover:bg-orange/90 transition-all duration-200 text-center"
