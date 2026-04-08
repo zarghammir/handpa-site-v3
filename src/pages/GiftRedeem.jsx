@@ -1,12 +1,11 @@
-// GiftRedeem.jsx — /gift/redeem
 import { useState } from "react";
-import { Link } from "react-router-dom";
 
 const GiftRedeem = () => {
-  const [code, setCode]       = useState("");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
+  const calUrl = `https://cal.com/medya/45min?notes=Gift code: ${success.code}`;
 
   const handleRedeem = async () => {
     if (!code.trim()) return;
@@ -15,10 +14,10 @@ const GiftRedeem = () => {
     setSuccess(null);
 
     try {
-      const res  = await fetch("/api/gift-redeem", {
-        method:  "POST",
+      const res = await fetch("/api/gift-redeem", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ code: code.trim() }),
+        body: JSON.stringify({ code: code.trim() }),
       });
       const data = await res.json();
 
@@ -35,7 +34,6 @@ const GiftRedeem = () => {
   return (
     <section className="min-h-screen py-16 px-4 bg-cream flex items-center justify-center">
       <div className="w-full max-w-md">
-
         {!success ? (
           <>
             <div className="text-center mb-8 space-y-2">
@@ -79,32 +77,29 @@ const GiftRedeem = () => {
             </div>
           </>
         ) : (
-          // Success state
           <div className="bg-white rounded-3xl border border-sand p-8 shadow-sm text-center space-y-4">
             <div className="w-16 h-16 bg-sage/20 rounded-full flex items-center justify-center mx-auto">
               <span className="text-3xl">🎵</span>
             </div>
-            <h2 className="text-3xl font-black text-forest">
-              Code redeemed!
-            </h2>
+            <h2 className="text-3xl font-black text-forest">Code redeemed!</h2>
             <p className="text-forest/60">
               Hi <strong>{success.recipient_name}</strong> — your gift from{" "}
               <strong>{success.gifter_name}</strong> has been activated.
             </p>
             <div className="bg-cream rounded-2xl p-4 text-sm text-forest/70 leading-relaxed">
-              Head to the booking page to schedule your lesson. Your code has
-              been marked as used — just mention it when booking and Medya
-              will confirm your free session.
+              Click below to book your lesson. Your gift code will be
+              automatically included in your booking notes.
             </div>
-            <Link
-              to="/signup"
-              className="inline-block w-full py-4 bg-orange text-white font-bold rounded-2xl hover:bg-orange/90 transition-all duration-200"
+            <a
+              href={calUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block w-full py-4 bg-orange text-white font-bold rounded-2xl hover:bg-orange/90 transition-all duration-200 text-center"
             >
               Book your lesson →
-            </Link>
+            </a>
           </div>
         )}
-
       </div>
     </section>
   );

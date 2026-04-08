@@ -83,6 +83,7 @@ export default async function handler(req, res) {
 
     return ok(res, {
       message: "Gift code redeemed successfully!",
+      code: code, 
       recipient_name: data.recipient_name,
       gifter_name: data.gifter_name,
     });
