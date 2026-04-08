@@ -6,7 +6,7 @@ import { randomBytes } from "crypto";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -69,17 +69,19 @@ export default async function handler(req, res) {
   const expiresAt = new Date();
   expiresAt.setMonth(expiresAt.getMonth() + 3);
 
-  const { error: dbError } = await supabase.from("gift_codes").insert([{
-    code,
-    stripe_session_id: session.id,
-    gifter_name,
-    gifter_email,
-    recipient_name,
-    recipient_email,
-    amount: session.amount_total,
-    status: "active",
-    expires_at: expiresAt.toISOString(),
-  }]);
+  const { error: dbError } = await supabase.from("gift_codes").insert([
+    {
+      code,
+      stripe_session_id: session.id,
+      gifter_name,
+      gifter_email,
+      recipient_name,
+      recipient_email,
+      amount: session.amount_total,
+      status: "active",
+      expires_at: expiresAt.toISOString(),
+    },
+  ]);
 
   if (dbError) {
     console.error("DB error:", dbError);
@@ -89,35 +91,37 @@ export default async function handler(req, res) {
   // Email the gift code to the gifter
   await resend.emails.send({
     from: "Medya Handpan <onboarding@resend.dev>",
-    to: "medy.tutoring@gmail.com",
+    to: "medy.tutoring@gmail.com", // TODO: change to gifter_email after domain verified
     subject: "Your handpan lesson gift code",
     html: `
-      <h2>Your gift is ready!</h2>
-      <p>Hi ${gifter_name},</p>
-      <p>Your payment was successful. Here is the gift code to forward to ${recipient_name}:</p>
-      <div style="font-size:28px;font-weight:bold;letter-spacing:4px;
-                  background:#f5f5f5;padding:20px;text-align:center;
-                  border-radius:8px;margin:20px 0;">
-        ${code}
-      </div>
-      ${message ? `<p>Your personal message: "${message}"</p>` : ""}
-      <p>The code expires in <strong>3 months</strong>.</p>
-      <p>To redeem, ${recipient_name} visits <strong>${process.env.SITE_URL}/gift/redeem</strong>
-         and enters the code when booking.</p>
-    `,
+    <p><strong>Note: forward this to ${gifter_name} at ${gifter_email}</strong></p>
+    <h2>Your gift is ready!</h2>
+    <p>Hi ${gifter_name},</p>
+    <p>Your payment was successful. Here is the gift code to forward to ${recipient_name}:</p>
+    <div style="font-size:28px;font-weight:bold;letter-spacing:4px;
+                background:#f5f5f5;padding:20px;text-align:center;
+                border-radius:8px;margin:20px 0;">
+      ${code}
+    </div>
+    ${message ? `<p>Their personal message: "${message}"</p>` : ""}
+    <p>The code expires in <strong>3 months</strong>.</p>
+    <p>${recipient_name} can redeem it at <strong>${process.env.SITE_URL}/gift/redeem</strong></p>
+  `,
   });
 
-  // Notify Medya
+  // Instructor notification
   await resend.emails.send({
     from: "Handpan <onboarding@resend.dev>",
     to: "medy.tutoring@gmail.com",
     subject: `New gift lesson sold — ${gifter_name} → ${recipient_name}`,
     html: `
-      <p><strong>Gifter:</strong> ${gifter_name} (${gifter_email})</p>
-      <p><strong>Recipient:</strong> ${recipient_name} (${recipient_email})</p>
-      <p><strong>Code:</strong> ${code}</p>
-      <p><strong>Expires:</strong> ${expiresAt.toLocaleDateString()}</p>
-    `,
+    <h2>New gift lesson sold</h2>
+    <p><strong>Gifter:</strong> ${gifter_name} (${gifter_email})</p>
+    <p><strong>Recipient:</strong> ${recipient_name} (${recipient_email})</p>
+    <p><strong>Gift code:</strong> ${code}</p>
+    <p><strong>Expires:</strong> ${expiresAt.toLocaleDateString()}</p>
+    <p><strong>Amount:</strong> $${(session.amount_total / 100).toFixed(2)}</p>
+  `,
   });
 
   return res.status(200).json({ message: "Gift code created and sent." });
