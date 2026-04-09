@@ -40,7 +40,7 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
     timeZone,
   });
 
-  const response = await fetch(`${CAL_API_BASE}/slots/available?${params}`, {
+  const response = await fetch(`${CAL_API_BASE}/slots?${params}`, {
     headers: {
       Authorization: `Bearer ${CAL_API_KEY}`,
       "cal-api-version": "2024-09-04",
