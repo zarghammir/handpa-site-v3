@@ -17,7 +17,7 @@ import { ok, err } from "./_lib/response.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -34,8 +34,8 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
   end.setDate(end.getDate() + 7);
 
   const params = new URLSearchParams({
-    startTime: start.toISOString(),
-    endTime: end.toISOString(),
+    start: start.toISOString(),
+    end: end.toISOString(),
     eventTypeId: CAL_EVENT_TYPE_ID,
     timeZone,
   });
@@ -74,7 +74,7 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
         minute: "2-digit",
         hour12: false,
         timeZone,
-      })
+      }),
     );
 
     lines.push(`${dayLabel}: ${timeLabels.join(", ")}`);
@@ -85,7 +85,12 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
     : "No availability found in the next 7 days.";
 }
 
-async function createBooking({ attendeeName, attendeeEmail, startTime, timeZone }) {
+async function createBooking({
+  attendeeName,
+  attendeeEmail,
+  startTime,
+  timeZone,
+}) {
   const response = await fetch(`${CAL_API_BASE}/bookings`, {
     method: "POST",
     headers: {
@@ -117,35 +122,31 @@ async function createBooking({ attendeeName, attendeeEmail, startTime, timeZone 
 // ─── Database helpers ─────────────────────────────────────────────────────────
 
 async function saveSession(sessionId, messages, ip) {
-  const { error } = await supabase
-    .from("chat_sessions")
-    .upsert(
-      {
-        session_id: sessionId,
-        messages,
-        ip,
-        last_message_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "session_id" }
-    );
+  const { error } = await supabase.from("chat_sessions").upsert(
+    {
+      session_id: sessionId,
+      messages,
+      ip,
+      last_message_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "session_id" },
+  );
 
   if (error) console.error("Session save error:", error);
 }
 
 async function saveLead(sessionId, name, email, timezone) {
-  const { error } = await supabase
-    .from("chat_leads")
-    .upsert(
-      {
-        session_id: sessionId,
-        name,
-        email,
-        timezone,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "session_id" }
-    );
+  const { error } = await supabase.from("chat_leads").upsert(
+    {
+      session_id: sessionId,
+      name,
+      email,
+      timezone,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "session_id" },
+  );
 
   if (error) console.error("Lead save error:", error);
 }
@@ -221,14 +222,18 @@ export async function sendSummaryEmail(sessionId) {
         <p style="margin:0;font-size:16px;">${bookedStatus}</p>
       </div>
 
-      ${lead ? `
+      ${
+        lead
+          ? `
       <div style="background:#f5f5f0;padding:16px;border-radius:8px;margin-bottom:20px;">
         <h3 style="margin:0 0 12px;">Visitor Details</h3>
         <p><strong>Name:</strong> ${lead.name}</p>
         <p><strong>Email:</strong> ${lead.email}</p>
         <p><strong>Timezone:</strong> ${lead.timezone}</p>
       </div>
-      ` : ""}
+      `
+          : ""
+      }
 
       <div style="background:#f5f5f0;padding:16px;border-radius:8px;">
         <h3 style="margin:0 0 12px;">Full Transcript</h3>
@@ -256,15 +261,7 @@ export async function sendSummaryEmail(sessionId) {
 // ─── Action marker parser ─────────────────────────────────────────────────────
 
 function parseAction(text) {
-  const availMatch = text.match(/\[CHECK_AVAILABILITY([^\]]*)\]/);
-  if (availMatch) {
-    const tzMatch = availMatch[1].match(/timeZone="([^"]+)"/);
-    return {
-      type: "CHECK_AVAILABILITY",
-      timeZone: tzMatch?.[1] ?? "America/Vancouver",
-    };
-  }
-
+  // SAVE_LEAD must be checked first — Claude outputs this before CHECK_AVAILABILITY
   const leadMatch = text.match(/\[SAVE_LEAD([^\]]+)\]/);
   if (leadMatch) {
     const attrs = {};
@@ -274,6 +271,15 @@ function parseAction(text) {
       attrs[m[1]] = m[2];
     }
     return { type: "SAVE_LEAD", ...attrs };
+  }
+
+  const availMatch = text.match(/\[CHECK_AVAILABILITY([^\]]*)\]/);
+  if (availMatch) {
+    const tzMatch = availMatch[1].match(/timeZone="([^"]+)"/);
+    return {
+      type: "CHECK_AVAILABILITY",
+      timeZone: tzMatch?.[1] ?? "America/Vancouver",
+    };
   }
 
   const bookingMatch = text.match(/\[CREATE_BOOKING([^\]]+)\]/);
@@ -403,10 +409,7 @@ export default async function handler(req, res) {
     const action = parseAction(reply);
 
     // ── Step 3: Save session transcript ──────────────────────────────────────
-    const fullMessages = [
-      ...messages,
-      { role: "assistant", content: reply },
-    ];
+    const fullMessages = [...messages, { role: "assistant", content: reply }];
     await saveSession(sessionId, fullMessages, ip);
 
     if (!action) {
@@ -423,7 +426,8 @@ export default async function handler(req, res) {
         const slots = await fetchAvailableSlots(action.timeZone);
         actionResult = `Lead saved. Available slots:\n${slots}`;
       } catch {
-        actionResult = "Lead saved. Could not fetch availability — ask the user to try again.";
+        actionResult =
+          "Lead saved. Could not fetch availability — ask the user to try again.";
       }
     }
 
@@ -432,7 +436,8 @@ export default async function handler(req, res) {
         const slots = await fetchAvailableSlots(action.timeZone);
         actionResult = `Available slots for the next 7 days:\n${slots}`;
       } catch {
-        actionResult = "Could not fetch availability. Ask the user to try again or use the contact form.";
+        actionResult =
+          "Could not fetch availability. Ask the user to try again or use the contact form.";
       }
     }
 
@@ -440,7 +445,8 @@ export default async function handler(req, res) {
       const { attendeeName, attendeeEmail, startTime, timeZone } = action;
 
       if (!attendeeName || !attendeeEmail || !startTime) {
-        actionResult = "Missing booking details. Ask the user to confirm their name, email, and chosen time slot.";
+        actionResult =
+          "Missing booking details. Ask the user to confirm their name, email, and chosen time slot.";
       } else {
         try {
           const booking = await createBooking({
@@ -475,11 +481,10 @@ export default async function handler(req, res) {
     await saveSession(
       sessionId,
       [...enrichedMessages, { role: "assistant", content: finalReply }],
-      ip
+      ip,
     );
 
     return ok(res, { reply: finalReply });
-
   } catch (e) {
     console.error("Chat error:", e);
     return err(res, 500, "Server error. Please try again.");
