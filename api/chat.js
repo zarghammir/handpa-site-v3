@@ -69,7 +69,7 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
     });
 
     const timeLabels = times.map((slot) =>
-      new Date(slot.time).toLocaleTimeString("en-US", {
+      new Date(slot.start).toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
