@@ -51,15 +51,16 @@ import Testimonial from "./components/Testimonial";
 import CTA from "./components/CTA";
 import SignupForm from "./components/SignupForm";
 import Footer from "./components/Footer";
-import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
+// import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
 import ContactForm from "./components/ContactForm";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GiftLesson from "./components/GiftLesson";
 import GiftSuccess from "./components/GiftSuccess";
+import ChatWidget from "./components/ChatWidget";
 
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
-import FAQ from "./pages/FAQ";
+// import FAQ from "./pages/FAQ";
 import GiftRedeem from "./pages/GiftRedeem";
 
 // lazy() + dynamic import() = code splitting.
@@ -97,7 +98,7 @@ function HomePage() {
       <About />
       <Video />
       <Testimonial />
-      <FAQ />
+      {/* <FAQ /> */}
       <CTA />
       <SignupForm />
       <ContactForm />
@@ -141,7 +142,8 @@ function App() {
 
         <ScrollToHash />
         <Navbar />
-        <GlobalAudioPlayer />
+        {/* <GlobalAudioPlayer /> */}
+        <ChatWidget />
 
         {/*
           Top-level ErrorBoundary catches any crash inside the route components.

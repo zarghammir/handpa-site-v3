@@ -55,9 +55,9 @@ const About = () => {
             className="w-full h-[280px] sm:h-[400px] md:h-[600px] object-cover rounded-3xl shadow-lg"
           />
           <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2">
-            <div className="bg-orange text-white font-bold text-sm md:text-base px-6 md:px-8 py-3 md:py-4 rounded-2xl shadow-lg whitespace-nowrap">
+            {/* <div className="bg-orange text-white font-bold text-sm md:text-base px-6 md:px-8 py-3 md:py-4 rounded-2xl shadow-lg whitespace-nowrap">
               Medya Shadabi
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
