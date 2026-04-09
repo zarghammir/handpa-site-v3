@@ -60,7 +60,6 @@ import ChatWidget from "./components/ChatWidget";
 
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
-// import FAQ from "./pages/FAQ";
 import GiftRedeem from "./pages/GiftRedeem";
 
 // lazy() + dynamic import() = code splitting.
@@ -98,7 +97,6 @@ function HomePage() {
       <About />
       <Video />
       <Testimonial />
-      {/* <FAQ /> */}
       <CTA />
       <SignupForm />
       <ContactForm />
