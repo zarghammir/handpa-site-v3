@@ -307,7 +307,7 @@ async function callClaude(messages, systemPrompt) {
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 400,
+      max_tokens: 800,
       system: systemPrompt,
       messages,
     }),
@@ -339,22 +339,41 @@ You can answer questions about:
 BOOKING FLOW — follow these steps exactly when someone wants to book:
 1. Ask for their full name (if you don't have it)
 2. Ask for their email address (if you don't have it)
-3. Ask for their timezone — if they say a city like "Vancouver" use "America/Vancouver"
+3. Ask for their timezone. If they give a city name, convert it to an IANA timezone:
+   - San Francisco, Los Angeles, Seattle, Portland, Las Vegas → America/Los_Angeles
+   - Vancouver (BC), Victoria → America/Vancouver
+   - Denver, Calgary, Edmonton → America/Denver
+   - Chicago, Dallas, Houston, Winnipeg → America/Chicago
+   - New York, Boston, Miami, Washington DC, Atlanta → America/New_York
+   - Toronto, Ottawa, Montreal → America/Toronto
+   - London → Europe/London
+   - Paris, Berlin, Amsterdam, Rome → Europe/Paris
+   - Tehran → Asia/Tehran
+   - Dubai → Asia/Dubai
+   - Sydney, Melbourne → Australia/Sydney
+   - If unsure, default to America/Vancouver
 4. Once you have name, email AND timezone, output exactly this and nothing else:
-   [SAVE_LEAD name="FULL_NAME" email="EMAIL" timeZone="TIMEZONE"]
-5. After the lead is saved, immediately output:
-   [CHECK_AVAILABILITY timeZone="TIMEZONE"]
-6. After availability results are shown to you, present ONLY the display times to the user (not the raw ISO strings in brackets — those are for your use only). Ask which slot they prefer.
-7. When the user confirms a specific slot, find the matching ISO time in brackets from the availability list and output exactly this and nothing else:
-   [CREATE_BOOKING attendeeName="FULL_NAME" attendeeEmail="EMAIL" startTime="RAW_ISO_TIME" timeZone="TIMEZONE"]
-   Use the exact ISO string from brackets as startTime — do not modify or convert it.
-   Example: if slot shows "13:00 [2026-04-10T13:00:00.000-07:00]" then startTime="2026-04-10T13:00:00.000-07:00"
+   [SAVE_LEAD name="FULL_NAME" email="EMAIL" timeZone="IANA_TIMEZONE"]
+   The system will automatically return available time slots to you. Wait for them.
+5. When the system returns available slots, present ONLY the display times to the user
+   (not the raw ISO strings in brackets — those are for your internal use only).
+   Ask which slot they prefer.
+6. When the user confirms a specific slot, find the matching ISO time in brackets from
+   the availability list the system returned earlier in the conversation, then output:
+   [CREATE_BOOKING attendeeName="FULL_NAME" attendeeEmail="EMAIL" startTime="RAW_ISO_TIME" timeZone="IANA_TIMEZONE"]
+   Use the EXACT ISO string from brackets as startTime — do not modify, guess, or construct it.
+   Example: if the system showed "13:00 [2026-04-10T13:00:00.000-07:00]" and user picks 1pm,
+   then startTime="2026-04-10T13:00:00.000-07:00"
+   If you cannot find the exact ISO string in your conversation history, output:
+   [CHECK_AVAILABILITY timeZone="IANA_TIMEZONE"]
+   to refresh the slot list before booking.
 
 Important rules for markers:
-- Output markers on their own line
+- Output ONE marker per response, on its own line
 - Do not add any text after a marker — stop there
+- Never output [CHECK_AVAILABILITY] right after [SAVE_LEAD] — the system handles availability automatically after SAVE_LEAD
+- Never invent, guess, or construct ISO timestamps — only use the exact strings the system provided
 - Never output a marker unless you have all required information
-- Never invent or guess availability — always use CHECK_AVAILABILITY first
 
 General rules:
 - Keep answers to 2-3 sentences max
@@ -389,13 +408,56 @@ export default async function handler(req, res) {
     return err(res, 400, "Session ID is required.");
   }
 
-  const messages = rawMessages
-    .slice(-30)
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .map((m) => ({
-      role: m.role,
-      content: sanitizeText(String(m.content ?? ""), 1000),
-    }));
+  // Load full conversation from Supabase — this is the authoritative history and
+  // includes hidden [SYSTEM ACTION RESULT] messages with ISO timestamps that the
+  // client never stores. Without these, Claude can't find the exact startTime when
+  // creating a booking.
+  let messages;
+  try {
+    const { data: savedSession } = await supabase
+      .from("chat_sessions")
+      .select("messages")
+      .eq("session_id", sessionId)
+      .maybeSingle();
+
+    const dbMessages = savedSession?.messages;
+    if (dbMessages && dbMessages.length > 0) {
+      const sanitized = dbMessages.map((m) => ({
+        role: m.role,
+        content: sanitizeText(String(m.content ?? ""), 1000),
+      }));
+
+      // Append the latest user message from the request if the DB doesn't have it yet
+      const lastDbMsg = sanitized[sanitized.length - 1];
+      const latestUserMsg = rawMessages[rawMessages.length - 1];
+      if (latestUserMsg?.role === "user" && lastDbMsg?.role !== "user") {
+        messages = [
+          ...sanitized,
+          { role: "user", content: sanitizeText(String(latestUserMsg.content ?? ""), 1000) },
+        ];
+      } else {
+        messages = sanitized;
+      }
+    } else {
+      // No saved session yet — use client-sent messages (first turn)
+      messages = rawMessages
+        .slice(-30)
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({
+          role: m.role,
+          content: sanitizeText(String(m.content ?? ""), 1000),
+        }));
+    }
+  } catch {
+    // Supabase unavailable — fall back to client-sent messages
+    messages = rawMessages
+      .slice(-30)
+      .filter((m) => m.role === "user" || m.role === "assistant")
+      .map((m) => ({
+        role: m.role,
+        content: sanitizeText(String(m.content ?? ""), 1000),
+      }));
+  }
 
   if (messages[messages.length - 1]?.role !== "user") {
     return err(res, 400, "Last message must be from the user.");
