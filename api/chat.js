@@ -181,7 +181,7 @@ async function markLeadCompleted(sessionId, bookingUid) {
 // Called from chat-end.js (widget closed) and the pg_cron inactivity job.
 // Exported so chat-end.js can import and reuse it.
 
-export async function sendSummaryEmail(sessionId) {
+ async function sendSummaryEmail(sessionId) {
   // Fetch the full session + lead data
   const { data: session } = await supabase
     .from("chat_sessions")
