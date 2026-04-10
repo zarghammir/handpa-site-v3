@@ -29,7 +29,6 @@ const CAL_API_KEY = process.env.CAL_API_KEY;
 // ─── Cal.com helpers ──────────────────────────────────────────────────────────
 
 async function fetchAvailableSlots(timeZone = "America/Vancouver") {
-  // Start from now, end 7 days from now
   const start = new Date();
   const end = new Date();
   end.setDate(end.getDate() + 14);
@@ -60,11 +59,9 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
   const lines = [];
 
   for (const [date, times] of Object.entries(slots)) {
-    // Filter out past dates entirely
     const dateObj = new Date(date + "T23:59:59");
     if (dateObj < now) continue;
 
-    // Filter out past time slots within today
     const futureTimes = times.filter((slot) => new Date(slot.start) > now);
     if (!futureTimes.length) continue;
 
@@ -75,21 +72,23 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
       timeZone,
     });
 
-    const timeLabels = futureTimes.map((slot) =>
-      new Date(slot.start).toLocaleTimeString("en-US", {
+    // Include raw ISO time in brackets so Claude never needs to convert
+    const timeLabels = futureTimes.map((slot) => {
+      const display = new Date(slot.start).toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
         timeZone,
-      }),
-    );
+      });
+      return `${display} [${slot.start}]`;
+    });
 
     lines.push(`${dayLabel}: ${timeLabels.join(", ")}`);
   }
 
   return lines.length
     ? lines.join("\n")
-    : "No availability found in the next 7 days.";
+    : "No availability found in the next 14 days.";
 }
 
 async function createBooking({
@@ -343,10 +342,11 @@ BOOKING FLOW — follow these steps exactly when someone wants to book:
    [SAVE_LEAD name="FULL_NAME" email="EMAIL" timeZone="TIMEZONE"]
 5. After the lead is saved, immediately output:
    [CHECK_AVAILABILITY timeZone="TIMEZONE"]
-6. After availability results are shown to you, present the options clearly and ask which slot they prefer
-7. When the user confirms a specific slot, output exactly this and nothing else:
-   [CREATE_BOOKING attendeeName="FULL_NAME" attendeeEmail="EMAIL" startTime="ISO_DATETIME_UTC" timeZone="TIMEZONE"]
-   Convert their chosen time to UTC for startTime. Example: 2026-04-14T17:00:00Z
+6. After availability results are shown to you, present ONLY the display times to the user (not the raw ISO strings in brackets — those are for your use only). Ask which slot they prefer.
+7. When the user confirms a specific slot, find the matching ISO time in brackets from the availability list and output exactly this and nothing else:
+   [CREATE_BOOKING attendeeName="FULL_NAME" attendeeEmail="EMAIL" startTime="RAW_ISO_TIME" timeZone="TIMEZONE"]
+   Use the exact ISO string from brackets as startTime — do not modify or convert it.
+   Example: if slot shows "13:00 [2026-04-10T13:00:00.000-07:00]" then startTime="2026-04-10T13:00:00.000-07:00"
 
 Important rules for markers:
 - Output markers on their own line
