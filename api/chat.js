@@ -29,6 +29,7 @@ const CAL_API_KEY = process.env.CAL_API_KEY;
 // ─── Cal.com helpers ──────────────────────────────────────────────────────────
 
 async function fetchAvailableSlots(timeZone = "America/Vancouver") {
+  // Start from now, end 7 days from now
   const start = new Date();
   const end = new Date();
   end.setDate(end.getDate() + 7);
@@ -54,25 +55,27 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
   }
 
   const data = await response.json();
-  console.log("Slots response:", JSON.stringify(data).substring(0, 300));
-
   const slots = data.data ?? {};
-  console.log("Slots keys:", Object.keys(slots));
-
+  const now = new Date();
   const lines = [];
 
   for (const [date, times] of Object.entries(slots)) {
-    if (!times.length) continue;
+    // Filter out past dates entirely
+    const dateObj = new Date(date + "T23:59:59");
+    if (dateObj < now) continue;
 
-    const dateObj = new Date(date + "T00:00:00");
-    const dayLabel = dateObj.toLocaleDateString("en-US", {
+    // Filter out past time slots within today
+    const futureTimes = times.filter((slot) => new Date(slot.start) > now);
+    if (!futureTimes.length) continue;
+
+    const dayLabel = new Date(date + "T00:00:00").toLocaleDateString("en-US", {
       weekday: "long",
       month: "short",
       day: "numeric",
       timeZone,
     });
 
-    const timeLabels = times.map((slot) =>
+    const timeLabels = futureTimes.map((slot) =>
       new Date(slot.start).toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
