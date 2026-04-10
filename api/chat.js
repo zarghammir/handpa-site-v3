@@ -56,7 +56,7 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
   const data = await response.json();
   console.log("Slots response:", JSON.stringify(data).substring(0, 300));
 
-  const slots = data.data?.slots ?? {};
+  const slots = data.data ?? {};
   console.log("Slots keys:", Object.keys(slots));
 
   const lines = [];
@@ -219,14 +219,18 @@ async function sendSummaryEmail(sessionId) {
         <p style="margin:0;font-size:16px;">${bookedStatus}</p>
       </div>
 
-      ${lead ? `
+      ${
+        lead
+          ? `
       <div style="background:#f5f5f0;padding:16px;border-radius:8px;margin-bottom:20px;">
         <h3 style="margin:0 0 12px;">Visitor Details</h3>
         <p><strong>Name:</strong> ${lead.name}</p>
         <p><strong>Email:</strong> ${lead.email}</p>
         <p><strong>Timezone:</strong> ${lead.timezone}</p>
       </div>
-      ` : ""}
+      `
+          : ""
+      }
 
       <div style="background:#f5f5f0;padding:16px;border-radius:8px;">
         <h3 style="margin:0 0 12px;">Full Transcript</h3>
@@ -411,7 +415,8 @@ export default async function handler(req, res) {
         const slots = await fetchAvailableSlots(action.timeZone);
         actionResult = `Lead saved. Available slots:\n${slots}`;
       } catch {
-        actionResult = "Lead saved. Could not fetch availability — ask the user to try again.";
+        actionResult =
+          "Lead saved. Could not fetch availability — ask the user to try again.";
       }
     }
 
@@ -420,14 +425,16 @@ export default async function handler(req, res) {
         const slots = await fetchAvailableSlots(action.timeZone);
         actionResult = `Available slots for the next 7 days:\n${slots}`;
       } catch {
-        actionResult = "Could not fetch availability. Ask the user to try again or use the contact form.";
+        actionResult =
+          "Could not fetch availability. Ask the user to try again or use the contact form.";
       }
     }
 
     if (action.type === "CREATE_BOOKING") {
       const { attendeeName, attendeeEmail, startTime, timeZone } = action;
       if (!attendeeName || !attendeeEmail || !startTime) {
-        actionResult = "Missing booking details. Ask the user to confirm their name, email, and chosen time slot.";
+        actionResult =
+          "Missing booking details. Ask the user to confirm their name, email, and chosen time slot.";
       } else {
         try {
           const booking = await createBooking({
@@ -462,7 +469,6 @@ export default async function handler(req, res) {
     );
 
     return ok(res, { reply: finalReply });
-
   } catch (e) {
     console.error("Chat error:", e);
     return err(res, 500, "Server error. Please try again.");
