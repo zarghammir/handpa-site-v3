@@ -371,7 +371,7 @@ export default async function handler(req, res) {
   }
 
   const ip = getClientIp(req);
-  const { allowed } = await checkRateLimit(ip, "chat", 40, 60 * 60);
+  const { allowed } = await checkRateLimit(ip, "chat", 300, 60 * 60);
   if (!allowed) {
     return err(res, 429, "Too many messages. Please try again later.");
   }
