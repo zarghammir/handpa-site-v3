@@ -32,7 +32,7 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
   // Start from now, end 7 days from now
   const start = new Date();
   const end = new Date();
-  end.setDate(end.getDate() + 7);
+  end.setDate(end.getDate() + 14);
 
   const params = new URLSearchParams({
     start: start.toISOString(),
