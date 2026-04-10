@@ -84,6 +84,9 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
     ? lines.join("\n")
     : "No availability found in the next 7 days.";
 }
+const data = await response.json();
+console.log("Cal.com raw response:", JSON.stringify(data).slice(0, 500)); // ADD THIS
+const slots = data.data?.slots ?? {};
 
 async function createBooking({
   attendeeName,
