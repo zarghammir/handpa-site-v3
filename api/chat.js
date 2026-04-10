@@ -513,7 +513,13 @@ export default async function handler(req, res) {
           await markLeadCompleted(sessionId, booking.uid);
           actionResult = `Booking confirmed! Booking ID: ${booking.uid}. Session starts: ${booking.start}. Confirmation email sent to ${attendeeEmail}.`;
         } catch (e) {
-          actionResult = `Booking failed: ${e.message}. Apologize and suggest they use the contact form or try again.`;
+          // Slot is already taken — fetch fresh availability so Claude shows correct options
+          try {
+            const freshSlots = await fetchAvailableSlots(timeZone ?? "America/Vancouver");
+            actionResult = `That time slot is no longer available. Here are the current available slots:\n${freshSlots}\nAsk the user to pick a different time from these options.`;
+          } catch {
+            actionResult = `That time slot is no longer available. Could not fetch updated availability — ask the user to try again.`;
+          }
         }
       }
     }
