@@ -56,16 +56,34 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
   const data = await response.json();
   const slots = data.data ?? {};
   const now = new Date();
+
+  // Group slots by their local date in the user's timezone.
+  // Cal.com date keys are UTC-based and can differ from the local date,
+  // so we derive the date from each slot's own start time instead.
+  const slotsByLocalDate = new Map();
+
+  for (const times of Object.values(slots)) {
+    for (const slot of times) {
+      if (new Date(slot.start) <= now) continue;
+
+      const localDateKey = new Date(slot.start).toLocaleDateString("en-CA", {
+        timeZone, // "en-CA" gives YYYY-MM-DD for reliable sorting
+      });
+
+      if (!slotsByLocalDate.has(localDateKey)) {
+        slotsByLocalDate.set(localDateKey, []);
+      }
+      slotsByLocalDate.get(localDateKey).push(slot);
+    }
+  }
+
+  const sortedDates = [...slotsByLocalDate.keys()].sort();
   const lines = [];
 
-  for (const [date, times] of Object.entries(slots)) {
-    const dateObj = new Date(date + "T23:59:59");
-    if (dateObj < now) continue;
+  for (const localDateKey of sortedDates) {
+    const times = slotsByLocalDate.get(localDateKey);
 
-    const futureTimes = times.filter((slot) => new Date(slot.start) > now);
-    if (!futureTimes.length) continue;
-
-    const dayLabel = new Date(date + "T00:00:00").toLocaleDateString("en-US", {
+    const dayLabel = new Date(times[0].start).toLocaleDateString("en-US", {
       weekday: "long",
       month: "short",
       day: "numeric",
@@ -73,7 +91,7 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
     });
 
     // Include raw ISO time in brackets so Claude never needs to convert
-    const timeLabels = futureTimes.map((slot) => {
+    const timeLabels = times.map((slot) => {
       const display = new Date(slot.start).toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
