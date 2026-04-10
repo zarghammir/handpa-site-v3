@@ -97,6 +97,8 @@ async function createBooking({
   startTime,
   timeZone,
 }) {
+  console.log("Creating booking with startTime:", startTime); // ← ADD HERE
+
   const response = await fetch(`${CAL_API_BASE}/bookings`, {
     method: "POST",
     headers: {
