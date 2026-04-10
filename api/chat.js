@@ -54,7 +54,11 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
   }
 
   const data = await response.json();
+  console.log("Slots response:", JSON.stringify(data).substring(0, 300));
+
   const slots = data.data?.slots ?? {};
+  console.log("Slots keys:", Object.keys(slots));
+
   const lines = [];
 
   for (const [date, times] of Object.entries(slots)) {
@@ -84,7 +88,6 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
     ? lines.join("\n")
     : "No availability found in the next 7 days.";
 }
-
 
 async function createBooking({
   attendeeName,
@@ -153,7 +156,6 @@ async function saveLead(sessionId, name, email, timezone) {
 }
 
 async function markLeadCompleted(sessionId, bookingUid) {
-  // Mark lead as completed
   const { error: leadError } = await supabase
     .from("chat_leads")
     .update({
@@ -165,7 +167,6 @@ async function markLeadCompleted(sessionId, bookingUid) {
 
   if (leadError) console.error("Lead update error:", leadError);
 
-  // Mark session as booked so the summary email shows correct status
   const { error: sessionError } = await supabase
     .from("chat_sessions")
     .update({ booked: true })
@@ -175,19 +176,15 @@ async function markLeadCompleted(sessionId, bookingUid) {
 }
 
 // ─── Email helper ─────────────────────────────────────────────────────────────
-// Formats and sends the conversation summary email to Medya.
-// Called from chat-end.js (widget closed) and the pg_cron inactivity job.
-// Exported so chat-end.js can import and reuse it.
 
- async function sendSummaryEmail(sessionId) {
-  // Fetch the full session + lead data
+async function sendSummaryEmail(sessionId) {
   const { data: session } = await supabase
     .from("chat_sessions")
     .select("messages, booked, created_at")
     .eq("session_id", sessionId)
     .maybeSingle();
 
-  if (!session) return; // session not found, nothing to send
+  if (!session) return;
 
   const { data: lead } = await supabase
     .from("chat_leads")
@@ -195,7 +192,6 @@ async function markLeadCompleted(sessionId, bookingUid) {
     .eq("session_id", sessionId)
     .maybeSingle();
 
-  // Format the transcript as readable HTML
   const transcript = (session.messages ?? [])
     .filter((m) => m.role === "user" || m.role === "assistant")
     .filter((m) => !m.content.startsWith("[SYSTEM ACTION RESULT"))
@@ -223,18 +219,14 @@ async function markLeadCompleted(sessionId, bookingUid) {
         <p style="margin:0;font-size:16px;">${bookedStatus}</p>
       </div>
 
-      ${
-        lead
-          ? `
+      ${lead ? `
       <div style="background:#f5f5f0;padding:16px;border-radius:8px;margin-bottom:20px;">
         <h3 style="margin:0 0 12px;">Visitor Details</h3>
         <p><strong>Name:</strong> ${lead.name}</p>
         <p><strong>Email:</strong> ${lead.email}</p>
         <p><strong>Timezone:</strong> ${lead.timezone}</p>
       </div>
-      `
-          : ""
-      }
+      ` : ""}
 
       <div style="background:#f5f5f0;padding:16px;border-radius:8px;">
         <h3 style="margin:0 0 12px;">Full Transcript</h3>
@@ -252,7 +244,6 @@ async function markLeadCompleted(sessionId, bookingUid) {
     return;
   }
 
-  // Mark email as sent so the inactivity job doesn't send it again
   await supabase
     .from("chat_sessions")
     .update({ email_sent: true })
@@ -262,7 +253,6 @@ async function markLeadCompleted(sessionId, bookingUid) {
 // ─── Action marker parser ─────────────────────────────────────────────────────
 
 function parseAction(text) {
-  // SAVE_LEAD must be checked first — Claude outputs this before CHECK_AVAILABILITY
   const leadMatch = text.match(/\[SAVE_LEAD([^\]]+)\]/);
   if (leadMatch) {
     const attrs = {};
@@ -403,13 +393,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // ── Step 1: First Claude call ─────────────────────────────────────────────
     let reply = await callClaude(messages, SYSTEM_PROMPT);
-
-    // ── Step 2: Parse for action markers ─────────────────────────────────────
     const action = parseAction(reply);
 
-    // ── Step 3: Save session transcript ──────────────────────────────────────
     const fullMessages = [...messages, { role: "assistant", content: reply }];
     await saveSession(sessionId, fullMessages, ip);
 
@@ -417,18 +403,15 @@ export default async function handler(req, res) {
       return ok(res, { reply });
     }
 
-    // ── Step 4: Execute the action ────────────────────────────────────────────
     let actionResult = "";
 
     if (action.type === "SAVE_LEAD") {
       await saveLead(sessionId, action.name, action.email, action.timeZone);
-
       try {
         const slots = await fetchAvailableSlots(action.timeZone);
         actionResult = `Lead saved. Available slots:\n${slots}`;
       } catch {
-        actionResult =
-          "Lead saved. Could not fetch availability — ask the user to try again.";
+        actionResult = "Lead saved. Could not fetch availability — ask the user to try again.";
       }
     }
 
@@ -437,17 +420,14 @@ export default async function handler(req, res) {
         const slots = await fetchAvailableSlots(action.timeZone);
         actionResult = `Available slots for the next 7 days:\n${slots}`;
       } catch {
-        actionResult =
-          "Could not fetch availability. Ask the user to try again or use the contact form.";
+        actionResult = "Could not fetch availability. Ask the user to try again or use the contact form.";
       }
     }
 
     if (action.type === "CREATE_BOOKING") {
       const { attendeeName, attendeeEmail, startTime, timeZone } = action;
-
       if (!attendeeName || !attendeeEmail || !startTime) {
-        actionResult =
-          "Missing booking details. Ask the user to confirm their name, email, and chosen time slot.";
+        actionResult = "Missing booking details. Ask the user to confirm their name, email, and chosen time slot.";
       } else {
         try {
           const booking = await createBooking({
@@ -456,9 +436,7 @@ export default async function handler(req, res) {
             startTime,
             timeZone: timeZone ?? "America/Vancouver",
           });
-
           await markLeadCompleted(sessionId, booking.uid);
-
           actionResult = `Booking confirmed! Booking ID: ${booking.uid}. Session starts: ${booking.start}. Confirmation email sent to ${attendeeEmail}.`;
         } catch (e) {
           actionResult = `Booking failed: ${e.message}. Apologize and suggest they use the contact form or try again.`;
@@ -466,7 +444,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── Step 5: Second Claude call with action result ─────────────────────────
     const enrichedMessages = [
       ...messages,
       { role: "assistant", content: reply },
@@ -478,7 +455,6 @@ export default async function handler(req, res) {
 
     const finalReply = await callClaude(enrichedMessages, SYSTEM_PROMPT);
 
-    // Update session with final reply
     await saveSession(
       sessionId,
       [...enrichedMessages, { role: "assistant", content: finalReply }],
@@ -486,6 +462,7 @@ export default async function handler(req, res) {
     );
 
     return ok(res, { reply: finalReply });
+
   } catch (e) {
     console.error("Chat error:", e);
     return err(res, 500, "Server error. Please try again.");
