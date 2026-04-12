@@ -29,12 +29,17 @@ function cleanReply(text) {
     .replace(/\[CHECK_AVAILABILITY[^\]]*\]/g, "")
     .replace(/\[CREATE_BOOKING[^\]]*\]/g, "")
     .replace(/\[SYSTEM ACTION RESULT[^\]]*\]/g, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1") // **bold** → bold
+    .replace(/\*(.+?)\*/g, "$1") // *italic* → italic
+    .replace(/^#+\s/gm, "") // ## headers → plain text
+    .replace(/^[-•]\s/gm, "") // - bullet or • bullet → plain
     .trim();
 }
 
 const INITIAL_MESSAGE = {
   role: "assistant",
-  content: "Hi! 👋 I'm Nava, Medya's assistant — named after the Persian word for 'melody'. Ask me anything about handpan lessons, or I can help you book a free session!",
+  content:
+    "Howdy! 👋 I'm Nava, Medya's assistant, named after the Persian word for 'melody'. Ask me anything about handpan lessons, or I can help you book a free session!",
 };
 
 export default function ChatWidget() {
@@ -69,7 +74,7 @@ export default function ChatWidget() {
     const payload = JSON.stringify({ sessionId });
     navigator.sendBeacon(
       "/api/chat-end",
-      new Blob([payload], { type: "application/json" })
+      new Blob([payload], { type: "application/json" }),
     );
   }, [messages.length, sessionId]);
 
@@ -106,9 +111,7 @@ export default function ChatWidget() {
         body: JSON.stringify({
           // Only send user/assistant messages — not the initial greeting
           // since that's not a real message Claude needs context from
-          messages: updatedMessages.filter((m) =>
-            m !== INITIAL_MESSAGE
-          ),
+          messages: updatedMessages.filter((m) => m !== INITIAL_MESSAGE),
           sessionId,
         }),
       });
@@ -128,7 +131,8 @@ export default function ChatWidget() {
         ...prev,
         {
           role: "assistant",
-          content: "Sorry, something went wrong. Please try again or use the contact form.",
+          content:
+            "Sorry, something went wrong. Please try again or use the contact form.",
         },
       ]);
     } finally {
@@ -147,7 +151,8 @@ export default function ChatWidget() {
     <>
       {/* ── Chat panel ───────────────────────────────────────────────────── */}
       {open && (
-        <div className="fixed bottom-24 right-5 z-[9999] w-[90vw] max-w-sm flex flex-col rounded-3xl border border-sand bg-white shadow-2xl overflow-hidden"
+        <div
+          className="fixed bottom-24 right-5 z-[9999] w-[90vw] max-w-sm flex flex-col rounded-3xl border border-sand bg-white shadow-2xl overflow-hidden"
           style={{ height: "min(600px, 80vh)" }}
         >
           {/* Header */}
@@ -157,7 +162,9 @@ export default function ChatWidget() {
                 M
               </div>
               <div>
-                <p className="text-cream font-bold text-sm leading-tight">Nava</p>
+                <p className="text-cream font-bold text-sm leading-tight">
+                  Nava
+                </p>
                 <p className="text-cream/50 text-xs">Ask me anything</p>
               </div>
             </div>
@@ -194,9 +201,18 @@ export default function ChatWidget() {
               <div className="flex justify-start">
                 <div className="bg-white border border-sand rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
                   <div className="flex gap-1 items-center h-4">
-                    <span className="w-1.5 h-1.5 bg-forest/30 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 bg-forest/30 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 bg-forest/30 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <span
+                      className="w-1.5 h-1.5 bg-forest/30 rounded-full animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 bg-forest/30 rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 bg-forest/30 rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    />
                   </div>
                 </div>
               </div>
@@ -223,7 +239,11 @@ export default function ChatWidget() {
               aria-label="Send message"
               className="w-10 h-10 rounded-2xl bg-orange text-white flex items-center justify-center hover:bg-orange/90 transition-all disabled:opacity-40 shrink-0"
             >
-              <svg className="w-4 h-4 rotate-90" fill="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-4 h-4 rotate-90"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
               </svg>
             </button>
@@ -238,12 +258,22 @@ export default function ChatWidget() {
         className="fixed bottom-5 right-5 z-[9999] w-14 h-14 rounded-full bg-orange text-white shadow-lg hover:bg-orange/90 hover:-translate-y-1 transition-all duration-200 flex items-center justify-center"
       >
         {open ? (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         ) : (
           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
           </svg>
         )}
       </button>
