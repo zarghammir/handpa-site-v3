@@ -34,7 +34,7 @@ function cleanReply(text) {
 
 const INITIAL_MESSAGE = {
   role: "assistant",
-  content: "Hi! 👋 I'm Medya's assistant. Ask me anything about handpan lessons, or I can help you book a session!",
+  content: "Hi! 👋 I'm Nava, Medya's assistant — named after the Persian word for 'melody'. Ask me anything about handpan lessons, or I can help you book a free session!",
 };
 
 export default function ChatWidget() {
@@ -157,7 +157,7 @@ export default function ChatWidget() {
                 M
               </div>
               <div>
-                <p className="text-cream font-bold text-sm leading-tight">Medya's Assistant</p>
+                <p className="text-cream font-bold text-sm leading-tight">Nava</p>
                 <p className="text-cream/50 text-xs">Ask me anything</p>
               </div>
             </div>
