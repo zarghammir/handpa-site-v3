@@ -39,7 +39,7 @@ function cleanReply(text) {
 const INITIAL_MESSAGE = {
   role: "assistant",
   content:
-    "Howdy! 👋 I'm Nava, Medya's assistant, named after the Persian word for 'melody'. Ask me anything about handpan lessons, or I can help you book a free session!",
+    "Howdy! 👋 I'm Nava, Medya's assistant. Ask me anything about handpan lessons, or I can help you book a free session!",
 };
 
 export default function ChatWidget() {
