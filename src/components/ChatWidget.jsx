@@ -42,7 +42,7 @@ const INITIAL_MESSAGE = {
     "Howdy! 👋 I'm Nava, Medya's assistant. Ask me anything about handpan lessons, or I can help you book a free session!",
 };
 
-const INACTIVITY_MS = 5 * 60 * 1000; // 5 minutes
+const INACTIVITY_MS = 1 * 60 * 1000; // 5 minutes
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
@@ -88,7 +88,9 @@ export default function ChatWidget() {
     if (messages.length <= 1) return;
 
     clearTimeout(inactivityTimerRef.current);
+    console.log("[inactivity] timer reset, fires in", INACTIVITY_MS / 1000, "s");
     inactivityTimerRef.current = setTimeout(() => {
+      console.log("[inactivity] timer fired — calling sendChatEnd");
       sendChatEnd();
     }, INACTIVITY_MS);
 
