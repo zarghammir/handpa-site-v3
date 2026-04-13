@@ -30,6 +30,10 @@ export default function Login() {
       .eq("id", data.user.id)
       .single();
 
+    console.log("User ID:", data.user.id);
+    console.log("Profile data:", profile);
+    console.log("Profile error:", profileError);
+
     if (profileError || !profile) {
       setError("Could not load user profile. Please try again.");
       setLoading(false);
