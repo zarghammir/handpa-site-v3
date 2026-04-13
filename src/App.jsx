@@ -61,10 +61,9 @@ import ChatWidget from "./components/ChatWidget";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import GiftRedeem from "./pages/GiftRedeem";
-import Login from './pages/Login'
-
-
-
+import Login from "./pages/Login";
+import StudentDashboard from "./pages/StudentDashboard";
+import InstructorDashboard from "./pages/InstructorDashboard";
 
 // lazy() + dynamic import() = code splitting.
 // Vite creates a separate JS chunk for LessonMap that is only loaded when needed.
@@ -163,6 +162,11 @@ function App() {
             <Route path="/gift/success" element={<GiftSuccess />} />
             <Route path="/gift/redeem" element={<GiftRedeem />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/dashboard/student" element={<StudentDashboard />} />
+            <Route
+              path="/dashboard/instructor"
+              element={<InstructorDashboard />}
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </ErrorBoundary>
