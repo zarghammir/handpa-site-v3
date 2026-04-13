@@ -19,11 +19,12 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 async function sendSummaryEmail(sessionId) {
   const { data: session } = await supabase
     .from("chat_sessions")
-    .select("messages, booked, created_at")
+    .select("messages, booked, created_at, email_sent")
     .eq("session_id", sessionId)
     .maybeSingle();
 
   if (!session) return;
+  if (session.email_sent) return; // already sent — inactivity timer and close can both fire
 
   const { data: lead } = await supabase
     .from("chat_leads")

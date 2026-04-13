@@ -42,6 +42,8 @@ const INITIAL_MESSAGE = {
     "Howdy! 👋 I'm Nava, Medya's assistant. Ask me anything about handpan lessons, or I can help you book a free session!",
 };
 
+const INACTIVITY_MS = 10 * 60 * 1000; // 15 minutes
+
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
@@ -50,6 +52,7 @@ export default function ChatWidget() {
   const [sessionId] = useState(() => getOrCreateSessionId());
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const inactivityTimerRef = useRef(null);
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -78,8 +81,23 @@ export default function ChatWidget() {
     );
   }, [messages.length, sessionId]);
 
+  // Start/reset a 15-min inactivity timer after each new message.
+  // When it fires, send the summary email just like closing the widget does.
+  // The server guards against duplicate emails via the email_sent flag.
+  useEffect(() => {
+    if (messages.length <= 1) return;
+
+    clearTimeout(inactivityTimerRef.current);
+    inactivityTimerRef.current = setTimeout(() => {
+      sendChatEnd();
+    }, INACTIVITY_MS);
+
+    return () => clearTimeout(inactivityTimerRef.current);
+  }, [messages, sendChatEnd]);
+
   // Send summary when widget is closed by the user
   const handleClose = () => {
+    clearTimeout(inactivityTimerRef.current);
     setOpen(false);
     sendChatEnd();
   };
@@ -87,6 +105,7 @@ export default function ChatWidget() {
   // Also send summary if the user leaves the page with widget open
   useEffect(() => {
     const handleUnload = () => {
+      clearTimeout(inactivityTimerRef.current);
       if (open && messages.length > 1) sendChatEnd();
     };
     window.addEventListener("beforeunload", handleUnload);
