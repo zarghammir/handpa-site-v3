@@ -42,7 +42,7 @@ const INITIAL_MESSAGE = {
     "Howdy! 👋 I'm Nava, Medya's assistant. Ask me anything about handpan lessons, or I can help you book a free session!",
 };
 
-const INACTIVITY_MS = 10 * 60 * 1000; // 15 minutes
+const INACTIVITY_MS = 5 * 60 * 1000; // 5 minutes
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
