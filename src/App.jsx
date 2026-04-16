@@ -58,7 +58,7 @@ import GiftLesson from "./components/GiftLesson";
 import GiftSuccess from "./components/GiftSuccess";
 import ChatWidget from "./components/ChatWidget";
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import HandpanExplorer from "./components/HandpanExplorer";
 
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -102,6 +102,7 @@ function HomePage() {
       <Hook />
       <About />
       <Video />
+      <HandpanExplorer />
       <Testimonial />
       <CTA />
       <SignupForm />
