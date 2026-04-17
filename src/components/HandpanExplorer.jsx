@@ -20,6 +20,11 @@
 // REF vs STATE
 //   synthRef, timersRef, swipeStartX — none of these need re-renders.
 //   Everything that changes the UI (activeNote, patternStep, etc.) is state.
+//
+// NAME → MELODY ALGORITHM
+//   Each letter maps deterministically to one of the 9 notes (A–Z → index 0–8
+//   via charCode mod 9). Same name always produces the same melody — no
+//   randomness. This is a pure function: nameToSteps(name) → steps[].
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -76,6 +81,14 @@ const NOTE_MAP = { ding: DING };
 TONE_FIELDS.forEach((n) => { NOTE_MAP[n.id] = n; });
 const ALL_NOTES = [DING, ...TONE_FIELDS];
 
+function nameToSteps(name) {
+  const chars = name.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 12);
+  return chars.split("").map((ch, i) => {
+    const idx = (ch.charCodeAt(0) - 65) % ALL_NOTES.length;
+    return { n: ALL_NOTES[idx].id, d: i * 420, letter: ch };
+  });
+}
+
 const CX = 160, CY = 160, R = 108;
 const FIELD_POS = TONE_FIELDS.map((note, i) => {
   const angle = ((i * 360) / TONE_FIELDS.length - 90) * (Math.PI / 180);
@@ -88,12 +101,21 @@ export default function HandpanExplorer() {
   const [activeNote,      setActiveNote]     = useState(null);
   const [infoNote,        setInfoNote]       = useState(null);
   const [audioReady,      setAudioReady]     = useState(false);
-  const [tab,             setTab]            = useState("explore");
+  const [tab,             setTab]            = useState("melody");
   const [activePattern,   setActivePattern]  = useState(null);
   const [patternStep,     setPatternStep]    = useState(-1);
   const [patternPlaying,  setPatternPlaying] = useState(false);
   const [patternIndex,    setPatternIndex]   = useState(0);
   const [swipeDir,        setSwipeDir]       = useState(null);
+
+  const [melodyName,      setMelodyName]     = useState("");
+  const [melodySteps,     setMelodySteps]    = useState([]);
+  const [melodyPlaying,   setMelodyPlaying]  = useState(false);
+  const [melodyStep,      setMelodyStep]     = useState(-1);
+  const [melodyPlayed,    setMelodyPlayed]   = useState(false);
+
+  // hint dismissed permanently once user clicks the melody tab
+  const [showHint, setShowHint] = useState(true);
 
   const synthRef    = useRef(null);
   const timersRef   = useRef([]);
@@ -156,6 +178,41 @@ export default function HandpanExplorer() {
     setActivePattern(null);
   }, []);
 
+  const playMelody = useCallback(async (steps) => {
+    if (!steps.length) return;
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    if (!synthRef.current) await initAudio();
+    if (!synthRef.current) return;
+    setMelodyPlaying(true);
+    setMelodyStep(0);
+    setMelodyPlayed(true);
+    steps.forEach((step, i) => {
+      const t = setTimeout(() => {
+        const note = NOTE_MAP[step.n];
+        if (note) { playNote(note, true); setMelodyStep(i); }
+        if (i === steps.length - 1)
+          setTimeout(() => { setMelodyPlaying(false); setMelodyStep(-1); }, 1200);
+      }, step.d);
+      timersRef.current.push(t);
+    });
+  }, [initAudio, playNote]);
+
+  const stopMelody = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    setMelodyPlaying(false);
+    setMelodyStep(-1);
+  }, []);
+
+  const handleMelodySubmit = useCallback(() => {
+    const trimmed = melodyName.trim();
+    if (!trimmed) return;
+    const steps = nameToSteps(trimmed);
+    setMelodySteps(steps);
+    playMelody(steps);
+  }, [melodyName, playMelody]);
+
   const goToPattern = useCallback((nextIdx) => {
     stopPattern();
     setPatternIndex(nextIdx);
@@ -191,6 +248,10 @@ export default function HandpanExplorer() {
     const pat = activePattern ? PATTERNS.find(p => p.id === activePattern) : null;
     if (pat && patternPlaying && patternStep >= 0 && pat.steps[patternStep]?.n === id)
       return "#E67E22";
+    if (melodyPlaying && melodyStep >= 0 && melodySteps[melodyStep]?.n === id)
+      return "#E67E22";
+    if (tab === "melody" && !melodyPlaying && melodyPlayed && melodySteps.some(s => s.n === id))
+      return "#A6B28B";
     return null;
   };
 
@@ -198,6 +259,11 @@ export default function HandpanExplorer() {
     timersRef.current.forEach(clearTimeout);
     if (synthRef.current) synthRef.current.dispose();
   }, []);
+
+  useEffect(() => {
+    if (tab !== "melody") { stopMelody(); }
+    if (tab !== "patterns") { stopPattern(); }
+  }, [tab, stopMelody, stopPattern]);
 
   const currentPattern   = PATTERNS[patternIndex];
   const isCurrentPlaying = activePattern === currentPattern.id && patternPlaying;
@@ -216,6 +282,20 @@ export default function HandpanExplorer() {
     <section className="bg-cream px-4 py-12 sm:px-8 md:py-16">
       <div className="mx-auto max-w-5xl">
 
+        {/* Keyframes for pulse badge ring + nudge line */}
+        <style>{`
+          @keyframes hp-pulse {
+            0%   { opacity: 0.8; transform: scale(0.6); }
+            70%  { opacity: 0;   transform: scale(1.9); }
+            100% { opacity: 0;   transform: scale(1.9); }
+          }
+          @keyframes hp-nudge {
+            0%,  15% { opacity: 0; transform: translateY(4px);  }
+            35%, 70% { opacity: 1; transform: translateY(0);     }
+            88%,100% { opacity: 0; transform: translateY(-3px);  }
+          }
+        `}</style>
+
         {/* Header */}
         <div className="mb-6 text-center">
           <span className="inline-block rounded-full bg-forest px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-cream mb-4">
@@ -229,31 +309,67 @@ export default function HandpanExplorer() {
           </p>
         </div>
 
-        {/* Tab switcher */}
-        <div className="mx-auto mb-6 flex max-w-[220px] rounded-xl border border-sand bg-sand/30 p-1">
-          {["explore", "patterns"].map((t) => (
+        {/* Tab switcher — identical markup + classes to original.
+            Only addition: position:relative on the melody button so the
+            pulse badge can be absolutely positioned inside it. */}
+        <div className="mx-auto mb-2 flex max-w-xs rounded-xl border border-sand bg-sand/30 p-1">
+          {["melody", "patterns", "explore"].map((t) => (
             <button
               key={t}
-              onClick={() => { setTab(t); stopPattern(); setInfoNote(null); }}
+              onClick={() => {
+                setTab(t);
+                stopPattern();
+                stopMelody();
+                setInfoNote(null);
+                if (t === "melody") setShowHint(false);
+              }}
               className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all duration-200 ${
                 tab === t ? "bg-forest text-cream" : "text-forest/45 hover:text-forest"
               }`}
+              style={t === "melody" ? { position: "relative" } : undefined}
             >
-              {t === "explore" ? "Free play" : "Patterns"}
+              {t === "melody" ? "Your Melody" : t === "patterns" ? "Patterns" : "Free play"}
+
+              {/* A — Pulse badge: 7px orange dot, ring expands outward */}
+              {t === "melody" && showHint && (
+                <span style={{
+                  position: "absolute", top: 5, right: 5,
+                  width: 7, height: 7, borderRadius: "50%",
+                  background: "#E67E22", display: "block",
+                  pointerEvents: "none",
+                }}>
+                  <span style={{
+                    position: "absolute", inset: -3,
+                    borderRadius: "50%",
+                    border: "1.5px solid #E67E22",
+                    animation: "hp-pulse 1.8s ease-out infinite",
+                  }} />
+                </span>
+              )}
             </button>
           ))}
         </div>
 
-        {/*
-          Mobile:  flex-col-reverse → panel above, handpan below (read then tap)
-          Desktop: flex-row + items-center → handpan 400px left, card centred vertically beside it
-        */}
+        {/* C — Nudge line: fixed 20px height so layout never shifts.
+            Fades in/out on a loop. Gone the moment hint is dismissed. */}
+        <div className="mx-auto mb-6 flex max-w-xs items-center justify-center" style={{ height: 20 }}>
+          {showHint && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 6,
+              opacity: 0, pointerEvents: "none",
+              animation: "hp-nudge 3.5s ease-in-out 0.9s infinite",
+            }}>
+              <span style={{ display: "inline-block", width: 14, height: 1, background: "#E67E22", flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: "#E67E22", fontStyle: "italic" }}>
+                type your name, hear it played
+              </span>
+            </div>
+          )}
+        </div>
+
         <div className="flex flex-col-reverse items-center gap-5 md:flex-row md:items-center md:gap-8">
 
-          {/* ── Handpan SVG ──
-              Mobile:  max 280px (full width of small screen)
-              Desktop: fixed 400px — larger tap targets, more presence
-          */}
+          {/* ── Handpan SVG ── */}
           <div className="flex-shrink-0 flex flex-col items-center w-full max-w-[280px] md:w-[400px] md:max-w-[400px]">
             <svg viewBox="0 0 320 320" className="w-full select-none"
               style={{ touchAction: "none" }}
@@ -314,15 +430,15 @@ export default function HandpanExplorer() {
             </svg>
 
             <p className="mt-1 text-center text-xs text-forest/35">
-              {!audioReady ? "Tap any field to begin" : "Any combo works, explore and enjoy :)"}
+              {tab === "melody" && melodyPlayed
+                ? "Your name, lit up on the handpan ✦"
+                : !audioReady
+                ? "Tap any field to begin"
+                : "Any combo works, explore and enjoy :)"}
             </p>
           </div>
 
-          {/* ── Right panel ──
-              flex-1 so it fills remaining space beside the handpan.
-              No max-width cap — it naturally stays compact because the
-              handpan takes 400px of the row on desktop.
-          */}
+          {/* ── Right panel ── */}
           <div className="flex-1 w-full min-w-0">
 
             {/* FREE PLAY */}
@@ -482,6 +598,105 @@ export default function HandpanExplorer() {
                 <p className="text-xs text-center text-forest/30">
                   Swipe or tap arrows to switch · Listen first, then try it yourself
                 </p>
+              </div>
+            )}
+
+            {/* YOUR MELODY */}
+            {tab === "melody" && (
+              <div className="flex flex-col gap-3">
+
+                <div className={`rounded-2xl border p-4 transition-all duration-300 ${
+                  melodyPlaying ? "border-orange/40 bg-orange/5" : "border-sand bg-white"
+                }`}>
+                  <p className="font-black text-sm text-forest mb-0.5">Your name as a handpan melody</p>
+                  <p className="text-xs text-forest/45 mb-4 leading-snug">
+                    Each letter maps to a unique note. Type your name and hear what it sounds like.
+                  </p>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={melodyName}
+                      onChange={(e) => {
+                        setMelodyName(e.target.value);
+                        setMelodyPlayed(false);
+                        setMelodySteps([]);
+                        stopMelody();
+                      }}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleMelodySubmit(); }}
+                      placeholder="e.g. Medya"
+                      maxLength={15}
+                      className="flex-1 min-w-0 rounded-xl border border-forest/15 bg-white px-3 py-2 text-sm text-forest placeholder:text-forest/30 outline-none focus:border-orange transition-colors"
+                    />
+                    <button
+                      onClick={melodyPlaying ? stopMelody : handleMelodySubmit}
+                      disabled={!melodyName.trim() && !melodyPlaying}
+                      className={`flex-shrink-0 rounded-xl px-4 py-2 text-xs font-bold transition-all disabled:opacity-40 ${
+                        melodyPlaying
+                          ? "bg-orange/10 text-orange border border-orange/30"
+                          : "bg-forest text-cream hover:bg-forest/90"
+                      }`}
+                    >
+                      {melodyPlaying ? "Stop" : melodyPlayed ? "Again ↻" : "Play ▶"}
+                    </button>
+                  </div>
+                </div>
+
+                {melodySteps.length > 0 && (
+                  <div className="rounded-2xl border border-sand bg-white p-4">
+                    <p className="text-xs font-bold uppercase tracking-widest text-sage/70 mb-3">
+                      {melodyName.trim().toUpperCase().replace(/[^A-Z]/gi, "").slice(0, 12).split("").join(" · ")}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {melodySteps.map((step, i) => {
+                        const note = NOTE_MAP[step.n];
+                        const isLit  = melodyPlaying && i === melodyStep;
+                        const isPast = melodyPlaying && i < melodyStep;
+                        return (
+                          <div key={i} className="flex flex-col items-center gap-0.5">
+                            <span className={`text-[9px] font-black uppercase tracking-wider transition-all duration-150 ${
+                              isLit ? "text-orange" : isPast ? "text-orange/40" : "text-forest/25"
+                            }`}>
+                              {step.letter}
+                            </span>
+                            <span className={`rounded-md px-2 py-0.5 text-xs font-bold transition-all duration-150 ${
+                              isLit  ? "bg-orange text-white scale-110" :
+                              isPast ? "bg-orange/20 text-orange/70" :
+                                       "bg-forest/8 text-forest/40"
+                            }`}>
+                              {note?.label}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {melodyPlaying && (
+                      <div className="flex gap-1">
+                        {melodySteps.map((_, i) => (
+                          <div key={i}
+                            className={`h-1 flex-1 rounded-full transition-all duration-150 ${
+                              i === melodyStep ? "bg-orange" :
+                              i < melodyStep   ? "bg-orange/30" : "bg-forest/10"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!melodySteps.length && (
+                  <div className="rounded-2xl bg-sage/8 border border-sage/15 p-4 text-center">
+                    <p className="text-2xl mb-2">✦</p>
+                    <p className="text-xs text-forest/50 leading-relaxed">
+                      Every name sounds different.<br />
+                      Try yours, your friend's, your city's.
+                    </p>
+                  </div>
+                )}
+
               </div>
             )}
 
