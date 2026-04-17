@@ -191,7 +191,7 @@ const Testimonials = () => {
     : 'opacity-100 translate-x-0'
 
   return (
-    <section id="testimonials" className="py-12 md:py-20 px-4 sm:px-8 bg-white">
+    <section id="testimonials" className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
       <div className="max-w-7xl mx-auto">
 
         {/* Heading */}

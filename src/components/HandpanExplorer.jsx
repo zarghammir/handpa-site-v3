@@ -93,14 +93,13 @@ export default function HandpanExplorer() {
   const [patternStep,     setPatternStep]    = useState(-1);
   const [patternPlaying,  setPatternPlaying] = useState(false);
   const [patternIndex,    setPatternIndex]   = useState(0);
-  const [swipeDir,        setSwipeDir]       = useState(null); // "left" | "right" | null
+  const [swipeDir,        setSwipeDir]       = useState(null);
 
   const synthRef    = useRef(null);
   const timersRef   = useRef([]);
   const swipeStartX = useRef(null);
   const swipeLocked = useRef(false);
 
-  // ── Audio ──────────────────────────────────────────────────────────────────
   const initAudio = useCallback(async () => {
     if (synthRef.current) return;
     try {
@@ -157,13 +156,11 @@ export default function HandpanExplorer() {
     setActivePattern(null);
   }, []);
 
-  // ── Carousel navigation ────────────────────────────────────────────────────
   const goToPattern = useCallback((nextIdx) => {
     stopPattern();
     setPatternIndex(nextIdx);
   }, [stopPattern]);
 
-  // ── Swipe detection ────────────────────────────────────────────────────────
   const handleSwipeStart = useCallback((clientX) => {
     swipeStartX.current = clientX;
     swipeLocked.current = false;
@@ -174,11 +171,9 @@ export default function HandpanExplorer() {
     const delta = clientX - swipeStartX.current;
     swipeStartX.current = null;
     if (Math.abs(delta) < SWIPE_THRESHOLD) return;
-
     swipeLocked.current = true;
     const dir = delta < 0 ? "left" : "right";
     setSwipeDir(dir);
-
     setTimeout(() => {
       setPatternIndex((prev) =>
         dir === "left"
@@ -190,7 +185,6 @@ export default function HandpanExplorer() {
     }, 200);
   }, [stopPattern]);
 
-  // ── Note color ─────────────────────────────────────────────────────────────
   const noteColor = (id) => {
     if (activeNote === id) return "#E67E22";
     if (infoNote?.id === id) return "#7C9E6B";
@@ -250,13 +244,19 @@ export default function HandpanExplorer() {
           ))}
         </div>
 
-        {/* col-reverse on mobile → panel above handpan. row on desktop */}
-        <div className="flex flex-col-reverse items-center gap-5 md:flex-row md:items-start md:gap-8">
+        {/*
+          Mobile:  flex-col-reverse → panel above, handpan below (read then tap)
+          Desktop: flex-row + items-center → handpan 400px left, card centred vertically beside it
+        */}
+        <div className="flex flex-col-reverse items-center gap-5 md:flex-row md:items-center md:gap-8">
 
-          {/* Handpan SVG */}
-          <div className="flex-shrink-0 flex flex-col items-center">
+          {/* ── Handpan SVG ──
+              Mobile:  max 280px (full width of small screen)
+              Desktop: fixed 400px — larger tap targets, more presence
+          */}
+          <div className="flex-shrink-0 flex flex-col items-center w-full max-w-[280px] md:w-[400px] md:max-w-[400px]">
             <svg viewBox="0 0 320 320" className="w-full select-none"
-              style={{ maxWidth: 260, touchAction: "none" }}
+              style={{ touchAction: "none" }}
               role="img" aria-label="Interactive handpan — tap to play">
               <circle cx={CX} cy={CY} r="148" fill="#3a4a3a" fillOpacity="0.05"
                 stroke="#2D3B2D" strokeWidth="1" strokeOpacity="0.12" />
@@ -318,7 +318,11 @@ export default function HandpanExplorer() {
             </p>
           </div>
 
-          {/* Right panel */}
+          {/* ── Right panel ──
+              flex-1 so it fills remaining space beside the handpan.
+              No max-width cap — it naturally stays compact because the
+              handpan takes 400px of the row on desktop.
+          */}
           <div className="flex-1 w-full min-w-0">
 
             {/* FREE PLAY */}
@@ -372,7 +376,6 @@ export default function HandpanExplorer() {
             {tab === "patterns" && (
               <div className="flex flex-col gap-3">
 
-                {/* Swipe zone — captures drag start/end */}
                 <div
                   onPointerDown={(e) => handleSwipeStart(e.clientX)}
                   onPointerUp={(e) => handleSwipeEnd(e.clientX)}
@@ -386,13 +389,11 @@ export default function HandpanExplorer() {
                       isCurrentPlaying ? "border-orange/40 bg-orange/5" : "border-sand bg-white"
                     }`}
                   >
-                    {/* Header */}
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-sm text-forest leading-tight">{currentPattern.name}</p>
                         <p className="text-xs text-forest/45 mt-0.5 leading-tight">{currentPattern.desc}</p>
                       </div>
-                      {/* stopPropagation prevents the play button from also starting a swipe */}
                       <button
                         onPointerDown={(e) => e.stopPropagation()}
                         onClick={() => isCurrentPlaying ? stopPattern() : playPattern(currentPattern)}
@@ -406,7 +407,6 @@ export default function HandpanExplorer() {
                       </button>
                     </div>
 
-                    {/* Note sequence pills */}
                     <div className="flex flex-wrap gap-1 mb-3">
                       {currentPattern.steps.map((step, i) => {
                         const isLit  = isCurrentPlaying && i === patternStep;
@@ -425,7 +425,6 @@ export default function HandpanExplorer() {
                       })}
                     </div>
 
-                    {/* Progress bar */}
                     {isCurrentPlaying && (
                       <div className="flex gap-1 mb-3">
                         {currentPattern.steps.map((_, i) => (
@@ -439,7 +438,6 @@ export default function HandpanExplorer() {
                       </div>
                     )}
 
-                    {/* Lesson tip */}
                     <div className="bg-sage/8 rounded-xl px-3 py-2">
                       <p className="text-xs text-forest/60 leading-relaxed">
                         <span className="font-bold text-sage">Lesson: </span>
@@ -449,7 +447,6 @@ export default function HandpanExplorer() {
                   </div>
                 </div>
 
-                {/* Controls row: prev arrow — dots — next arrow */}
                 <div className="flex items-center justify-between px-1">
                   <button
                     onClick={() => goToPattern((patternIndex - 1 + PATTERNS.length) % PATTERNS.length)}
@@ -490,18 +487,6 @@ export default function HandpanExplorer() {
 
           </div>
         </div>
-
-        {/* CTA */}
-        {/* <div className="mt-8 text-center">
-          <p className="mb-3 text-sm font-medium text-forest/55">
-            In your first lesson, you'll be playing melodies like these
-          </p>
-          <a href="#signup"
-            className="inline-block rounded-2xl bg-orange px-7 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:bg-orange/90"
-          >
-            Book your free intro session →
-          </a>
-        </div> */}
 
       </div>
     </section>
