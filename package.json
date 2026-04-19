@@ -21,6 +21,7 @@
     "resend": "^6.10.0",
     "stripe": "^22.0.0",
     "tailwindcss": "^4.2.2",
+    "three": "^0.184.0",
     "tone": "^15.1.22"
   },
   "devDependencies": {
