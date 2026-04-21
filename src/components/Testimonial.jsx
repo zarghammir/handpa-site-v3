@@ -203,25 +203,33 @@ function OrbitCard({ testimonial, angle, rotateAngle, isSelected, onTap }) {
   );
 }
 
-// ─── Mobile list — full cards stacked vertically ──────────────────────────────
+// ─── Mobile grid — 2 cards per row, stacked vertically ───────────────────────
 function MobileSlider({ testimonials }) {
+  const pairs = [];
+  for (let i = 0; i < testimonials.length; i += 2) {
+    pairs.push(testimonials.slice(i, i + 2));
+  }
+
   return (
     <div className="flex flex-col gap-4">
-      {testimonials.map((t) => (
-        <div key={t.id} className="bg-white rounded-2xl border border-sand p-5">
-          <span className="text-orange text-2xl font-black leading-none block mb-3">"</span>
-          <p className="text-forest/75 text-sm leading-relaxed">{t.text}</p>
-          <div className="mt-4 pt-4 border-t border-sand/60 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-sage/20 flex items-center justify-center text-sm font-black text-sage flex-shrink-0">
-              {t.name?.[0]?.toUpperCase()}
+      {pairs.map((pair, pi) => (
+        <div key={pi} className="grid grid-cols-2 gap-3">
+          {pair.map((t) => (
+            <div key={t.id} className="bg-white rounded-2xl border border-sand p-4 flex flex-col">
+              <span className="text-orange text-xl font-black leading-none block mb-2">"</span>
+              <p className="text-forest/75 text-xs leading-relaxed flex-1">{t.text}</p>
+              <div className="mt-3 pt-3 border-t border-sand/60 flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-sage/20 flex items-center justify-center text-xs font-black text-sage flex-shrink-0">
+                  {t.name?.[0]?.toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-forest truncate">{t.name}</p>
+                  <p className="text-xs text-forest/40">{countryFlag(t.country)}</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-bold text-forest">{t.name}</p>
-              <p className="text-xs text-forest/40">
-                {countryFlag(t.country)} {t.country}
-              </p>
-            </div>
-          </div>
+          ))}
+          {pair.length === 1 && <div />}
         </div>
       ))}
     </div>
