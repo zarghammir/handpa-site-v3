@@ -232,23 +232,22 @@ export default function Testimonials() {
   const [loading,       setLoading]       = useState(true);
   const [showForm,      setShowForm]      = useState(false);
   const [selectedId,    setSelectedId]    = useState(null);
-  const [angle,         setAngle]         = useState(0);    // drives card positions
+  const [angle,         setAngle]         = useState(0);
   const [tilt,          setTilt]          = useState({ x: 0, y: 0 });
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [isMobile,      setIsMobile]      = useState(() => window.innerWidth < 768);
 
-  // ── All transient interaction state lives here — zero in React state ─────
-  // This prevents re-renders mid-drag which cause glitches.
   const raf        = useRef(null);
-  const angleRef   = useRef(0);       // always in sync with `angle` state
-  const paused     = useRef(false);   // true when card selected OR dragging
-  const drag       = useRef(null);    // { startX, startAngle } | null
-  const wasDrag    = useRef(false);   // did last pointer-down turn into a drag?
+  const angleRef   = useRef(0);
+  const paused     = useRef(false);
+  const drag       = useRef(null);
+  const wasDrag    = useRef(false);
 
-  // ── Reduced motion ───────────────────────────────────────────────────────
+  // ── Mobile detection ─────────────────────────────────────────────────────
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mq.matches);
-    mq.addEventListener("change", e => setReducedMotion(e.matches));
+    const check = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   // ── Fetch ────────────────────────────────────────────────────────────────
@@ -378,13 +377,13 @@ export default function Testimonials() {
           <p className="text-forest/40 text-center py-12">No testimonials yet.</p>
         )}
 
-        {/* Reduced motion fallback */}
-        {!loading && testimonials.length > 0 && reducedMotion && (
+        {/* Reduced motion or mobile: grid */}
+        {!loading && testimonials.length > 0 && (reducedMotion || isMobile) && (
           <GridFallback testimonials={testimonials} />
         )}
 
-        {/* 3D orbit */}
-        {!loading && testimonials.length > 0 && !reducedMotion && (
+        {/* 3D orbit — desktop only */}
+        {!loading && testimonials.length > 0 && !reducedMotion && !isMobile && (
           <div
             onPointerDown={onDown}
             onPointerMove={onMove}
