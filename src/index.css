@@ -4,6 +4,29 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ── Pulse-ring animation for "Your Name" tab ── */
+@keyframes pulse-ring {
+  0%   { transform: scale(1);    opacity: 0.75; }
+  70%  { transform: scale(1.2);  opacity: 0; }
+  100% { transform: scale(1.2);  opacity: 0; }
+}
+
+.tab-pulse-ring::before,
+.tab-pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  border: 2px solid #E67E22;
+  opacity: 0;
+  animation: pulse-ring 2s ease-out infinite;
+  pointer-events: none;
+}
+
+.tab-pulse-ring::after {
+  animation-delay: 0.85s;
+}
+
 @theme {
   --color-forest: #2D3B1F;    /* Deep dark green — headlines & nav */
   --color-sage: #A6B28B;      /* Your sage — accents & borders */

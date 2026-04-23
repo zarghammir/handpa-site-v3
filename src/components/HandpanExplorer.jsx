@@ -177,6 +177,7 @@ export default function HandpanExplorer() {
   const [infoNote, setInfoNote] = useState(null);
   const [audioReady, setAudioReady] = useState(false);
   const [tab, setTab] = useState("melody");
+  const [melodyEngaged, setMelodyEngaged] = useState(false);
   const [activePattern, setActivePattern] = useState(null);
   const [patternStep, setPatternStep] = useState(-1);
   const [patternPlaying, setPatternPlaying] = useState(false);
@@ -426,22 +427,27 @@ export default function HandpanExplorer() {
         <div className="flex justify-center mb-5">
           <div className="inline-flex rounded-2xl border border-sand bg-white p-1 gap-1">
             {[
-              { id: "explore", label: "Explore" },
-              { id: "patterns", label: "Patterns" },
               { id: "melody", label: "Your Name" },
+              { id: "patterns", label: "Pattern" },
+              { id: "explore", label: "Explore" },
             ].map(({ id, label }) => (
               <button
                 key={id}
                 onClick={() => {
                   setTab(id);
+                  if (id === "melody") setMelodyEngaged(true);
                   stopPattern();
                   stopMelody();
                 }}
-                className={`px-5 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${
+                className={[
+                  "relative px-5 py-2 rounded-xl text-sm font-bold transition-all duration-200",
                   tab === id
                     ? "bg-forest text-cream shadow-sm"
-                    : "text-forest/50 hover:text-forest"
-                }`}
+                    : "text-forest/50 hover:text-forest",
+                  id === "melody" && !melodyEngaged
+                    ? "tab-pulse-ring"
+                    : "",
+                ].join(" ")}
               >
                 {label}
               </button>
@@ -468,6 +474,17 @@ export default function HandpanExplorer() {
                   ? "Tap any field to begin"
                   : "Drag to rotate · tap to play"}
             </p>
+
+            {/* Mute hint — mobile only, fades once audio is initialised */}
+            <div
+              className="md:hidden mt-2 flex items-center justify-center gap-1.5 transition-all duration-500"
+              style={{ opacity: audioReady ? 0 : 1, pointerEvents: "none" }}
+            >
+              <span className="text-base leading-none">🔇</span>
+              <p className="text-xs text-forest/45 font-medium">
+                No sound? Check your mute switch
+              </p>
+            </div>
           </div>
 
           {/* ── Cards panel — RIGHT on desktop, BELOW on mobile ── */}
@@ -667,6 +684,7 @@ export default function HandpanExplorer() {
                       onChange={(e) => {
                         setMelodyName(e.target.value);
                         setMelodyPlayed(false);
+                        setMelodyEngaged(true);
                       }}
                       onKeyDown={(e) =>
                         e.key === "Enter" && handleMelodySubmit()
@@ -676,7 +694,7 @@ export default function HandpanExplorer() {
                       className="flex-1 rounded-xl border border-forest/15 bg-cream px-3 py-2 text-sm text-forest placeholder:text-forest/30 outline-none focus:border-orange transition-colors"
                     />
                     <button
-                      onClick={melodyPlaying ? stopMelody : handleMelodySubmit}
+                      onClick={() => { setMelodyEngaged(true); melodyPlaying ? stopMelody() : handleMelodySubmit(); }}
                       disabled={!melodyName.trim() && !melodyPlaying}
                       className="rounded-xl px-4 py-2 text-sm font-bold transition-all bg-forest text-cream hover:bg-forest/90 disabled:opacity-40"
                     >
