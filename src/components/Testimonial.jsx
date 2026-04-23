@@ -203,35 +203,59 @@ function OrbitCard({ testimonial, angle, rotateAngle, isSelected, onTap }) {
   );
 }
 
-// ─── Mobile grid — 2 cards per row, stacked vertically ───────────────────────
+// ─── Mobile slider — 2 cards per page, stacked vertically, with pagination ────
 function MobileSlider({ testimonials }) {
-  const pairs = [];
-  for (let i = 0; i < testimonials.length; i += 2) {
-    pairs.push(testimonials.slice(i, i + 2));
-  }
+  const [page, setPage] = useState(0);
+  const cardsPerPage = 2;
+  const totalPages = Math.ceil(testimonials.length / cardsPerPage);
+
+  const visible = testimonials.slice(page * cardsPerPage, page * cardsPerPage + cardsPerPage);
 
   return (
-    <div className="flex flex-col gap-4">
-      {pairs.map((pair, pi) => (
-        <div key={pi} className="grid grid-cols-2 gap-3">
-          {pair.map((t) => (
-            <div key={t.id} className="bg-white rounded-2xl border border-sand p-4 flex flex-col">
-              <span className="text-orange text-xl font-black leading-none block mb-2">"</span>
-              <p className="text-forest/75 text-xs leading-relaxed flex-1">{t.text}</p>
-              <div className="mt-3 pt-3 border-t border-sand/60 flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-sage/20 flex items-center justify-center text-xs font-black text-sage flex-shrink-0">
-                  {t.name?.[0]?.toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-forest truncate">{t.name}</p>
-                  <p className="text-xs text-forest/40">{countryFlag(t.country)}</p>
-                </div>
-              </div>
+    <div>
+      <div className="flex flex-col gap-4 mb-6">
+        {visible.map((t) => (
+          <div key={t.id} className="bg-sand/50 rounded-2xl border border-sand/80 p-5">
+            <span className="text-orange text-2xl font-black leading-none block mb-3">"</span>
+            <p className="text-forest/75 text-sm leading-relaxed">{t.text}</p>
+            <div className="mt-4">
+              <p className="font-bold text-forest text-sm">{t.name}</p>
+              <p className="text-forest/50 text-sm mt-0.5">{countryFlag(t.country)} {t.country}</p>
             </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-center gap-4">
+        <button
+          onClick={() => setPage(p => Math.max(0, p - 1))}
+          disabled={page === 0}
+          className="w-10 h-10 rounded-full border border-forest/20 flex items-center justify-center text-forest text-lg disabled:opacity-30 hover:bg-sand transition-all"
+        >
+          ‹
+        </button>
+
+        <div className="flex items-center gap-2">
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i)}
+              className={`rounded-full transition-all duration-200 h-3 ${
+                i === page ? "w-7 bg-orange" : "w-3 bg-forest/20"
+              }`}
+            />
           ))}
-          {pair.length === 1 && <div />}
         </div>
-      ))}
+
+        <button
+          onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+          disabled={page === totalPages - 1}
+          className="w-10 h-10 rounded-full border border-forest/20 flex items-center justify-center text-forest text-lg disabled:opacity-30 hover:bg-sand transition-all"
+        >
+          ›
+        </button>
+      </div>
     </div>
   );
 }
@@ -245,7 +269,7 @@ export default function Testimonials() {
   const [angle,         setAngle]         = useState(0);
   const [tilt,          setTilt]          = useState({ x: 0, y: 0 });
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [isMobile,      setIsMobile]      = useState(() => window.innerWidth < 768);
+  const [isMobile,      setIsMobile]      = useState(() => window.innerWidth < 1024);
 
   const raf        = useRef(null);
   const angleRef   = useRef(0);
@@ -253,9 +277,9 @@ export default function Testimonials() {
   const drag       = useRef(null);
   const wasDrag    = useRef(false);
 
-  // ── Mobile detection ─────────────────────────────────────────────────────
+  // ── Mobile/tablet detection (<1024px uses paginated slider) ───────────────
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+    const check = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
@@ -357,17 +381,17 @@ export default function Testimonials() {
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-10 gap-4">
-          <div className="text-center md:text-left">
+        <div className="flex flex-col items-center lg:flex-row lg:items-end lg:justify-between mb-10 gap-4">
+          <div className="text-center lg:text-left">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-forest leading-tight">
-              What students say
+              Testimonials from our students
             </h2>
-            <div className="w-24 h-1 bg-orange mt-3 rounded-full mx-auto md:mx-0" />
+            <div className="w-24 h-1 bg-orange mt-3 rounded-full mx-auto lg:mx-0" />
           </div>
           {!showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="self-center md:self-auto px-6 py-3 border-2 border-forest/20 text-forest text-sm font-bold rounded-2xl hover:bg-sand transition-all duration-200"
+              className="px-6 py-3 border-2 border-forest/20 text-forest text-sm font-bold rounded-2xl hover:bg-sand transition-all duration-200"
             >
               Share your experience →
             </button>
@@ -387,12 +411,12 @@ export default function Testimonials() {
           <p className="text-forest/40 text-center py-12">No testimonials yet.</p>
         )}
 
-        {/* Mobile or reduced motion: paginated 2-card slider */}
+        {/* Mobile/tablet or reduced motion: paginated card slider */}
         {!loading && testimonials.length > 0 && (reducedMotion || isMobile) && (
           <MobileSlider testimonials={testimonials} />
         )}
 
-        {/* 3D orbit — desktop only */}
+        {/* 3D orbit — desktop only (≥1024px) */}
         {!loading && testimonials.length > 0 && !reducedMotion && !isMobile && (
           <div
             onPointerDown={onDown}
