@@ -39,11 +39,10 @@ const About = () => {
 
             <div className="px-5 md:px-10 py-4 md:py-5 border-2 border-forest/30 text-forest rounded-2xl col-span-2 hover:bg-sand transition-all duration-300">
               <p className="text-base md:text-xl font-black text-forest">
-                North Vancouver based
+                Available online or in-person in Vancouver
               </p>
-              <p className="text-forest/40 text-xs md:text-sm mt-1">
-                Available online or in-person (North Van)
-              </p>
+              {/* <p className="text-forest/40 text-xs md:text-sm mt-1">
+              </p> */}
             </div>
           </div>
         </div>

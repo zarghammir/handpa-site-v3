@@ -32,22 +32,28 @@ const Navbar = () => {
           </Link>
 
           <a
+            href={homeSectionLink("about")}
+            className="text-forest/60 hover:text-forest text-sm font-medium transition-colors"
+          >
+            About
+          </a>
+          <a
             href={homeSectionLink("video")}
             className="text-forest/60 hover:text-forest text-sm font-medium transition-colors"
           >
             Lessons
           </a>
           <a
-            href={homeSectionLink("faq")}
+            href={homeSectionLink("explorer")}
             className="text-forest/60 hover:text-forest text-sm font-medium transition-colors"
           >
-            FAQ
+            Explorer
           </a>
           <a
-            href={homeSectionLink("about")}
+            href={homeSectionLink("how-it-works")}
             className="text-forest/60 hover:text-forest text-sm font-medium transition-colors"
           >
-            About
+            How It Works
           </a>
           <a
             href={homeSectionLink("testimonials")}
@@ -55,7 +61,6 @@ const Navbar = () => {
           >
             Students
           </a>
-
           <a
             href={homeSectionLink("contact")}
             className="text-forest/60 hover:text-forest text-sm font-medium transition-colors"
@@ -133,6 +138,14 @@ const Navbar = () => {
           </Link>
 
           <a
+            href={homeSectionLink("about")}
+            onClick={() => setOpen(false)}
+            className="text-forest/60 text-sm font-medium hover:text-forest transition-colors"
+          >
+            About
+          </a>
+
+          <a
             href={homeSectionLink("video")}
             onClick={() => setOpen(false)}
             className="text-forest/60 text-sm font-medium hover:text-forest transition-colors"
@@ -141,19 +154,27 @@ const Navbar = () => {
           </a>
 
           <a
+            href={homeSectionLink("explorer")}
+            onClick={() => setOpen(false)}
+            className="text-forest/60 text-sm font-medium hover:text-forest transition-colors"
+          >
+            Explorer
+          </a>
+
+          <a
+            href={homeSectionLink("how-it-works")}
+            onClick={() => setOpen(false)}
+            className="text-forest/60 text-sm font-medium hover:text-forest transition-colors"
+          >
+            How It Works
+          </a>
+
+          <a
             href={homeSectionLink("testimonials")}
             onClick={() => setOpen(false)}
             className="text-forest/60 text-sm font-medium hover:text-forest transition-colors"
           >
             Students
-          </a>
-
-          <a
-            href={homeSectionLink("about")}
-            onClick={() => setOpen(false)}
-            className="text-forest/60 text-sm font-medium hover:text-forest transition-colors"
-          >
-            About
           </a>
 
           <a

@@ -83,7 +83,7 @@ const ContactForm = () => {
             about lessons, level, scheduling, or anything else.
           </p>
 
-          <div className="rounded-3xl border border-sand bg-cream p-6 md:p-8 shadow-sm">
+          {/* <div className="rounded-3xl border border-sand bg-cream p-6 md:p-8 shadow-sm">
             <div className="space-y-3">
               <p className="text-forest font-bold text-lg">
                 What this teaches you
@@ -93,7 +93,7 @@ const ContactForm = () => {
                 your own backend route, and the backend answers back.
               </p>
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="rounded-3xl border border-sand bg-white p-6 md:p-8 shadow-sm">

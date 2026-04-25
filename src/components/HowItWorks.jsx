@@ -256,7 +256,7 @@ export default function HowItWorks() {
   const [headerRef, headerInView] = useInView(0.2);
 
   return (
-    <section className="bg-white px-4 py-16 sm:px-8 md:py-24">
+    <section id="how-it-works" className="bg-white px-4 py-16 sm:px-8 md:py-24">
       <div className="mx-auto max-w-5xl">
 
         {/* Header */}
