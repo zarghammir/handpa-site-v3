@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   }
 
   const now = new Date();
-  // 45–75 min window: cron runs every 15 min, so every booking is caught exactly once
+  // 45–75 min window: cron runs hourly, so every booking is caught exactly once
   const in45m = new Date(now.getTime() + 45 * 60 * 1000);
   const in75m = new Date(now.getTime() + 75 * 60 * 1000);
 
