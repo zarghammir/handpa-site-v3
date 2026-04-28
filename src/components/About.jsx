@@ -32,7 +32,7 @@ const About = () => {
 
             <div className="px-5 md:px-10 py-4 md:py-5 border-2 border-forest/30 text-forest rounded-2xl hover:bg-sand transition-all duration-300">
               <p className="text-2xl md:text-3xl font-black text-forest">
-                {/* <LiveStats type="students" suffix="+" /> */} 28+
+                {/* <LiveStats type="students" suffix="+" /> */} 27+
               </p>
               <p className="text-forest/40 text-xs md:text-sm mt-1">Students taught</p>
             </div>
