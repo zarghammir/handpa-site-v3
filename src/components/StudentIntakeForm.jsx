@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const daysOfWeek = [
   "Monday",
@@ -43,6 +43,7 @@ const StudentIntakeForm = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const sectionRef = useRef(null);
 
   const toggleDay = (day) => {
     setForm((prev) => {
@@ -117,8 +118,6 @@ const StudentIntakeForm = () => {
         throw new Error(data.message || "Something went wrong.");
       }
 
-      setSuccess(data.message);
-
       setForm({
         full_name: "",
         email: "",
@@ -131,6 +130,10 @@ const StudentIntakeForm = () => {
         availability: {},
         message: "",
       });
+      setSuccess(data.message);
+      setTimeout(() => {
+        sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
     } catch (error) {
       setErrorMessage(error.message || "Something went wrong.");
     } finally {
@@ -138,8 +141,29 @@ const StudentIntakeForm = () => {
     }
   };
 
+  if (success) {
+    return (
+      <section ref={sectionRef} id="studentform" className="py-16 md:py-24 px-4 sm:px-8 bg-cream">
+        <div className="max-w-4xl mx-auto rounded-3xl border border-sand bg-white shadow-sm overflow-hidden">
+          <div className="p-10 md:p-16 text-center space-y-6">
+            <div className="flex justify-center">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-forest">Request Submitted!</h2>
+            <p className="text-forest/70 text-base max-w-md mx-auto leading-relaxed">{success}</p>
+            <p className="text-forest/50 text-sm">I'll get back to you within 1–2 business days.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section id="studentform" className="py-16 md:py-24 px-4 sm:px-8 bg-cream">
+    <section ref={sectionRef} id="studentform" className="py-16 md:py-24 px-4 sm:px-8 bg-cream">
       <div className="max-w-4xl mx-auto rounded-3xl border border-sand bg-white shadow-sm overflow-hidden">
         <div className="p-6 md:p-10 space-y-8">
           <div className="text-center space-y-3">
@@ -428,12 +452,6 @@ const StudentIntakeForm = () => {
             </div>
 
             {/* Feedback */}
-            {success && (
-              <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
-                {success}
-              </div>
-            )}
-
             {errorMessage && (
               <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
                 {errorMessage}
