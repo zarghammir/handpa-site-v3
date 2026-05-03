@@ -1,12 +1,13 @@
 import React from "react";
 import medyaImg from "../../public/images/medya.png";
 import LiveStats from "./LiveStats";
+import GlobeWidget from "./GlobeWidget";
 
 const About = () => {
   return (
     <section id="about" className="py-12 md:py-20 px-4 sm:px-8 bg-cream">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 md:gap-16 items-start">
-        <div className="space-y-6 md:space-y-8 text-center md:text-left order-2 md:order-1">
+        <div className="space-y-6 md:space-y-8 text-center md:text-left">
           <div className="flex justify-center md:justify-start">
             <span className="inline-block px-5 py-2.5 bg-forest text-cream text-xs font-bold uppercase tracking-widest rounded-full">
               About Your Teacher
@@ -37,17 +38,22 @@ const About = () => {
               <p className="text-forest/40 text-xs md:text-sm mt-1">Students taught</p>
             </div>
 
-            <div className="px-5 md:px-10 py-4 md:py-5 border-2 border-forest/30 text-forest rounded-2xl col-span-2 hover:bg-sand transition-all duration-300">
-              <p className="text-base md:text-xl font-black text-forest">
-                Available online or in-person in Vancouver
-              </p>
-              {/* <p className="text-forest/40 text-xs md:text-sm mt-1">
-              </p> */}
+            <div className="px-5 py-4 md:py-5 border-2 border-forest/30 text-forest rounded-2xl col-span-2 hover:bg-sand transition-all duration-300 flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-2">
+                <p className="text-base md:text-xl font-black text-forest leading-snug">
+                  In-person in Vancouver<br className="hidden sm:block" />
+                  <span className="text-sage"> · Online worldwide</span>
+                </p>
+                <p className="text-forest/40 text-xs md:text-sm leading-relaxed">
+                  Local sessions in Vancouver or join remotely from anywhere on the globe
+                </p>
+              </div>
+              <GlobeWidget size={110} />
             </div>
           </div>
         </div>
 
-        <div className="relative order-1 md:order-2">
+        <div className="relative">
           <img
             src={medyaImg}
             alt="Medya Shadabi"
