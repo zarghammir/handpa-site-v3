@@ -276,7 +276,7 @@ const StudentIntakeForm = () => {
                     >
                       <option value="">Select an option</option>
                       <option value="home_studio">Medya's home studio</option>
-                      <option value="student_place">At my place</option>
+                      <option value="student_place">Student's house</option>
                     </select>
                   </div>
 
