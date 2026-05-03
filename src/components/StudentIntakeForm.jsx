@@ -275,8 +275,8 @@ const StudentIntakeForm = () => {
                       className="w-full rounded-2xl border border-forest/15 bg-white px-4 py-3 text-forest outline-none focus:border-orange transition-colors"
                     >
                       <option value="">Select an option</option>
-                      <option value="home_studio">In my home studio</option>
-                      <option value="student_place">At your place</option>
+                      <option value="home_studio">Medya's home studio</option>
+                      <option value="student_place">At my place</option>
                     </select>
                   </div>
 
