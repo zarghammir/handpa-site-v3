@@ -12,6 +12,48 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+function formatLabel(val) {
+  if (!val) return "N/A";
+  return val.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatTime(time) {
+  if (!time) return "";
+  const [h, m] = time.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+function infoRow(label, value) {
+  return `
+    <tr>
+      <td style="padding:11px 0;border-bottom:1px solid #f3f0ec;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td width="150" style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;vertical-align:top;padding-top:2px;">${label}</td>
+            <td style="font-size:15px;color:#1f2937;font-weight:500;line-height:1.5;">${value}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>`;
+}
+
+function sectionHeader(title) {
+  return `
+    <tr>
+      <td style="padding:28px 0 14px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="border-bottom:2px solid #ede8e0;padding-bottom:10px;">
+              <p style="margin:0;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#c9a044;font-weight:700;">${title}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>`;
+}
+
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
 
@@ -20,7 +62,7 @@ export default async function handler(req, res) {
   }
 
   const ip = getClientIp(req);
-  const { allowed } = await checkRateLimit(ip, "student-intake", 3, 60 * 60 * 24); // 3/day
+  const { allowed } = await checkRateLimit(ip, "student-intake", 3, 60 * 60 * 24);
   if (!allowed) {
     return err(res, 429, "Too many requests. Please try again later.");
   }
@@ -97,24 +139,229 @@ export default async function handler(req, res) {
       return err(res, 500, "Could not save your form. Please try again.");
     }
 
+    // --- Build shared template parts ---
+
+    const submissionDate = new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const availabilityRows = availability_preferences
+      .map(
+        (slot, i) => `
+      <tr style="background:${i % 2 === 0 ? "#ffffff" : "#faf8f5"};">
+        <td style="padding:12px 18px;font-size:14px;font-weight:600;color:#374151;border-bottom:1px solid #ede8e0;">${escapeHtml(slot.day)}</td>
+        <td style="padding:12px 18px;font-size:14px;color:#6b7280;border-bottom:1px solid #ede8e0;">${escapeHtml(formatTime(slot.start))} &ndash; ${escapeHtml(formatTime(slot.end))}</td>
+      </tr>`
+      )
+      .join("");
+
+    const messageBlock = cleanMessage
+      ? `
+      ${sectionHeader("Message")}
+      <tr>
+        <td style="padding:4px 0 0 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="padding:18px 20px;background:#faf8f4;border-radius:8px;border-left:3px solid #c9a044;">
+                <p style="margin:0;font-size:15px;color:#4b5563;line-height:1.7;font-style:italic;">&ldquo;${escapeHtml(cleanMessage)}&rdquo;</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>`
+      : "";
+
+    // --- Instructor email ---
+
+    const instructorHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>New Student Intake</title>
+</head>
+<body style="margin:0;padding:0;background-color:#edeae5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#edeae5;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:#0d0d1a;border-radius:14px 14px 0 0;padding:44px 44px 36px;text-align:center;">
+              <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Handpan Lessons</p>
+              <h1 style="margin:0 0 10px 0;font-size:28px;font-weight:700;color:#f7f4ef;letter-spacing:-0.3px;line-height:1.2;">New Student Intake</h1>
+              <p style="margin:0;font-size:13px;color:#6b7a99;">${submissionDate}</p>
+            </td>
+          </tr>
+
+          <!-- Name banner -->
+          <tr>
+            <td style="background:linear-gradient(90deg,#b8882a,#d4a840);padding:16px 44px;text-align:center;">
+              <p style="margin:0;font-size:19px;font-weight:700;color:#ffffff;letter-spacing:0.2px;">${escapeHtml(cleanName)}</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background:#ffffff;padding:8px 44px 44px;border-radius:0 0 14px 14px;">
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+
+                ${sectionHeader("Contact Information")}
+                ${infoRow("Email", `<a href="mailto:${escapeHtml(cleanEmail)}" style="color:#1d6fa8;text-decoration:none;">${escapeHtml(cleanEmail)}</a>`)}
+                ${infoRow("Phone", escapeHtml(cleanPhone) || "N/A")}
+
+                ${sectionHeader("Lesson Details")}
+                ${infoRow("Mode", formatLabel(lesson_mode))}
+                ${lesson_mode === "in_person" ? infoRow("Location Type", formatLabel(in_person_location_type || "N/A")) : ""}
+                ${cleanAddress ? infoRow("Address", escapeHtml(cleanAddress)) : ""}
+                ${infoRow("Experience", formatLabel(experience_level))}
+                ${infoRow("Has Handpan", has_handpan ? "Yes &#10003;" : "No")}
+
+                ${sectionHeader("Availability")}
+                <tr>
+                  <td style="padding:4px 0 0 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-radius:8px;overflow:hidden;border:1px solid #ede8e0;">
+                      <tr style="background:#f5f2ed;">
+                        <td style="padding:10px 18px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;width:45%;">Day</td>
+                        <td style="padding:10px 18px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;">Available Window</td>
+                      </tr>
+                      ${availabilityRows}
+                    </table>
+                  </td>
+                </tr>
+
+                ${messageBlock}
+
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:22px 0 8px 0;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#b0aaa0;">Sent automatically from your Handpan Lessons website</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    // --- Student confirmation email ---
+
+    const studentAvailabilityList = availability_preferences
+      .map((slot) => `<li style="margin:0 0 6px 0;font-size:15px;color:#4b5563;">${escapeHtml(slot.day)}: ${escapeHtml(formatTime(slot.start))} &ndash; ${escapeHtml(formatTime(slot.end))}</li>`)
+      .join("");
+
+    const studentHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lesson Request Received</title>
+</head>
+<body style="margin:0;padding:0;background-color:#edeae5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#edeae5;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:#0d0d1a;border-radius:14px 14px 0 0;padding:44px 44px 36px;text-align:center;">
+              <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Handpan Lessons</p>
+              <h1 style="margin:0 0 10px 0;font-size:26px;font-weight:700;color:#f7f4ef;line-height:1.2;">Request Received!</h1>
+              <p style="margin:0;font-size:15px;color:#a0aec0;">We&rsquo;ll be in touch very soon.</p>
+            </td>
+          </tr>
+
+          <!-- Accent bar -->
+          <tr>
+            <td style="background:linear-gradient(90deg,#b8882a,#d4a840);padding:4px 0;"></td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background:#ffffff;padding:40px 44px 44px;border-radius:0 0 14px 14px;">
+
+              <p style="margin:0 0 20px 0;font-size:22px;font-weight:700;color:#1f2937;">Hi ${escapeHtml(cleanName)},</p>
+
+              <p style="margin:0 0 24px 0;font-size:15px;color:#4b5563;line-height:1.7;">
+                Thank you for your interest in handpan lessons! I&rsquo;ve received your request and will get back to you within <strong>1&ndash;2 business days</strong> to confirm a time that works best.
+              </p>
+
+              <!-- Summary box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td style="background:#faf8f4;border-radius:10px;border:1px solid #ede8e0;padding:24px 28px;">
+                    <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#c9a044;font-weight:700;">Your Submission Summary</p>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td width="130" style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;padding:6px 0;">Mode</td>
+                        <td style="font-size:14px;color:#374151;font-weight:500;padding:6px 0;">${formatLabel(lesson_mode)}</td>
+                      </tr>
+                      <tr>
+                        <td style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;padding:6px 0;">Experience</td>
+                        <td style="font-size:14px;color:#374151;font-weight:500;padding:6px 0;">${formatLabel(experience_level)}</td>
+                      </tr>
+                      <tr>
+                        <td style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.8px;padding:6px 0;vertical-align:top;">Availability</td>
+                        <td style="padding:6px 0;">
+                          <ul style="margin:0;padding:0 0 0 16px;">
+                            ${studentAvailabilityList}
+                          </ul>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 6px 0;font-size:15px;color:#4b5563;line-height:1.7;">
+                Looking forward to starting your handpan journey!
+              </p>
+
+              <!-- Sign-off -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:32px;padding-top:24px;border-top:1px solid #ede8e0;">
+                <tr>
+                  <td>
+                    <p style="margin:0 0 4px 0;font-size:16px;font-weight:700;color:#1f2937;">Medya</p>
+                    <p style="margin:0;font-size:13px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;">Handpan Instructor</p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:22px 0 8px 0;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#b0aaa0;">You&rsquo;re receiving this because you submitted a lesson request on the Handpan Lessons website.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
     // Email to instructor
     await resend.emails.send({
       from: "Handpan <onboarding@resend.dev>",
       to: ["medy.tutoring@gmail.com"],
       subject: `New student intake from ${escapeHtml(cleanName)}`,
-      html: `
-        <h2>New Student Intake</h2>
-        <p><strong>Name:</strong> ${escapeHtml(cleanName)}</p>
-        <p><strong>Email:</strong> ${escapeHtml(cleanEmail)}</p>
-        <p><strong>Phone:</strong> ${escapeHtml(cleanPhone) || "N/A"}</p>
-        <p><strong>Lesson Mode:</strong> ${escapeHtml(lesson_mode)}</p>
-        <p><strong>Location:</strong> ${escapeHtml(in_person_location_type || "N/A")}</p>
-        <p><strong>Address:</strong> ${escapeHtml(cleanAddress) || "N/A"}</p>
-        <p><strong>Experience:</strong> ${escapeHtml(experience_level)}</p>
-        <p><strong>Has Handpan:</strong> ${has_handpan ? "Yes" : "No"}</p>
-        <pre>${escapeHtml(JSON.stringify(availability_preferences, null, 2))}</pre>
-        <p>${escapeHtml(cleanMessage)}</p>
-      `,
+      html: instructorHtml,
     });
 
     // Confirmation email to student
@@ -122,13 +369,7 @@ export default async function handler(req, res) {
       from: "Medya Handpan <onboarding@resend.dev>",
       to: [cleanEmail],
       subject: "Your handpan lesson request received",
-      html: `
-        <h2>Hi ${escapeHtml(cleanName)},</h2>
-        <p>Thank you for your interest in handpan lessons!</p>
-        <p>I've received your request and will get back to you within 1–2 business days.</p>
-        <p>Looking forward to starting your journey.</p>
-        <p><strong>Medya</strong></p>
-      `,
+      html: studentHtml,
     });
 
     return ok(res, { message: "Your request has been submitted successfully." });
