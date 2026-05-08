@@ -1,6 +1,5 @@
 import React from "react";
-import medyaImg from "../../public/images/medya.png";
-import handpanImg from "../../public/images/handpan-image.JPG";
+const handpanImg = "/images/handpan-image.JPG";
 import LiveStats from "./LiveStats";
 import GlobeWidget from "./GlobeWidget";
 
