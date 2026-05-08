@@ -14,6 +14,8 @@ const supabase = createClient(
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function handleGet(req, res) {
+  if (req.query?.token) return handleApprove(req, res);
+
   const ip = getClientIp(req);
   const { allowed } = await checkRateLimit(ip, "testimonials-get", 30, 60);
   if (!allowed) {
@@ -32,6 +34,62 @@ async function handleGet(req, res) {
   }
 
   return ok(res, { testimonials: data });
+}
+
+function renderApprovePage(message, success) {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${success ? "Approved" : "Error"}</title>
+    <style>
+      body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #FAFAF5; }
+      .card { text-align: center; padding: 48px; border-radius: 24px; border: 1px solid #EBD5AB; background: white; max-width: 400px; }
+      .icon { font-size: 48px; margin-bottom: 16px; }
+      h1 { color: #2D3B1F; font-size: 22px; margin: 0 0 12px; }
+      p { color: #2D3B1F99; font-size: 15px; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="icon">${success ? "✅" : "❌"}</div>
+      <h1>${success ? "Approved!" : "Something went wrong"}</h1>
+      <p>${message}</p>
+    </div>
+  </body>
+</html>`;
+}
+
+async function handleApprove(req, res) {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).send(renderApprovePage("Invalid link.", false));
+  }
+
+  const { data, error } = await supabase
+    .from("testimonials")
+    .select("id, name")
+    .eq("approval_token", token)
+    .eq("approved", false)
+    .single();
+
+  if (error || !data) {
+    return res.status(404).send(renderApprovePage("This link is invalid or has already been used.", false));
+  }
+
+  const { error: updateError } = await supabase
+    .from("testimonials")
+    .update({ approved: true, approval_token: null })
+    .eq("id", data.id);
+
+  if (updateError) {
+    console.error("Supabase update error:", updateError);
+    return res.status(500).send(renderApprovePage("Something went wrong. Please try again.", false));
+  }
+
+  return res.status(200).send(renderApprovePage(`Testimonial from ${data.name} is now live.`, true));
 }
 
 async function handlePost(req, res) {
@@ -70,7 +128,7 @@ async function handlePost(req, res) {
     return err(res, 500, "Could not save your testimonial.");
   }
 
-  const approvalLink = `${process.env.SITE_URL}/api/testimonial-approve?token=${approvalToken}`;
+  const approvalLink = `${process.env.SITE_URL}/api/testimonials?token=${approvalToken}`;
 
   const submissionDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
