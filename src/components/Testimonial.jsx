@@ -69,7 +69,7 @@ function SubmitForm({ onClose }) {
     if (!form.name || !form.country || !form.text) return;
     setStatus({ loading: true, success: "", error: "" });
     try {
-      const res = await fetch("/api/testimonial-submit", {
+      const res = await fetch("/api/testimonials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -286,7 +286,7 @@ export default function Testimonials() {
 
   // ── Fetch ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    fetch("/api/testimonials-get")
+    fetch("/api/testimonials")
       .then(r => r.json())
       .then(d => { if (d.success) setTestimonials(d.testimonials); })
       .catch(console.error)

@@ -13,67 +13,77 @@ const supabase = createClient(
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export default async function handler(req, res) {
-  if (handleCors(req, res)) return;
-
-  if (req.method !== "POST") {
-    return err(res, 405, "Method not allowed.");
-  }
-
+async function handleGet(req, res) {
   const ip = getClientIp(req);
-  const { allowed } = await checkRateLimit(ip, "testimonial-submit", 3, 60 * 60); // 3/hour
+  const { allowed } = await checkRateLimit(ip, "testimonials-get", 30, 60);
   if (!allowed) {
     return err(res, 429, "Too many requests. Please try again later.");
   }
 
-  try {
-    const name = sanitizeText(req.body?.name, 100);
-    const country = sanitizeText(req.body?.country, 100);
-    const text = sanitizeText(req.body?.text, 500);
+  const { data, error } = await supabase
+    .from("testimonials")
+    .select("id, name, country, text, created_at")
+    .eq("approved", true)
+    .order("created_at", { ascending: false });
 
-    if (!name || !country || !text) {
-      return err(res, 400, "All fields are required.");
-    }
+  if (error) {
+    console.error("Supabase fetch error:", error);
+    return err(res, 500, "Could not fetch testimonials.");
+  }
 
-    if (text.length > 500) {
-      return err(res, 400, "Testimonial must be under 500 characters.");
-    }
+  return ok(res, { testimonials: data });
+}
 
-    // Generate a random token — 32 bytes turned into a hex string (64 characters).
-    // This is what makes the approval link secret and unguessable.
-    const approvalToken = randomBytes(32).toString("hex");
+async function handlePost(req, res) {
+  const ip = getClientIp(req);
+  const { allowed } = await checkRateLimit(ip, "testimonial-submit", 3, 60 * 60);
+  if (!allowed) {
+    return err(res, 429, "Too many requests. Please try again later.");
+  }
 
-    const { error } = await supabase.from("testimonials").insert([
-      {
-        name,
-        country,
-        text,
-        approved: false,
-        approval_token: approvalToken,
-      },
-    ]);
+  const name = sanitizeText(req.body?.name, 100);
+  const country = sanitizeText(req.body?.country, 100);
+  const text = sanitizeText(req.body?.text, 500);
 
-    if (error) {
-      console.error("Supabase insert error:", error);
-      return err(res, 500, "Could not save your testimonial.");
-    }
+  if (!name || !country || !text) {
+    return err(res, 400, "All fields are required.");
+  }
 
-    // Build the approval link.
-    // SITE_URL is an env variable set in Vercel, e.g. https://your-site.vercel.app
-    const approvalLink = `${process.env.SITE_URL}/api/testimonial-approve?token=${approvalToken}`;
+  if (text.length > 500) {
+    return err(res, 400, "Testimonial must be under 500 characters.");
+  }
 
-    const submissionDate = new Date().toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  const approvalToken = randomBytes(32).toString("hex");
 
-    await resend.emails.send({
-      from: "Handpan <onboarding@resend.dev>",
-      to: "medy.tutoring@gmail.com",
-      subject: `New testimonial from ${escapeHtml(name)} — approve?`,
-      html: `<!DOCTYPE html>
+  const { error } = await supabase.from("testimonials").insert([
+    {
+      name,
+      country,
+      text,
+      approved: false,
+      approval_token: approvalToken,
+    },
+  ]);
+
+  if (error) {
+    console.error("Supabase insert error:", error);
+    return err(res, 500, "Could not save your testimonial.");
+  }
+
+  const approvalLink = `${process.env.SITE_URL}/api/testimonial-approve?token=${approvalToken}`;
+
+  const submissionDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  await resend.emails.send({
+    from: "Handpan <onboarding@resend.dev>",
+    to: "medy.tutoring@gmail.com",
+    subject: `New testimonial from ${escapeHtml(name)} — approve?`,
+    html: `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -199,9 +209,18 @@ export default async function handler(req, res) {
   </table>
 </body>
 </html>`,
-    });
+  });
 
-    return ok(res, { message: "Thank you! Your testimonial has been submitted for review." });
+  return ok(res, { message: "Thank you! Your testimonial has been submitted for review." });
+}
+
+export default async function handler(req, res) {
+  if (handleCors(req, res)) return;
+
+  try {
+    if (req.method === "GET") return await handleGet(req, res);
+    if (req.method === "POST") return await handlePost(req, res);
+    return err(res, 405, "Method not allowed.");
   } catch (e) {
     console.error("Server error:", e);
     return err(res, 500, "Server error. Please try again.");
