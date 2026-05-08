@@ -57,7 +57,7 @@ const Video = () => {
           {/* Video wrapper */}
           <div className="relative rounded-2xl overflow-hidden shadow-lg bg-forest aspect-video">
             <iframe
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+              src="https://www.youtube.com/embed/20Y8F7h_PSE"
               title="Handpan lesson preview"
               className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

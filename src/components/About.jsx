@@ -1,5 +1,6 @@
 import React from "react";
 import medyaImg from "../../public/images/medya.png";
+import handpanImg from "../../public/images/handpan-image.jpg";
 import LiveStats from "./LiveStats";
 import GlobeWidget from "./GlobeWidget";
 
@@ -55,7 +56,7 @@ const About = () => {
 
         <div className="relative">
           <img
-            src={medyaImg}
+            src={handpanImg}
             alt="Medya Shadabi"
             className="w-full h-[280px] sm:h-[400px] md:h-[600px] object-cover rounded-3xl shadow-lg"
           />

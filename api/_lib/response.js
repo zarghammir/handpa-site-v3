@@ -29,8 +29,8 @@
  *   ok(res, { message: "Sent!", testimonials: [] })
  *   // → 200  { success: true, message: "Sent!", testimonials: [] }
  */
-export const ok = (res, data = {}) =>
-  res.status(200).json({ success: true, ...data });
+export const ok = (res, data = {}, status = 200) =>
+  res.status(status).json({ success: true, ...data });
 
 /**
  * Send an error response with a given HTTP status code and message.
