@@ -1,18 +1,22 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import SessionNotes from "../components/SessionNotes";
-import LoginCalendar from "../components/LoginCalendar";
+import BookingEmbed from "../components/BookingEmbed";
+
+// The cal.com event slug for paid 60-min lessons. The student books from the
+// embed below; cal.com fires BOOKING_CREATED → our webhook stores it →
+// instructor approves on cal.com → it appears in "Confirmed appointments".
+const CAL_EVENT_LINK = "medya/60min-lesson";
 
 export default function StudentDashboard() {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [bookings, setBookings] = useState([]);
-  const [logins, setLogins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openNotes, setOpenNotes] = useState(null); // booking id of open notes panel
 
   useEffect(() => {
     async function load() {
-      // Get the logged-in user from the stored session
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -23,24 +27,23 @@ export default function StudentDashboard() {
 
       setUser(session.user);
 
-      // Fetch confirmed bookings + login history in parallel — saves a round-trip.
-      const [bookingRes, loginRes] = await Promise.all([
+      // Fetch profile (for cal.com prefill name) + confirmed bookings in parallel.
+      const [profileRes, bookingRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", session.user.id)
+          .single(),
         supabase
           .from("bookings")
           .select("*")
           .eq("student_email", session.user.email)
           .eq("status", "confirmed")
           .order("start_time", { ascending: false }),
-        supabase
-          .from("login_history")
-          .select("logged_in_at")
-          .eq("user_id", session.user.id)
-          .order("logged_in_at", { ascending: false })
-          .limit(365), // Plenty for a month-view calendar
       ]);
 
+      if (!profileRes.error) setProfile(profileRes.data);
       if (!bookingRes.error) setBookings(bookingRes.data);
-      if (!loginRes.error) setLogins(loginRes.data);
       setLoading(false);
     }
     load();
@@ -92,34 +95,27 @@ export default function StudentDashboard() {
           </button>
         </div>
 
-        {/* Login calendar */}
-        <div className="mb-8">
-          <LoginCalendar logins={logins} />
-        </div>
-
-        {/* Section heading */}
+        {/* Confirmed appointments — what's already booked + approved */}
         <h2 className="text-xl font-black text-forest mb-4">
           Confirmed appointments
         </h2>
 
-        {/* Empty state */}
         {bookings.length === 0 && (
           <div className="bg-white rounded-3xl border border-sand p-8 text-center">
             <p className="text-forest/50">No confirmed appointments yet.</p>
             <p className="text-forest/40 text-sm mt-2">
-              Once your instructor confirms a booking, it will appear here.
+              Book a session below — it will appear here once your instructor
+              approves it.
             </p>
           </div>
         )}
 
-        {/* Booking cards */}
         <div className="flex flex-col gap-4">
           {bookings.map((booking) => (
             <div
               key={booking.id}
               className="bg-white rounded-3xl border border-sand p-6 shadow-sm"
             >
-              {/* Booking info */}
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
                   <p className="font-bold text-forest">
@@ -135,7 +131,6 @@ export default function StudentDashboard() {
                 </span>
               </div>
 
-              {/* Notes toggle button */}
               <button
                 type="button"
                 onClick={() =>
@@ -146,7 +141,6 @@ export default function StudentDashboard() {
                 {openNotes === booking.id ? "Hide notes ↑" : "Session notes ↓"}
               </button>
 
-              {/* SessionNotes — read for student, reply only after instructor seeds */}
               {openNotes === booking.id && user && (
                 <div className="mt-4 pt-4 border-t border-sand">
                   <SessionNotes
@@ -158,6 +152,22 @@ export default function StudentDashboard() {
               )}
             </div>
           ))}
+        </div>
+
+        {/* Book a new session — cal.com embed */}
+        <div className="mt-12">
+          <h2 className="text-xl font-black text-forest mb-2">
+            Book your next session
+          </h2>
+          <p className="text-forest/60 text-sm mb-4">
+            Pick a 60-minute slot below. Your instructor will confirm it
+            shortly afterwards.
+          </p>
+          <BookingEmbed
+            calLink={CAL_EVENT_LINK}
+            name={profile?.full_name}
+            email={user?.email}
+          />
         </div>
       </div>
     </div>
