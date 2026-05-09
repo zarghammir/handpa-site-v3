@@ -39,8 +39,10 @@ export default function Login() {
 
   // Read ?verified=pending from the URL — set by Signup.jsx when email
   // confirmation is required before the account becomes active.
+  // Read ?expired=true — set by useInactivityTimeout after a 30-minute idle.
   const [searchParams] = useSearchParams();
   const pendingVerification = searchParams.get("verified") === "pending";
+  const sessionExpired = searchParams.get("expired") === "true";
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -79,7 +81,23 @@ export default function Login() {
       return;
     }
 
-    // ── Step 3: Redirect based on role ───────────────────────────────────────
+    // ── Step 3: Record this login ────────────────────────────────────────────
+    //
+    // We insert a row into login_history so the student dashboard calendar can
+    // show the days the user signed in. This is intentionally fire-and-forget:
+    // a failed insert (network blip, RLS misconfig) should not block sign-in.
+    //
+    // We do this here — not in a global onAuthStateChange listener — because
+    // SIGNED_IN also fires on token refresh and on session restore at page
+    // load. We only want to record an actual credential sign-in.
+    supabase
+      .from("login_history")
+      .insert({ user_id: data.user.id })
+      .then(({ error }) => {
+        if (error) console.warn("login_history insert failed:", error.message);
+      });
+
+    // ── Step 4: Redirect based on role ───────────────────────────────────────
     if (profile.role === "instructor") {
       navigate("/dashboard/instructor");
     } else {
@@ -113,6 +131,15 @@ export default function Login() {
             <p className="font-bold text-forest mb-1">Check your inbox</p>
             We sent a confirmation link to your email. Click it to activate your
             account, then sign in here.
+          </div>
+        )}
+
+        {/* Inactivity timeout banner — shown after a 30-min idle sign-out */}
+        {sessionExpired && (
+          <div className="mb-6 bg-orange/10 border border-orange/30 rounded-2xl px-5 py-4 text-sm text-forest/80 leading-relaxed">
+            <p className="font-bold text-forest mb-1">Session expired</p>
+            You were signed out after 30 minutes of inactivity. Please sign in
+            again to continue.
           </div>
         )}
 

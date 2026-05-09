@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import useInactivityTimeout from '../hooks/useInactivityTimeout'
+
+// 30-minute auto sign-out applies to anything wrapped by ProtectedRoute.
+const INACTIVITY_MINUTES = 30
 
 export default function ProtectedRoute({ children, requiredRole }) {
   const [session, setSession] = useState(undefined)
   const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Hook is safe to call unconditionally — it only does anything once mounted.
+  // If the user isn't logged in we Navigate away below before any timer matters.
+  useInactivityTimeout(INACTIVITY_MINUTES)
 
   useEffect(() => {
     const checkAuth = async () => {

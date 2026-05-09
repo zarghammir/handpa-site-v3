@@ -26,9 +26,10 @@ export default async function handler(req, res) {
     return err(res, 401, "Invalid or expired token.");
   }
 
-  // ── Route to GET or POST handler ──────────────────────────────────────────
-  if (req.method === "GET")  return getNotes(req, res, user);
-  if (req.method === "POST") return createNote(req, res, user);
+  // ── Route to GET / POST / PATCH handler ───────────────────────────────────
+  if (req.method === "GET")   return getNotes(req, res, user);
+  if (req.method === "POST")  return createNote(req, res, user);
+  if (req.method === "PATCH") return updateNote(req, res, user);
 
   return err(res, 405, "Method not allowed.");
 }
@@ -50,7 +51,7 @@ async function getNotes(req, res, user) {
 
   const { data, error } = await supabase
     .from("session_notes")
-    .select("id, author_id, author_role, content, created_at")
+    .select("id, author_id, author_role, content, created_at, updated_at")
     .eq("booking_id", booking_id)
     .order("created_at", { ascending: true });
 
@@ -83,6 +84,25 @@ async function createNote(req, res, user) {
 
   const author_role = profile?.role === "instructor" ? "instructor" : "student";
 
+  // ── Seeding rule: students can only post AFTER an instructor note exists.
+  //    Instructor seeds the conversation; student replies. We enforce here so
+  //    a student bypassing the UI can't post into an empty thread.
+  if (author_role === "student") {
+    const { count } = await supabase
+      .from("session_notes")
+      .select("*", { count: "exact", head: true })
+      .eq("booking_id", booking_id)
+      .eq("author_role", "instructor");
+
+    if (!count || count === 0) {
+      return err(
+        res,
+        403,
+        "You can only reply once your instructor has added a note."
+      );
+    }
+  }
+
   const { data, error } = await supabase
     .from("session_notes")
     .insert({
@@ -98,6 +118,45 @@ async function createNote(req, res, user) {
 
   // Return the new note — frontend can use this for optimistic update
   return ok(res, { note: data }, 201);
+}
+
+// ── PATCH /api/session-notes ──────────────────────────────────────────────
+// Edit an existing note. Only the original author can edit their own note.
+async function updateNote(req, res, user) {
+  const { id, content } = req.body;
+
+  if (!id || !content?.trim()) {
+    return err(res, 400, "id and content are required.");
+  }
+
+  // Look up the note and confirm authorship
+  const { data: existing, error: fetchError } = await supabase
+    .from("session_notes")
+    .select("id, author_id")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !existing) {
+    return err(res, 404, "Note not found.");
+  }
+
+  if (existing.author_id !== user.id) {
+    return err(res, 403, "You can only edit your own notes.");
+  }
+
+  const { data, error } = await supabase
+    .from("session_notes")
+    .update({
+      content:    content.trim(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) return err(res, 500, "Could not update note.");
+
+  return ok(res, { note: data });
 }
 
 // ── Shared access check ───────────────────────────────────────────────────
