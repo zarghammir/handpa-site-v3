@@ -1,50 +1,65 @@
 // src/components/BookingEmbed.jsx
 //
-// An inline cal.com booking widget. The student picks a slot here without
-// ever leaving our site. Cal.com handles the actual booking workflow + email
-// confirmations; our cal-webhook.js receives BOOKING_CREATED and stores it in
-// the bookings table.
+// Inline cal.com booking widget using the official React package.
 //
 // PROPS
 //   calLink   — cal.com path without the domain, e.g. "medya/60min-lesson"
-//   name      — pre-fill the booking form's name field
-//   email     — pre-fill the booking form's email field
-//   height    — iframe height in pixels (default 780)
+//   namespace — cal.com embed namespace; lets multiple embeds coexist on one
+//               page without trampling each other's state
+//   name      — pre-fills the booker form's name field
+//   email     — pre-fills the email field
+//   height    — explicit height in CSS units (default 720px)
 //
-// WHY AN IFRAME (not @calcom/embed-react)
-//   The npm package gives slightly nicer auto-resize, but it's an extra
-//   dependency to maintain and it loads cal.com's JS into our bundle. An
-//   iframe with `?embed=true` is officially supported, gets the same booking
-//   experience without the chrome, and is zero-config.
+// HOW THE PACKAGE WORKS
+//   getCalApi({ namespace }) returns a small RPC handle pointing at the
+//   embedded iframe for the given namespace. Calling cal("ui", {...}) sends a
+//   message to that iframe to apply UI options (theme, layout, brand color).
+//   <Cal namespace="..." calLink="..." config={{...}} /> mounts the iframe.
+
+import Cal, { getCalApi } from "@calcom/embed-react";
+import { useEffect } from "react";
 
 export default function BookingEmbed({
   calLink,
+  namespace = "60min-lesson",
   name,
   email,
-  height = 780,
+  height = 720,
 }) {
+  useEffect(() => {
+    (async function () {
+      const cal = await getCalApi({ namespace });
+      cal("ui", {
+        hideEventTypeDetails: false,
+        layout: "month_view",
+        // Match our forest brand color — propagates to buttons and accents
+        // inside the cal.com iframe.
+        cssVarsPerTheme: {
+          light: { "cal-brand": "#0a3a2a" },
+        },
+      });
+    })();
+  }, [namespace]);
+
   if (!calLink) return null;
 
-  // Build prefill query params. Cal.com reads `name` and `email` from the URL
-  // and pre-populates the booker form, so the student doesn't retype them.
-  const params = new URLSearchParams({ embed: "true" });
-  if (name) params.set("name", name);
-  if (email) params.set("email", email);
-
-  const src = `https://cal.com/${calLink}?${params.toString()}`;
+  // The config object is also where prefill values live — cal.com reads `name`
+  // and `email` here and pre-populates the booker form so the student doesn't
+  // retype info we already know.
+  const config = {
+    layout: "month_view",
+    useSlotsViewOnSmallScreen: "true",
+  };
+  if (name) config.name = name;
+  if (email) config.email = email;
 
   return (
     <div className="bg-white rounded-3xl border border-sand overflow-hidden shadow-sm">
-      <iframe
-        src={src}
-        title="Book a session"
-        loading="lazy"
-        style={{
-          width: "100%",
-          height: `${height}px`,
-          border: 0,
-          background: "white",
-        }}
+      <Cal
+        namespace={namespace}
+        calLink={calLink}
+        style={{ width: "100%", height: `${height}px`, overflow: "scroll" }}
+        config={config}
       />
     </div>
   );
