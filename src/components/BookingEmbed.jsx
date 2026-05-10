@@ -32,6 +32,11 @@ export default function BookingEmbed({
       cal("ui", {
         hideEventTypeDetails: false,
         layout: "month_view",
+        // Force light mode regardless of the device's color-scheme preference.
+        // Cal.com defaults to following `prefers-color-scheme`, which made the
+        // embed render dark on dark-mode devices — we always want light here
+        // to match the rest of the site (cream + forest palette).
+        theme: "light",
         // Match our forest brand color — propagates to buttons and accents
         // inside the cal.com iframe.
         cssVarsPerTheme: {
@@ -46,9 +51,12 @@ export default function BookingEmbed({
   // The config object is also where prefill values live — cal.com reads `name`
   // and `email` here and pre-populates the booker form so the student doesn't
   // retype info we already know.
+  // theme: "light" here belt-and-braces in case the cal("ui") call hasn't run
+  // yet when the iframe first mounts.
   const config = {
     layout: "month_view",
     useSlotsViewOnSmallScreen: "true",
+    theme: "light",
   };
   if (name) config.name = name;
   if (email) config.email = email;

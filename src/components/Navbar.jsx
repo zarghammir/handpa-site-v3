@@ -5,6 +5,11 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
+  // Dashboard pages are a focused workspace — no marketing nav, no Book CTA.
+  // The dashboards have their own header with sign-out and any role-specific
+  // actions, so this component renders nothing on those routes.
+  if (location.pathname.startsWith("/dashboard")) return null;
+
   const homeSectionLink = (sectionId) => {
     return location.pathname === "/" ? `#${sectionId}` : `/#${sectionId}`;
   };
@@ -80,14 +85,15 @@ const Navbar = () => {
           </span>
         </Link>
 
-        {/* Right — Buttons */}
+        {/* Right — Login button. Routes to /login; if already signed in,
+            ProtectedRoute on the dashboard handles the role-based redirect. */}
         <div className="hidden md:flex items-center gap-3">
-          <a
-            href={homeSectionLink("signup")}
+          <Link
+            to="/login"
             className="px-5 py-2 bg-orange text-white text-sm font-bold rounded-xl hover:bg-orange/90 transition-all duration-200"
           >
-            Book a Session
-          </a>
+            Login
+          </Link>
         </div>
 
         {/* Mobile menu button */}
@@ -186,13 +192,13 @@ const Navbar = () => {
           </a>
 
           <div className="pt-2 border-t border-sand">
-            <a
-              href={homeSectionLink("signup")}
+            <Link
+              to="/login"
               onClick={() => setOpen(false)}
               className="block text-center px-4 py-2.5 bg-orange text-white text-sm font-bold rounded-xl hover:bg-orange/90 transition-all"
             >
-              Book a Session
-            </a>
+              Login
+            </Link>
           </div>
         </div>
       )}

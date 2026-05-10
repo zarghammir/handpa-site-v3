@@ -203,12 +203,12 @@ export default function InstructorDashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-cream pt-24 pb-16 px-4">
+    <div className="min-h-screen bg-cream pt-8 sm:pt-12 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-black text-forest">
+            <h1 className="text-2xl sm:text-3xl font-black text-forest">
               Instructor Dashboard
             </h1>
             <p className="text-forest/50 text-sm mt-1">{user?.email}</p>
@@ -216,9 +216,9 @@ export default function InstructorDashboard() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="text-sm font-semibold text-forest/60 hover:text-orange transition-colors"
+            className="px-4 py-2 bg-white border border-sand text-sm font-bold text-forest hover:bg-orange hover:text-white hover:border-orange rounded-xl transition-colors whitespace-nowrap"
           >
-            Sign out
+            Log out
           </button>
         </div>
 

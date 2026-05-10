@@ -128,7 +128,7 @@ export default function StudentDashboard() {
     );
 
   return (
-    <div className="min-h-screen bg-cream pt-20 sm:pt-24 pb-16 px-4">
+    <div className="min-h-screen bg-cream pt-8 sm:pt-12 pb-16 px-4">
       {/* Header + tabs — narrow column even on desktop. The Book tab below
           breaks out wider so cal.com has room for its horizontal layout. */}
       <div className="max-w-2xl mx-auto">
@@ -144,9 +144,9 @@ export default function StudentDashboard() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="text-sm font-semibold text-forest/60 hover:text-orange transition-colors whitespace-nowrap"
+            className="px-4 py-2 bg-white border border-sand text-sm font-bold text-forest hover:bg-orange hover:text-white hover:border-orange rounded-xl transition-colors whitespace-nowrap"
           >
-            Sign out
+            Log out
           </button>
         </div>
 
