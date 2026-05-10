@@ -71,8 +71,8 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
     const headers = { Authorization: `Bearer ${session.access_token}` };
     try {
       const [notesRes, filesRes] = await Promise.all([
-        fetch(`/api/session-notes?booking_id=${bookingId}`, { headers }),
-        fetch(`/api/session-files?booking_id=${bookingId}`, { headers }),
+        fetch(`/api/session?type=notes&booking_id=${bookingId}`, { headers }),
+        fetch(`/api/session?type=files&booking_id=${bookingId}`, { headers }),
       ]);
       const notesJson = await notesRes.json();
       const filesJson = await filesRes.json();
@@ -142,7 +142,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
     setError(null);
 
     const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch("/api/session-notes", {
+    const res = await fetch("/api/session?type=notes", {
       method:  "POST",
       headers: {
         "Content-Type":  "application/json",
@@ -225,7 +225,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
   async function saveEdit() {
     if (!editingText.trim()) return;
     const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch("/api/session-notes", {
+    const res = await fetch("/api/session?type=notes", {
       method:  "PATCH",
       headers: {
         "Content-Type":  "application/json",
@@ -244,7 +244,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
     if (!isInstructor) return;
     if (!confirm("Delete this file?")) return;
     const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(`/api/session-files?id=${id}`, {
+    const res = await fetch(`/api/session?type=files&id=${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
