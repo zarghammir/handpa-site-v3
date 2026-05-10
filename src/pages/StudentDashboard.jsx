@@ -129,8 +129,9 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-cream pt-20 sm:pt-24 pb-16 px-4">
+      {/* Header + tabs — narrow column even on desktop. The Book tab below
+          breaks out wider so cal.com has room for its horizontal layout. */}
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="mb-6 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-2xl sm:text-3xl font-black text-forest truncate">
@@ -149,7 +150,6 @@ export default function StudentDashboard() {
           </button>
         </div>
 
-        {/* Tabs — full-width buttons, easy to tap on mobile */}
         <div className="grid grid-cols-2 gap-2 mb-6 bg-white rounded-2xl p-1 border border-sand">
           {TABS.map((t) => {
             const active = tab === t.id;
@@ -169,9 +169,11 @@ export default function StudentDashboard() {
             );
           })}
         </div>
+      </div>
 
-        {/* ── Lessons tab ─────────────────────────────────────────── */}
-        {tab === "lessons" && (
+      {/* ── Lessons tab ─────────────────────────────────────────── */}
+      {tab === "lessons" && (
+        <div className="max-w-2xl mx-auto">
           <div className="flex flex-col gap-8">
             {/* Empty state */}
             {bookings.length === 0 && (
@@ -219,23 +221,26 @@ export default function StudentDashboard() {
               </Section>
             )}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ── Book tab ────────────────────────────────────────────── */}
-        {tab === "book" && (
-          <div>
-            <p className="text-forest/60 text-sm mb-4 px-1">
-              Pick a 60-minute slot below. Your instructor will confirm it
-              shortly afterwards, then it'll show up under Lessons.
-            </p>
-            <BookingEmbed
-              calLink={CAL_EVENT_LINK}
-              name={profile?.full_name}
-              email={user?.email}
-            />
-          </div>
-        )}
-      </div>
+      {/* ── Book tab ────────────────────────────────────────────── */}
+      {/* Wider container (max-w-5xl ≈ 1024px) so cal.com renders its
+          horizontal 3-column layout on desktop. On mobile (<900px) the
+          embed gracefully falls back to the stacked slots view. */}
+      {tab === "book" && (
+        <div className="max-w-5xl mx-auto">
+          <p className="text-forest/60 text-sm mb-4 px-1">
+            Pick a 60-minute slot below. Your instructor will confirm it
+            shortly afterwards, then it'll show up under Lessons.
+          </p>
+          <BookingEmbed
+            calLink={CAL_EVENT_LINK}
+            name={profile?.full_name}
+            email={user?.email}
+          />
+        </div>
+      )}
     </div>
   );
 }
