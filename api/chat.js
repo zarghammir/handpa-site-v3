@@ -27,6 +27,13 @@ const CAL_API_BASE = "https://api.cal.com/v2";
 const CAL_EVENT_TYPE_ID = process.env.CAL_EVENT_TYPE_ID;
 const CAL_API_KEY = process.env.CAL_API_KEY;
 
+// Cal.com pins v2 endpoints to a date string. Without this header (or with a
+// stale one) you silently get an older endpoint shape — the booking schema
+// and validation rules changed between versions. Bumping this fixed bookings
+// that previously failed with "slot is no longer available" because cal.com
+// was rejecting the start-time format under the newer API.
+const CAL_API_VERSION = "2026-02-25";
+
 // ─── Cal.com helpers ──────────────────────────────────────────────────────────
 
 async function fetchAvailableSlots(timeZone = "America/Vancouver") {
@@ -44,7 +51,7 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
   const response = await fetch(`${CAL_API_BASE}/slots?${params}`, {
     headers: {
       Authorization: `Bearer ${CAL_API_KEY}`,
-      "cal-api-version": "2024-09-04",
+      "cal-api-version": CAL_API_VERSION,
     },
   });
 
@@ -116,18 +123,28 @@ async function createBooking({
   startTime,
   timeZone,
 }) {
-  console.log("Creating booking with startTime:", startTime); // ← ADD HERE
+  // Cal.com's v2 booking endpoint wants an ISO 8601 UTC string ending in `Z`.
+  // Claude returns offset format like "2026-05-16T10:00:00.000-07:00", which
+  // newer API versions reject. We pass it through `new Date(...).toISOString()`
+  // — same instant in time, but expressed in UTC.
+  const utcStart = new Date(startTime).toISOString();
+
+  console.log(
+    "Creating booking — input:", startTime,
+    "→ utc:", utcStart,
+    "tz:", timeZone,
+  );
 
   const response = await fetch(`${CAL_API_BASE}/bookings`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${CAL_API_KEY}`,
       "Content-Type": "application/json",
-      "cal-api-version": "2024-08-13",
+      "cal-api-version": CAL_API_VERSION,
     },
     body: JSON.stringify({
       eventTypeId: Number(CAL_EVENT_TYPE_ID),
-      start: startTime,
+      start: utcStart,
       attendee: {
         name: attendeeName,
         email: attendeeEmail,
@@ -137,9 +154,18 @@ async function createBooking({
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    console.error("Cal.com booking error:", error);
-    throw new Error(error.message ?? "Could not create booking.");
+    const errorBody = await response.json().catch(() => ({}));
+    console.error("Cal.com booking error:", response.status, errorBody);
+    // Re-throw with both status code and message so the caller can decide
+    // whether to surface "slot taken" or a more accurate message.
+    const e = new Error(
+      errorBody?.error?.message ??
+      errorBody?.message ??
+      `Cal.com responded ${response.status}.`
+    );
+    e.status = response.status;
+    e.body = errorBody;
+    throw e;
   }
 
   const data = await response.json();
@@ -478,12 +504,30 @@ export default async function handler(req, res) {
           await markLeadCompleted(sessionId, booking.uid);
           actionResult = `Booking confirmed! Booking ID: ${booking.uid}. Session starts: ${booking.start}. Confirmation email sent to ${attendeeEmail}.`;
         } catch (e) {
-          // Slot is already taken — fetch fresh availability so Claude shows correct options
-          try {
-            const freshSlots = await fetchAvailableSlots(timeZone ?? "America/Vancouver");
-            actionResult = `That time slot is no longer available. Here are the current available slots:\n${freshSlots}\nAsk the user to pick a different time from these options.`;
-          } catch {
-            actionResult = `That time slot is no longer available. Could not fetch updated availability — ask the user to try again.`;
+          // Decide what the failure actually was. Cal.com returns 409 when the
+          // slot was just taken; everything else (400 validation, 401 auth,
+          // 422 etc.) is a *different* problem and the user should be told
+          // so, not lied to with "slot is no longer available".
+          const isSlotTaken =
+            e.status === 409 ||
+            /no longer available|already booked|slot.+taken/i.test(
+              e.message ?? "",
+            );
+
+          if (isSlotTaken) {
+            try {
+              const freshSlots = await fetchAvailableSlots(
+                timeZone ?? "America/Vancouver",
+              );
+              actionResult = `That time slot is no longer available. Here are the current available slots:\n${freshSlots}\nAsk the user to pick a different time from these options.`;
+            } catch {
+              actionResult = `That time slot is no longer available. Could not fetch updated availability — ask the user to try again.`;
+            }
+          } else {
+            // Surface the actual cal.com error (truncated) so we don't
+            // mislead the user. Logged in full to console for debugging.
+            const detail = (e.message ?? "Unknown error").slice(0, 200);
+            actionResult = `The booking system returned an error: ${detail}. Apologise to the user, suggest they try a different slot, and if it keeps failing recommend they email medy.tutoring@gmail.com directly.`;
           }
         }
       }
