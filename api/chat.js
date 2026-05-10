@@ -27,12 +27,14 @@ const CAL_API_BASE = "https://api.cal.com/v2";
 const CAL_EVENT_TYPE_ID = process.env.CAL_EVENT_TYPE_ID;
 const CAL_API_KEY = process.env.CAL_API_KEY;
 
-// Cal.com pins v2 endpoints to a date string. Without this header (or with a
-// stale one) you silently get an older endpoint shape — the booking schema
-// and validation rules changed between versions. Bumping this fixed bookings
-// that previously failed with "slot is no longer available" because cal.com
-// was rejecting the start-time format under the newer API.
-const CAL_API_VERSION = "2026-02-25";
+// Cal.com pins v2 endpoints to a date string. CRITICAL: each endpoint has its
+// own pin — they are NOT interchangeable. Per cal.com docs:
+//   GET  /v2/slots     → must be "2024-09-04"
+//   POST /v2/bookings  → "2026-02-25"
+// Using the wrong version causes silent fallback to an older endpoint shape
+// (slots returns 404/error; bookings rejects start-time format).
+const CAL_API_VERSION_SLOTS = "2024-09-04";
+const CAL_API_VERSION_BOOKINGS = "2026-02-25";
 
 // ─── Cal.com helpers ──────────────────────────────────────────────────────────
 
@@ -51,7 +53,7 @@ async function fetchAvailableSlots(timeZone = "America/Vancouver") {
   const response = await fetch(`${CAL_API_BASE}/slots?${params}`, {
     headers: {
       Authorization: `Bearer ${CAL_API_KEY}`,
-      "cal-api-version": CAL_API_VERSION,
+      "cal-api-version": CAL_API_VERSION_SLOTS,
     },
   });
 
@@ -140,7 +142,7 @@ async function createBooking({
     headers: {
       Authorization: `Bearer ${CAL_API_KEY}`,
       "Content-Type": "application/json",
-      "cal-api-version": CAL_API_VERSION,
+      "cal-api-version": CAL_API_VERSION_BOOKINGS,
     },
     body: JSON.stringify({
       eventTypeId: Number(CAL_EVENT_TYPE_ID),
