@@ -18,10 +18,12 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import SessionNotes from "../components/SessionNotes";
 import BookingAgenda from "../components/BookingAgenda";
+import RemindersSettings from "../components/RemindersSettings";
 
 const TABS = [
   { id: "agenda", label: "Agenda" },
   { id: "students", label: "Students" },
+  { id: "reminders", label: "Reminders" },
 ];
 
 export default function InstructorDashboard() {
@@ -511,6 +513,13 @@ export default function InstructorDashboard() {
                 </>
               )}
             </section>
+          </div>
+        )}
+
+        {/* ── Reminders tab ─────────────────────────────────────────── */}
+        {tab === "reminders" && (
+          <div>
+            <RemindersSettings />
           </div>
         )}
       </div>

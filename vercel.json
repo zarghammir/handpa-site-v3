@@ -4,5 +4,11 @@
       "source": "/((?!api/|@|_|.*\\..*).*)",
       "destination": "/index.html"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/bookings?action=send-reminders",
+      "schedule": "*/15 * * * *"
+    }
   ]
 }
