@@ -1,0 +1,40 @@
+# GitHub Actions cron — replaces the Vercel cron we can't run on Hobby.
+#
+# Why this exists: Vercel's Hobby plan limits cron jobs to once per day, which
+# would make our reminder timing very imprecise (12–36h off). GitHub Actions
+# gives us free 15-minute granularity. The workflow simply curls our endpoint
+# with the CRON_SECRET; all the reminder logic lives in api/bookings.js.
+#
+# Schedule note: GitHub Actions delays cron runs during peak load (top of the
+# hour is busiest), so we offset the schedule to 7/22/37/52 past each hour
+# instead of 0/15/30/45. Same 15-minute cadence, more reliable triggers.
+#
+# Setup (one-time):
+#   1. GitHub repo → Settings → Secrets and variables → Actions →
+#      "New repository secret":
+#        Name:  CRON_SECRET   Value: <same value as on Vercel>
+#   2. Commit + push this file. The first run starts within ~15 min;
+#      you can also trigger manually from the Actions tab via the
+#      "Run workflow" button (workflow_dispatch below).
+
+name: Send booking reminders
+
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch: # manual trigger from the Actions tab
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call reminder endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          # -f makes curl exit non-zero on HTTP errors (so the job fails loudly).
+          # -sS keeps output quiet on success but shows the error body on failure.
+          curl -fsS \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "https://handpa-site-v3.vercel.app/api/bookings?action=send-reminders"
