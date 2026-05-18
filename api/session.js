@@ -5,11 +5,18 @@
 // cap. Each "resource" is selected by the `type` query param.
 //
 // ROUTES
-//   ?type=notes  GET    list notes for a booking
-//                POST   create a note
-//                PATCH  edit a note (author only)
-//   ?type=files  GET    list files for a booking (with signed URLs)
-//                DELETE delete a file (instructor only)
+//   ?type=notes         GET    list notes for a booking
+//                       POST   create a note
+//                       PATCH  edit a note (author only)
+//   ?type=files         GET    list files for a booking (with signed URLs)
+//                       DELETE delete a file (instructor only)
+//   ?type=participants  GET    list the {full_name, avatar_url} for both
+//                              parties on this booking. Goes through the
+//                              service role because RLS on `profiles`
+//                              prevents students from reading the
+//                              instructor's profile directly — without
+//                              this, the student would never see Medya's
+//                              avatar in chat bubbles.
 //
 // Uploads happen client-side directly to Supabase Storage (storage RLS
 // enforces instructor-only). That avoids Vercel's request-body size limit
@@ -45,9 +52,58 @@ export default async function handler(req, res) {
 
   // ── Route by `type` ─────────────────────────────────────────────────────
   const { type } = req.query;
-  if (type === "notes") return handleNotes(req, res, user);
-  if (type === "files") return handleFiles(req, res, user);
-  return err(res, 400, "Pass ?type=notes or ?type=files");
+  if (type === "notes")        return handleNotes(req, res, user);
+  if (type === "files")        return handleFiles(req, res, user);
+  if (type === "participants") return handleParticipants(req, res, user);
+  return err(res, 400, "Pass ?type=notes, ?type=files, or ?type=participants");
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PARTICIPANTS
+// ─────────────────────────────────────────────────────────────────────────
+// Returns the instructor + student profile rows attached to a booking so
+// the chat UI can render an avatar circle next to each message bubble.
+// Resolved server-side because students cannot read other profiles under
+// RLS — service_role bypasses that safely after we verify the caller has
+// access to the booking.
+async function handleParticipants(req, res, user) {
+  if (req.method !== "GET") return err(res, 405, "Method not allowed.");
+
+  const { booking_id } = req.query;
+  if (!booking_id) return err(res, 400, "booking_id is required.");
+
+  const allowed = await canAccessBooking(user, booking_id);
+  if (!allowed) return err(res, 403, "You don't have access to this booking.");
+
+  const { data: booking } = await supabase
+    .from("bookings")
+    .select("student_email")
+    .eq("id", booking_id)
+    .single();
+
+  // Pull the instructor row by role, and the student row by the email
+  // attached to the booking. Both are scoped to a single record so the
+  // payload stays minimal.
+  const [{ data: instructor }, { data: student }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, role")
+      .eq("role", "instructor")
+      .limit(1)
+      .maybeSingle(),
+    booking?.student_email
+      ? supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, role")
+          .eq("email", booking.student_email)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const participants = [];
+  if (instructor) participants.push(instructor);
+  if (student)    participants.push(student);
+  return ok(res, { participants });
 }
 
 // ─────────────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 // Password reset reuses the same Supabase resetPasswordForEmail flow as
 // the /forgot-password page so we don't duplicate logic.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 const DAYS = [
@@ -17,15 +17,21 @@ const TIME_OPTIONS = [
 ];
 
 const SITE_URL = import.meta.env.VITE_SITE_URL ?? window.location.origin;
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024; // 2 MB — matches the instructor cap
+const ALLOWED_MIME = ["image/png", "image/jpeg", "image/webp"];
 
 export default function StudentProfileTab({ user }) {
+  const fileInputRef = useRef(null);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [resetState, setResetState] = useState({ sending: false, message: null });
 
   const [profile, setProfile] = useState({
     full_name: "",
     email: "",
+    avatar_url: "",
     created_at: null,
     lesson_mode: "online",
     in_person_location_type: "",
@@ -39,7 +45,7 @@ export default function StudentProfileTab({ user }) {
     async function load() {
       const { data, error } = await supabase
         .from("profiles")
-        .select("full_name, email, created_at, lesson_mode, in_person_location_type, student_address, availability_preferences")
+        .select("full_name, email, avatar_url, created_at, lesson_mode, in_person_location_type, student_address, availability_preferences")
         .eq("id", user.id)
         .single();
 
@@ -51,6 +57,7 @@ export default function StudentProfileTab({ user }) {
         setProfile({
           full_name: data.full_name ?? "",
           email: data.email ?? user.email ?? "",
+          avatar_url: data.avatar_url ?? "",
           created_at: data.created_at,
           lesson_mode: data.lesson_mode ?? "online",
           in_person_location_type: data.in_person_location_type ?? "",
@@ -62,6 +69,55 @@ export default function StudentProfileTab({ user }) {
     }
     load();
   }, [user.id, user.email]);
+
+  const handleAvatarPick = () => fileInputRef.current?.click();
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_MIME.includes(file.type)) {
+      setFeedback({ type: "error", text: "Use a PNG, JPEG, or WEBP image." });
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      setFeedback({ type: "error", text: "Image must be under 2 MB." });
+      return;
+    }
+
+    setUploading(true);
+    setFeedback(null);
+
+    const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+    const path = `${user.id}/avatar.${ext}`;
+
+    const { error: uploadErr } = await supabase
+      .storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type });
+
+    if (uploadErr) {
+      setFeedback({ type: "error", text: uploadErr.message });
+      setUploading(false);
+      return;
+    }
+
+    const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+    const publicUrl = `${pub.publicUrl}?v=${Date.now()}`;
+
+    const { error: updateErr } = await supabase
+      .from("profiles")
+      .update({ avatar_url: publicUrl })
+      .eq("id", user.id);
+
+    if (updateErr) {
+      setFeedback({ type: "error", text: updateErr.message });
+    } else {
+      setProfile((p) => ({ ...p, avatar_url: publicUrl }));
+      setFeedback({ type: "success", text: "Photo updated." });
+    }
+    setUploading(false);
+  };
 
   const toggleDay = (day) => {
     setProfile((prev) => {
@@ -103,25 +159,37 @@ export default function StudentProfileTab({ user }) {
 
     const availability_preferences = slots.map(([day, { start, end }]) => ({ day, start, end }));
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        lesson_mode: profile.lesson_mode,
-        in_person_location_type:
-          profile.lesson_mode === "in_person" ? profile.in_person_location_type || null : null,
-        student_address:
-          profile.lesson_mode === "in_person" &&
-          profile.in_person_location_type === "student_place"
-            ? profile.student_address
-            : null,
-        availability_preferences,
-      })
-      .eq("id", user.id);
-
-    if (error) {
-      setFeedback({ type: "error", text: error.message });
-    } else {
-      setFeedback({ type: "success", text: "Profile updated." });
+    // Route through the API so the server can update the profile AND email
+    // Medya in a single trip. Doing the update client-side and the email
+    // server-side would risk drift if the email request failed silently.
+    const { data: { session } } = await supabase.auth.getSession();
+    try {
+      const res = await fetch("/api/student-intake?type=availability-update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          lesson_mode: profile.lesson_mode,
+          in_person_location_type:
+            profile.lesson_mode === "in_person" ? profile.in_person_location_type || null : null,
+          student_address:
+            profile.lesson_mode === "in_person" &&
+            profile.in_person_location_type === "student_place"
+              ? profile.student_address
+              : null,
+          availability_preferences,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setFeedback({ type: "error", text: json.error || "Could not save changes." });
+      } else {
+        setFeedback({ type: "success", text: "Profile updated. Medya has been notified." });
+      }
+    } catch (err) {
+      setFeedback({ type: "error", text: err.message || "Could not save changes." });
     }
     setSaving(false);
   };
@@ -153,6 +221,44 @@ export default function StudentProfileTab({ user }) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+
+      {/* Profile photo */}
+      <section className="bg-white rounded-3xl border border-sand p-6">
+        <h2 className="text-xs font-black uppercase tracking-wider text-forest/50 mb-4">
+          Profile photo
+        </h2>
+
+        <div className="flex items-center gap-5">
+          <div className="w-20 h-20 rounded-full bg-sand overflow-hidden flex items-center justify-center text-forest/30 font-bold text-2xl shrink-0">
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              profile.full_name?.[0]?.toUpperCase() ?? "?"
+            )}
+          </div>
+
+          <div className="flex-1">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={handleAvatarPick}
+              disabled={uploading}
+              className="px-4 py-2 bg-forest text-cream font-bold rounded-xl hover:bg-sage transition-colors disabled:opacity-60 text-sm"
+            >
+              {uploading ? "Uploading..." : "Change photo"}
+            </button>
+            <p className="text-xs text-forest/40 mt-2">
+              PNG, JPEG, or WEBP. Max 2 MB.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Account info — read-only */}
       <section className="bg-white rounded-3xl border border-sand p-6">

@@ -43,6 +43,7 @@ export default function InstructorDashboard() {
   // Students-tab state — same per-student drill-down as before
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudentDetail, setSelectedStudentDetail] = useState(null);
   const [studentBookings, setStudentBookings] = useState([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [loadingStudentBookings, setLoadingStudentBookings] = useState(false);
@@ -120,23 +121,36 @@ export default function InstructorDashboard() {
     return () => supabase.removeChannel(channel);
   }, []);
 
-  // ── Students tab — load a single student's bookings ──────────────────────
+  // ── Students tab — load a single student's bookings + profile details ───
+  // We pull lesson_mode + availability alongside the bookings so the
+  // instructor can see how the student wants to learn without leaving the
+  // page. Both queries run in parallel since they don't depend on each other.
   useEffect(() => {
     if (!selectedStudent) {
       setStudentBookings([]);
+      setSelectedStudentDetail(null);
       return;
     }
     let cancelled = false;
     async function load() {
       setLoadingStudentBookings(true);
       setOpenNotesStudent(null);
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("student_email", selectedStudent.email)
-        .order("start_time", { ascending: false });
+      setSelectedStudentDetail(null);
+      const [bookingsRes, detailRes] = await Promise.all([
+        supabase
+          .from("bookings")
+          .select("*")
+          .eq("student_email", selectedStudent.email)
+          .order("start_time", { ascending: false }),
+        supabase
+          .from("profiles")
+          .select("lesson_mode, in_person_location_type, student_address, availability_preferences")
+          .eq("id", selectedStudent.id)
+          .maybeSingle(),
+      ]);
       if (cancelled) return;
-      if (!error) setStudentBookings(data ?? []);
+      if (!bookingsRes.error) setStudentBookings(bookingsRes.data ?? []);
+      if (!detailRes.error)   setSelectedStudentDetail(detailRes.data ?? null);
       setLoadingStudentBookings(false);
     }
     load();
@@ -412,16 +426,10 @@ export default function InstructorDashboard() {
 
               {selectedStudent && (
                 <>
-                  <div className="bg-white rounded-3xl border border-sand p-6 shadow-sm mb-4">
-                    <h2 className="text-2xl font-black text-forest">
-                      {selectedStudent.full_name || selectedStudent.email}
-                    </h2>
-                    {selectedStudent.full_name && (
-                      <p className="text-forest/50 text-sm">
-                        {selectedStudent.email}
-                      </p>
-                    )}
-                  </div>
+                  <StudentDetailCard
+                    student={selectedStudent}
+                    detail={selectedStudentDetail}
+                  />
 
                   {loadingStudentBookings && (
                     <p className="text-forest/50 text-sm">Loading bookings…</p>
@@ -535,6 +543,92 @@ export default function InstructorDashboard() {
           <InstructorProfileTab user={user} />
         )}
       </div>
+    </div>
+  );
+}
+
+// ── StudentDetailCard ─────────────────────────────────────────────────────
+// Header card for a student in the Students tab. Shows the name + email at
+// the top (matching the previous design), then a compact panel below with
+// lesson mode + weekly availability so Medya can see how this student
+// prefers to learn without having to dig into a separate profile screen.
+function StudentDetailCard({ student, detail }) {
+  const mode  = detail?.lesson_mode;
+  const slots = Array.isArray(detail?.availability_preferences)
+    ? detail.availability_preferences
+    : [];
+
+  const modeLabel =
+    mode === "in_person" ? "In-person" :
+    mode === "online"    ? "Online"    :
+    null;
+
+  // "Medya's home studio" / "Student's place — <address>"
+  let locationLabel = null;
+  if (mode === "in_person") {
+    if (detail?.in_person_location_type === "home_studio") {
+      locationLabel = "Medya's home studio";
+    } else if (detail?.in_person_location_type === "student_place") {
+      locationLabel = detail?.student_address
+        ? `Student's place — ${detail.student_address}`
+        : "Student's place";
+    }
+  }
+
+  function formatTimeLabel(t) {
+    if (!t) return "";
+    const [h, m] = t.split(":").map(Number);
+    const period = h >= 12 ? "PM" : "AM";
+    const hour   = h % 12 || 12;
+    return `${hour}:${String(m).padStart(2, "0")} ${period}`;
+  }
+
+  return (
+    <div className="bg-white rounded-3xl border border-sand p-6 shadow-sm mb-4">
+      <h2 className="text-2xl font-black text-forest">
+        {student.full_name || student.email}
+      </h2>
+      {student.full_name && (
+        <p className="text-forest/50 text-sm">{student.email}</p>
+      )}
+
+      {/* Preferences strip — only render when we actually have data so an
+          empty profile doesn't show a stub. */}
+      {(modeLabel || slots.length > 0) && (
+        <div className="mt-5 pt-5 border-t border-sand grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {modeLabel && (
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-forest/40 mb-2">
+                Lesson mode
+              </p>
+              <span className="inline-flex items-center text-xs font-bold px-3 py-1 rounded-full bg-sage/15 text-sage">
+                {modeLabel}
+              </span>
+              {locationLabel && (
+                <p className="text-xs text-forest/60 mt-2">{locationLabel}</p>
+              )}
+            </div>
+          )}
+
+          {slots.length > 0 && (
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-forest/40 mb-2">
+                Availability
+              </p>
+              <ul className="flex flex-col gap-1">
+                {slots.map((s, i) => (
+                  <li key={`${s.day}-${i}`} className="text-xs text-forest">
+                    <span className="font-bold">{s.day}</span>{" "}
+                    <span className="text-forest/60">
+                      {formatTimeLabel(s.start)} – {formatTimeLabel(s.end)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

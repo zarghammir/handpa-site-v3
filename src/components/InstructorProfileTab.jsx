@@ -1,7 +1,7 @@
-// Instructor profile tab — name + email display, editable bio, avatar upload,
-// and password reset via email. Uploads go to the `avatars` storage bucket
-// at path `<user_id>/avatar.<ext>` (see migrations/06_profile_bio_avatar.sql
-// for the bucket and RLS that scopes writes to the owning user).
+// Instructor profile tab — name + email display, avatar upload, and password
+// reset via email. Uploads go to the `avatars` storage bucket at path
+// `<user_id>/avatar.<ext>` (see migrations/06_profile_bio_avatar.sql for the
+// bucket and RLS that scopes writes to the owning user).
 
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
@@ -14,7 +14,6 @@ export default function InstructorProfileTab({ user }) {
   const fileInputRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [resetState, setResetState] = useState({ sending: false, message: null });
   const [feedback, setFeedback] = useState(null);
@@ -22,7 +21,6 @@ export default function InstructorProfileTab({ user }) {
   const [profile, setProfile] = useState({
     full_name: "",
     email: "",
-    bio: "",
     avatar_url: "",
   });
 
@@ -30,7 +28,7 @@ export default function InstructorProfileTab({ user }) {
     async function load() {
       const { data, error } = await supabase
         .from("profiles")
-        .select("full_name, email, bio, avatar_url")
+        .select("full_name, email, avatar_url")
         .eq("id", user.id)
         .single();
 
@@ -38,7 +36,6 @@ export default function InstructorProfileTab({ user }) {
         setProfile({
           full_name: data.full_name ?? "",
           email: data.email ?? user.email ?? "",
-          bio: data.bio ?? "",
           avatar_url: data.avatar_url ?? "",
         });
       }
@@ -46,19 +43,6 @@ export default function InstructorProfileTab({ user }) {
     }
     load();
   }, [user.id, user.email]);
-
-  const handleSaveBio = async () => {
-    setSaving(true);
-    setFeedback(null);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ bio: profile.bio })
-      .eq("id", user.id);
-
-    if (error) setFeedback({ type: "error", text: error.message });
-    else setFeedback({ type: "success", text: "Bio updated." });
-    setSaving(false);
-  };
 
   const handleAvatarPick = () => fileInputRef.current?.click();
 
@@ -181,35 +165,6 @@ export default function InstructorProfileTab({ user }) {
           <Row label="Name" value={profile.full_name || "—"} />
           <Row label="Email" value={profile.email} />
         </dl>
-      </section>
-
-      {/* Bio */}
-      <section className="bg-white rounded-3xl border border-sand p-6 space-y-3">
-        <h2 className="text-xs font-black uppercase tracking-wider text-forest/50">
-          Bio
-        </h2>
-        <p className="text-forest/60 text-sm">
-          A short public blurb about you.
-        </p>
-        <textarea
-          value={profile.bio}
-          onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))}
-          rows="5"
-          maxLength={600}
-          placeholder="Tell students who you are and what makes your lessons unique..."
-          className="w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 text-forest outline-none focus:border-orange resize-none"
-        />
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-forest/40">{profile.bio.length}/600</span>
-          <button
-            type="button"
-            onClick={handleSaveBio}
-            disabled={saving}
-            className="px-5 py-2.5 bg-orange text-white font-bold rounded-xl hover:bg-orange/90 transition-colors disabled:opacity-60 text-sm"
-          >
-            {saving ? "Saving..." : "Save bio"}
-          </button>
-        </div>
       </section>
 
       {feedback && (

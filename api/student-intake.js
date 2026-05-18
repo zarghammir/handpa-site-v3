@@ -80,6 +80,13 @@ export default async function handler(req, res) {
   }
   const authUser = userData.user;
 
+  // The student profile tab uses ?type=availability-update so the dashboard
+  // can update preferences AND notify Medya in one request — onboarding still
+  // routes through the default (no query) path.
+  if (req.query?.type === "availability-update") {
+    return handleAvailabilityUpdate(req, res, authUser);
+  }
+
   // Per-user rate limit (3 onboarding submissions per day) — keyed on user id
   // rather than IP so the limit follows the account.
   const { allowed } = await checkRateLimit(`user:${authUser.id}`, "student-intake", 3, 60 * 60 * 24);
@@ -428,6 +435,162 @@ export default async function handler(req, res) {
     return ok(res, { message: "Your request has been submitted successfully." });
   } catch (error) {
     console.error("Server error:", error);
+    return err(res, 500, "Server error. Please try again.");
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// AVAILABILITY UPDATE (from the student profile tab)
+// ────────────────────────────────────────────────────────────────────────
+// Persists the new lesson_mode + availability_preferences and emails Medya
+// so she knows the student's schedule changed. Validation mirrors the
+// onboarding path, but we don't require experience_level / has_handpan
+// since those don't appear on the profile tab.
+async function handleAvailabilityUpdate(req, res, authUser) {
+  // Tighter rate limit than onboarding — students shouldn't be hammering
+  // this from the profile tab. 10/day comfortably covers fix-ups while
+  // blocking abuse.
+  const { allowed } = await checkRateLimit(
+    `user:${authUser.id}`,
+    "availability-update",
+    10,
+    60 * 60 * 24
+  );
+  if (!allowed) {
+    return err(res, 429, "Too many updates. Please try again later.");
+  }
+
+  try {
+    const {
+      lesson_mode,
+      in_person_location_type,
+      student_address,
+      availability_preferences,
+    } = req.body ?? {};
+
+    if (!lesson_mode) {
+      return err(res, 400, "Lesson mode is required.");
+    }
+    if (lesson_mode === "in_person" && !in_person_location_type) {
+      return err(res, 400, "Please choose an in-person location option.");
+    }
+    if (
+      lesson_mode === "in_person" &&
+      in_person_location_type === "student_place" &&
+      !student_address
+    ) {
+      return err(res, 400, "Please enter your address for in-person lessons at your place.");
+    }
+    if (!Array.isArray(availability_preferences) || availability_preferences.length === 0) {
+      return err(res, 400, "Please choose at least one day and time range.");
+    }
+    for (const slot of availability_preferences) {
+      if (!slot.day || !slot.start || !slot.end) {
+        return err(res, 400, "Each selected day must include a start and end time.");
+      }
+      if (slot.end <= slot.start) {
+        return err(res, 400, `For ${slot.day}, end time must be later than start time.`);
+      }
+    }
+
+    const cleanAddress = sanitizeText(student_address, 300);
+
+    const { data: profileRow } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", authUser.id)
+      .maybeSingle();
+    const cleanName = sanitizeText(profileRow?.full_name || authUser.email || "", 100);
+    const cleanEmail = sanitizeText(profileRow?.email || authUser.email || "", 200);
+
+    const { error: updateErr } = await supabase
+      .from("profiles")
+      .update({
+        lesson_mode,
+        in_person_location_type:
+          lesson_mode === "in_person" ? in_person_location_type || null : null,
+        student_address:
+          lesson_mode === "in_person" && in_person_location_type === "student_place"
+            ? cleanAddress || null
+            : null,
+        availability_preferences,
+      })
+      .eq("id", authUser.id);
+
+    if (updateErr) {
+      console.error("Availability update error:", updateErr);
+      return err(res, 500, "Could not save your changes. Please try again.");
+    }
+
+    // Build the instructor email — same visual language as the onboarding
+    // intake template, but trimmed to the fields the student can change.
+    const availabilityRows = availability_preferences
+      .map(
+        (slot, i) => `
+      <tr style="background:${i % 2 === 0 ? "#ffffff" : "#faf8f5"};">
+        <td style="padding:12px 18px;font-size:14px;font-weight:600;color:#374151;border-bottom:1px solid #ede8e0;">${escapeHtml(slot.day)}</td>
+        <td style="padding:12px 18px;font-size:14px;color:#6b7280;border-bottom:1px solid #ede8e0;">${escapeHtml(formatTime(slot.start))} &ndash; ${escapeHtml(formatTime(slot.end))}</td>
+      </tr>`
+      )
+      .join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student availability updated</title></head>
+<body style="margin:0;padding:0;background-color:#edeae5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#edeae5;padding:40px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+        <tr><td style="background:#0d0d1a;border-radius:14px 14px 0 0;padding:36px 44px 28px;text-align:center;">
+          <p style="margin:0 0 12px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Handpan Lessons</p>
+          <h1 style="margin:0;font-size:24px;font-weight:700;color:#f7f4ef;line-height:1.2;">Availability updated</h1>
+        </td></tr>
+        <tr><td style="background:linear-gradient(90deg,#b8882a,#d4a840);padding:14px 44px;text-align:center;">
+          <p style="margin:0;font-size:18px;font-weight:700;color:#ffffff;">${escapeHtml(cleanName)}</p>
+        </td></tr>
+        <tr><td style="background:#ffffff;padding:24px 44px 36px;border-radius:0 0 14px 14px;">
+          <p style="margin:0 0 18px 0;font-size:14px;color:#4b5563;line-height:1.6;">
+            ${escapeHtml(cleanName)} (<a href="mailto:${escapeHtml(cleanEmail)}" style="color:#1d6fa8;text-decoration:none;">${escapeHtml(cleanEmail)}</a>) just updated their schedule in the dashboard.
+          </p>
+          ${sectionHeader("Lesson Mode")}
+          ${infoRow("Mode", formatLabel(lesson_mode))}
+          ${lesson_mode === "in_person" ? infoRow("Location Type", formatLabel(in_person_location_type || "N/A")) : ""}
+          ${lesson_mode === "in_person" && cleanAddress ? infoRow("Address", escapeHtml(cleanAddress)) : ""}
+          ${sectionHeader("Availability")}
+          <tr><td style="padding:4px 0 0 0;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-radius:8px;overflow:hidden;border:1px solid #ede8e0;">
+              <tr style="background:#f5f2ed;">
+                <td style="padding:10px 18px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;width:45%;">Day</td>
+                <td style="padding:10px 18px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1.5px;">Available Window</td>
+              </tr>
+              ${availabilityRows}
+            </table>
+          </td></tr>
+        </td></tr>
+        <tr><td style="padding:22px 0 8px 0;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#b0aaa0;">Sent automatically from your Handpan Lessons dashboard</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+
+    // Fire-and-forget — the dashboard save is what the student actually
+    // cares about. We still await so Resend errors surface in logs.
+    try {
+      await resend.emails.send({
+        from: "Handpan <onboarding@resend.dev>",
+        to: ["medy.tutoring@gmail.com"],
+        subject: `${cleanName} updated their availability`,
+        html,
+      });
+    } catch (mailErr) {
+      console.warn("Availability email failed:", mailErr?.message || mailErr);
+    }
+
+    return ok(res, { message: "Profile updated." });
+  } catch (error) {
+    console.error("Availability update error:", error);
     return err(res, 500, "Server error. Please try again.");
   }
 }

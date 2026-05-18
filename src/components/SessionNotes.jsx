@@ -95,32 +95,35 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
-  // Hydrate avatars/names for every author + uploader we've seen but don't
-  // yet have a profile for. Runs whenever the thread gains a new contributor.
+  // Hydrate avatars/names for the two participants on this booking. We hit
+  // the server endpoint (service_role) instead of querying `profiles`
+  // directly because RLS hides the instructor's row from students — without
+  // this round-trip the student would never see Medya's photo in chat.
   useEffect(() => {
-    const ids = new Set();
-    notes.forEach((n) => n.author_id && ids.add(n.author_id));
-    files.forEach((f) => f.uploader_id && ids.add(f.uploader_id));
-    const missing = [...ids].filter((id) => !profilesById[id]);
-    if (missing.length === 0) return;
-
     let cancelled = false;
     (async () => {
-      const { data, error: profErr } = await supabase
-        .from("profiles")
-        .select("id, full_name, avatar_url")
-        .in("id", missing);
-      if (cancelled || profErr || !data) return;
-      setProfilesById((prev) => {
-        const next = { ...prev };
-        for (const p of data) next[p.id] = p;
-        return next;
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      try {
+        const res = await fetch(
+          `/api/session?type=participants&booking_id=${bookingId}`,
+          { headers: { Authorization: `Bearer ${session.access_token}` } }
+        );
+        const json = await res.json();
+        if (cancelled || !json.success || !Array.isArray(json.participants)) return;
+        setProfilesById((prev) => {
+          const next = { ...prev };
+          for (const p of json.participants) {
+            if (p?.id) next[p.id] = p;
+          }
+          return next;
+        });
+      } catch {
+        // Non-fatal — bubbles will just render with initials.
+      }
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, [notes, files, profilesById]);
+    return () => { cancelled = true; };
+  }, [bookingId]);
 
   // ── Step 2: Realtime — subscribe to INSERT on both tables ────────────────
   useEffect(() => {
