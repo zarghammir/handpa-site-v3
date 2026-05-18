@@ -131,41 +131,64 @@ export default async function handler(req, res) {
     }
 
     // Pull the trusted name/email from the profile row (set at registration),
-    // not the request body — the user shouldn't be able to spoof these.
+    // not the request body. maybeSingle() returns null instead of erroring
+    // when the row doesn't exist — we'll fall back to upsert below.
     const { data: profileRow, error: profileLookupErr } = await supabase
       .from("profiles")
       .select("full_name, email")
       .eq("id", authUser.id)
-      .single();
+      .maybeSingle();
 
-    if (profileLookupErr || !profileRow) {
-      console.error("Profile lookup error:", profileLookupErr);
+    if (profileLookupErr) {
+      console.error("Profile lookup error:", profileLookupErr, { userId: authUser.id });
       return err(res, 500, "Could not load your profile. Please try again.");
     }
 
-    const cleanName = sanitizeText(profileRow.full_name || authUser.user_metadata?.full_name || "", 100);
-    const cleanEmail = sanitizeText(profileRow.email || authUser.email || "", 200);
+    const cleanName = sanitizeText(
+      profileRow?.full_name || authUser.user_metadata?.full_name || "",
+      100
+    );
+    const cleanEmail = sanitizeText(
+      profileRow?.email || authUser.email || "",
+      200
+    );
     const cleanPhone = "";
     const cleanAddress = sanitizeText(student_address, 300);
     const cleanMessage = sanitizeText(message, 1000);
 
-    // Write the onboarding answers onto the user's profile and flip the gate.
-    const { error: profileUpdateErr } = await supabase
+    // Write the onboarding answers onto the profile and flip the gate.
+    // upsert (instead of update) is defensive: if the Register-time insert
+    // raced with a Supabase auth trigger and the profile is missing, we
+    // create it here. .select().single() forces PostgREST to return the
+    // affected row so we can verify onboarding_complete actually became
+    // true — an empty .update() would otherwise pass silently.
+    const { data: savedRow, error: profileUpsertErr } = await supabase
       .from("profiles")
-      .update({
-        lesson_mode,
-        in_person_location_type: in_person_location_type || null,
-        student_address: cleanAddress || null,
-        experience_level,
-        has_handpan,
-        availability_preferences,
-        onboarding_message: cleanMessage || null,
-        onboarding_complete: true,
-      })
-      .eq("id", authUser.id);
+      .upsert(
+        {
+          id: authUser.id,
+          full_name: cleanName || null,
+          email: cleanEmail || null,
+          role: "student",
+          lesson_mode,
+          in_person_location_type: in_person_location_type || null,
+          student_address: cleanAddress || null,
+          experience_level,
+          has_handpan,
+          availability_preferences,
+          onboarding_message: cleanMessage || null,
+          onboarding_complete: true,
+        },
+        { onConflict: "id" }
+      )
+      .select("id, onboarding_complete")
+      .single();
 
-    if (profileUpdateErr) {
-      console.error("Supabase profile update error:", profileUpdateErr);
+    if (profileUpsertErr || !savedRow?.onboarding_complete) {
+      console.error("Profile upsert error:", profileUpsertErr, {
+        userId: authUser.id,
+        savedRow,
+      });
       return err(res, 500, "Could not save your onboarding. Please try again.");
     }
 
