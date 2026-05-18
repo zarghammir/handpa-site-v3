@@ -152,7 +152,11 @@ export default function Onboarding() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Something went wrong.");
 
-      navigate("/dashboard/student");
+      // Full page nav (not react-router navigate) so ProtectedRoute mounts
+      // from scratch and re-reads profile.onboarding_complete from the DB.
+      // Client-side nav was occasionally landing back at /onboarding step 1
+      // because the profile fetch was returning the pre-update value.
+      window.location.assign("/dashboard/student");
     } catch (err) {
       setError(err.message || "Something went wrong.");
       setSubmitting(false);

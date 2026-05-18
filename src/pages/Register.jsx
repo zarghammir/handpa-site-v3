@@ -127,22 +127,27 @@ export default function Register() {
       // anon key on the client. So RLS must allow inserts from the user's own
       // session OR we need a trigger. See the SQL migration for the trigger
       // approach, which is more robust.
-      const { error: profileError } = await supabase.from("profiles").insert([
-        {
-          id: authData.user.id, // same UUID as auth.users — this is the FK
-          full_name: form.full_name,
-          email: form.email,
-          role: "student",      // all self-registered users are students
-        },
-      ]);
+      // upsert (not insert) because Supabase may have a trigger that auto-
+      // creates the profile row on auth signup. A plain insert then 409s with
+      // a unique-violation. upsert cooperates with the trigger and also lets
+      // us patch the row with the form's full_name/email if the trigger
+      // created an empty one.
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: authData.user.id, // same UUID as auth.users — this is the FK
+            full_name: form.full_name,
+            email: form.email,
+            role: "student",      // all self-registered users are students
+          },
+          { onConflict: "id" }
+        );
 
       if (profileError) {
-        // The auth user was created but the profile insert failed.
-        // This is an edge case — log it but don't block the user.
-        // A Postgres trigger (in the SQL migration) handles this as a fallback.
-        console.error("Profile insert error:", profileError);
-        // Don't return here — the auth succeeded, so we can still redirect.
-        // The profile will be created by the trigger.
+        // The auth user was created but the profile upsert failed.
+        // Log and keep going — the API will upsert again at onboarding time.
+        console.error("Profile upsert error:", profileError);
       }
 
       // ── Step 3: Redirect ───────────────────────────────────────────────────
