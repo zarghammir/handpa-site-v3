@@ -16,12 +16,14 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase";
 import SessionNotes from "../components/SessionNotes";
 import BookingEmbed from "../components/BookingEmbed";
+import StudentProfileTab from "../components/StudentProfileTab";
 
 const CAL_EVENT_LINK = "medya/60min-lesson";
 
 const TABS = [
   { id: "lessons", label: "Lessons" },
   { id: "book", label: "Book" },
+  { id: "profile", label: "Profile" },
 ];
 
 function dayLabel(iso) {
@@ -150,7 +152,7 @@ export default function StudentDashboard() {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mb-6 bg-white rounded-2xl p-1 border border-sand">
+        <div className="grid grid-cols-3 gap-2 mb-6 bg-white rounded-2xl p-1 border border-sand">
           {TABS.map((t) => {
             const active = tab === t.id;
             return (
@@ -240,6 +242,11 @@ export default function StudentDashboard() {
             email={user?.email}
           />
         </div>
+      )}
+
+      {/* ── Profile tab ─────────────────────────────────────────── */}
+      {tab === "profile" && user && (
+        <StudentProfileTab user={user} />
       )}
     </div>
   );

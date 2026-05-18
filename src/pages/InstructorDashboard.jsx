@@ -19,11 +19,13 @@ import { supabase } from "../lib/supabase";
 import SessionNotes from "../components/SessionNotes";
 import BookingAgenda from "../components/BookingAgenda";
 import RemindersSettings from "../components/RemindersSettings";
+import InstructorProfileTab from "../components/InstructorProfileTab";
 
 const TABS = [
   { id: "agenda", label: "Agenda" },
   { id: "students", label: "Students" },
   { id: "reminders", label: "Reminders" },
+  { id: "profile", label: "Profile" },
 ];
 
 export default function InstructorDashboard() {
@@ -521,6 +523,11 @@ export default function InstructorDashboard() {
           <div>
             <RemindersSettings />
           </div>
+        )}
+
+        {/* ── Profile tab ───────────────────────────────────────────── */}
+        {tab === "profile" && user && (
+          <InstructorProfileTab user={user} />
         )}
       </div>
     </div>
