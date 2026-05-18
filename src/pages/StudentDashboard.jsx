@@ -17,13 +17,14 @@ import { supabase } from "../lib/supabase";
 import SessionNotes from "../components/SessionNotes";
 import BookingEmbed from "../components/BookingEmbed";
 import StudentProfileTab from "../components/StudentProfileTab";
+import UserMenu from "../components/UserMenu";
 
 const CAL_EVENT_LINK = "medya/60min-lesson";
 
+// Profile is reached via the top-right avatar dropdown, not the tab bar.
 const TABS = [
   { id: "lessons", label: "Lessons" },
   { id: "book", label: "Book" },
-  { id: "profile", label: "Profile" },
 ];
 
 function dayLabel(iso) {
@@ -77,7 +78,7 @@ export default function StudentDashboard() {
       const [profileRes, bookingRes] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name")
+          .select("full_name, avatar_url")
           .eq("id", session.user.id)
           .single(),
         supabase
@@ -134,25 +135,19 @@ export default function StudentDashboard() {
       {/* Header + tabs — narrow column even on desktop. The Book tab below
           breaks out wider so cal.com has room for its horizontal layout. */}
       <div className="max-w-2xl mx-auto">
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-black text-forest truncate">
-              Your Lessons
-            </h1>
-            <p className="text-forest/50 text-xs sm:text-sm mt-1 truncate">
-              {user?.email}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="px-4 py-2 bg-white border border-sand text-sm font-bold text-forest hover:bg-orange hover:text-white hover:border-orange rounded-xl transition-colors whitespace-nowrap"
-          >
-            Log out
-          </button>
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-black text-forest truncate">
+            Your Lessons
+          </h1>
+          <UserMenu
+            user={user}
+            profile={profile}
+            onOpenProfile={() => setTab("profile")}
+            onSignOut={handleSignOut}
+          />
         </div>
 
-        <div className="grid grid-cols-3 gap-2 mb-6 bg-white rounded-2xl p-1 border border-sand">
+        <div className="grid grid-cols-2 gap-2 mb-6 bg-white rounded-2xl p-1 border border-sand">
           {TABS.map((t) => {
             const active = tab === t.id;
             return (

@@ -20,16 +20,19 @@ import SessionNotes from "../components/SessionNotes";
 import BookingAgenda from "../components/BookingAgenda";
 import RemindersSettings from "../components/RemindersSettings";
 import InstructorProfileTab from "../components/InstructorProfileTab";
+import UserMenu from "../components/UserMenu";
 
+// "profile" lives outside this list — it's reached via the top-right
+// avatar dropdown rather than the tab bar (Gmail-style).
 const TABS = [
   { id: "agenda", label: "Agenda" },
   { id: "students", label: "Students" },
   { id: "reminders", label: "Reminders" },
-  { id: "profile", label: "Profile" },
 ];
 
 export default function InstructorDashboard() {
   const [user, setUser] = useState(null);
+  const [myProfile, setMyProfile] = useState(null);
   const [tab, setTab] = useState("agenda");
 
   // Agenda state — all upcoming bookings for any student
@@ -55,7 +58,7 @@ export default function InstructorDashboard() {
       if (!session) return;
       setUser(session.user);
 
-      const [bookingsRes, studentsRes] = await Promise.all([
+      const [bookingsRes, studentsRes, myProfileRes] = await Promise.all([
         supabase
           .from("bookings")
           .select("*")
@@ -65,10 +68,16 @@ export default function InstructorDashboard() {
           .select("id, full_name, email")
           .eq("role", "student")
           .order("full_name", { ascending: true }),
+        supabase
+          .from("profiles")
+          .select("full_name, avatar_url")
+          .eq("id", session.user.id)
+          .single(),
       ]);
 
       if (!bookingsRes.error) setAllBookings(bookingsRes.data ?? []);
       if (!studentsRes.error) setStudents(studentsRes.data ?? []);
+      if (!myProfileRes.error) setMyProfile(myProfileRes.data);
       setLoadingAgenda(false);
       setLoadingStudents(false);
     }
@@ -210,20 +219,16 @@ export default function InstructorDashboard() {
     <div className="min-h-screen bg-cream pt-8 sm:pt-12 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-forest">
-              Instructor Dashboard
-            </h1>
-            <p className="text-forest/50 text-sm mt-1">{user?.email}</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="px-4 py-2 bg-white border border-sand text-sm font-bold text-forest hover:bg-orange hover:text-white hover:border-orange rounded-xl transition-colors whitespace-nowrap"
-          >
-            Log out
-          </button>
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-black text-forest">
+            Instructor Dashboard
+          </h1>
+          <UserMenu
+            user={user}
+            profile={myProfile}
+            onOpenProfile={() => setTab("profile")}
+            onSignOut={handleSignOut}
+          />
         </div>
 
         {/* Tabs */}

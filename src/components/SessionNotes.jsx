@@ -52,6 +52,10 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
   const [error, setError] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
+  // id → { full_name, avatar_url } for everyone who has contributed to this
+  // thread. We hydrate it from `profiles` so chat bubbles can show a small
+  // avatar circle next to each message.
+  const [profilesById, setProfilesById] = useState({});
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -90,6 +94,33 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
     loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
+
+  // Hydrate avatars/names for every author + uploader we've seen but don't
+  // yet have a profile for. Runs whenever the thread gains a new contributor.
+  useEffect(() => {
+    const ids = new Set();
+    notes.forEach((n) => n.author_id && ids.add(n.author_id));
+    files.forEach((f) => f.uploader_id && ids.add(f.uploader_id));
+    const missing = [...ids].filter((id) => !profilesById[id]);
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      const { data, error: profErr } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", missing);
+      if (cancelled || profErr || !data) return;
+      setProfilesById((prev) => {
+        const next = { ...prev };
+        for (const p of data) next[p.id] = p;
+        return next;
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [notes, files, profilesById]);
 
   // ── Step 2: Realtime — subscribe to INSERT on both tables ────────────────
   useEffect(() => {
@@ -367,16 +398,38 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
   );
 
   // ── Inline render helpers ────────────────────────────────────────────────
+  function renderAvatar(authorId, fallbackName) {
+    // Small (28px) circle that sits beside each chat bubble. Falls back to
+    // the first initial of the author's name when they haven't uploaded a
+    // photo yet, mirroring the style we use elsewhere on the dashboard.
+    const prof = authorId ? profilesById[authorId] : null;
+    const name = prof?.full_name || fallbackName || "";
+    const initial = (name?.[0] || "?").toUpperCase();
+    return (
+      <div className="w-7 h-7 shrink-0 rounded-full overflow-hidden bg-sand flex items-center justify-center text-forest text-[11px] font-bold">
+        {prof?.avatar_url ? (
+          <img
+            src={prof.avatar_url}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span>{initial}</span>
+        )}
+      </div>
+    );
+  }
+
   function renderNote(note) {
     const isMine = note.author_id === currentUser.id;
     const isInstructorNote = note.author_role === "instructor";
     const isEditing = editingId === note.id;
+    const fallbackName = isInstructorNote ? "Medya" : "Student";
 
-    return (
+    const bubble = (
       <div
-        key={`note-${note.id}`}
         className={`max-w-[85%] rounded-2xl border border-sand px-3 py-2 ${
-          isInstructorNote ? "self-start bg-sage/10" : "self-end bg-orange/10"
+          isInstructorNote ? "bg-sage/10" : "bg-orange/10"
         }`}
       >
         <p
@@ -436,6 +489,20 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
         )}
       </div>
     );
+
+    // Instructor bubbles sit on the left with the avatar to the left of the
+    // bubble; student bubbles mirror on the right.
+    return (
+      <div
+        key={`note-${note.id}`}
+        className={`flex items-end gap-2 ${
+          isInstructorNote ? "self-start flex-row" : "self-end flex-row-reverse"
+        } max-w-[95%]`}
+      >
+        {renderAvatar(note.author_id, fallbackName)}
+        {bubble}
+      </div>
+    );
   }
 
   function renderFile(file) {
@@ -443,11 +510,8 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
     // the bubble always sits on the instructor (left) side.
     const showDelete = isInstructor;
 
-    return (
-      <div
-        key={`file-${file.id}`}
-        className="self-start max-w-[85%] rounded-2xl border border-sand bg-sage/10 px-3 py-2"
-      >
+    const bubble = (
+      <div className="max-w-[85%] rounded-2xl border border-sand bg-sage/10 px-3 py-2">
         <p className="text-xs font-bold mb-1 text-sage">Medya · file</p>
 
         <a
@@ -481,6 +545,16 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
             </button>
           )}
         </div>
+      </div>
+    );
+
+    return (
+      <div
+        key={`file-${file.id}`}
+        className="flex items-end gap-2 self-start max-w-[95%]"
+      >
+        {renderAvatar(file.uploader_id, "Medya")}
+        {bubble}
       </div>
     );
   }
