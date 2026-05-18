@@ -49,6 +49,10 @@ export default function InstructorDashboard() {
   const [loadingStudentBookings, setLoadingStudentBookings] = useState(false);
   const [openNotesStudent, setOpenNotesStudent] = useState(null);
   const [search, setSearch] = useState("");
+  // Bumped every time we want to force the selected-student loader to rerun
+  // (e.g. clicking the same row again should refetch even though the
+  // selectedStudent reference is unchanged).
+  const [studentRefreshTick, setStudentRefreshTick] = useState(0);
 
   // ── Load instructor + agenda + roster on mount ───────────────────────────
   useEffect(() => {
@@ -125,6 +129,8 @@ export default function InstructorDashboard() {
   // We pull lesson_mode + availability alongside the bookings so the
   // instructor can see how the student wants to learn without leaving the
   // page. Both queries run in parallel since they don't depend on each other.
+  // The `studentRefreshTick` dep lets us refetch on a same-row re-click and
+  // after a save elsewhere — see the click handler and realtime block below.
   useEffect(() => {
     if (!selectedStudent) {
       setStudentBookings([]);
@@ -157,6 +163,37 @@ export default function InstructorDashboard() {
     return () => {
       cancelled = true;
     };
+  }, [selectedStudent, studentRefreshTick]);
+
+  // ── Realtime: refresh the selected student's profile on UPDATE ──────────
+  // Supabase only streams events for tables included in the realtime
+  // publication. `profiles` may or may not be enabled in this project, so
+  // we treat this purely as a best-effort live refresh. The same-row
+  // re-click + post-save tick below cover the case where realtime is off.
+  useEffect(() => {
+    if (!selectedStudent) return;
+    const channel = supabase
+      .channel(`student-profile-${selectedStudent.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${selectedStudent.id}`,
+        },
+        (payload) => {
+          const next = payload.new || {};
+          setSelectedStudentDetail({
+            lesson_mode:              next.lesson_mode ?? null,
+            in_person_location_type:  next.in_person_location_type ?? null,
+            student_address:          next.student_address ?? null,
+            availability_preferences: next.availability_preferences ?? [],
+          });
+        }
+      )
+      .subscribe();
+    return () => supabase.removeChannel(channel);
   }, [selectedStudent]);
 
   // ── Status updates (instructor confirm/cancel) ───────────────────────────
@@ -388,7 +425,12 @@ export default function InstructorDashboard() {
                       <button
                         key={s.id}
                         type="button"
-                        onClick={() => setSelectedStudent(s)}
+                        onClick={() => {
+                          setSelectedStudent(s);
+                          // Re-clicking the same row keeps `selectedStudent`
+                          // identical, so we bump the tick to force a refresh.
+                          setStudentRefreshTick((t) => t + 1);
+                        }}
                         className={`text-left rounded-xl px-3 py-2 transition-colors ${
                           isSelected
                             ? "bg-forest text-cream"
@@ -429,6 +471,7 @@ export default function InstructorDashboard() {
                   <StudentDetailCard
                     student={selectedStudent}
                     detail={selectedStudentDetail}
+                    onRefresh={() => setStudentRefreshTick((t) => t + 1)}
                   />
 
                   {loadingStudentBookings && (
@@ -552,7 +595,7 @@ export default function InstructorDashboard() {
 // the top (matching the previous design), then a compact panel below with
 // lesson mode + weekly availability so Medya can see how this student
 // prefers to learn without having to dig into a separate profile screen.
-function StudentDetailCard({ student, detail }) {
+function StudentDetailCard({ student, detail, onRefresh }) {
   const mode  = detail?.lesson_mode;
   const slots = Array.isArray(detail?.availability_preferences)
     ? detail.availability_preferences
@@ -585,12 +628,26 @@ function StudentDetailCard({ student, detail }) {
 
   return (
     <div className="bg-white rounded-3xl border border-sand p-6 shadow-sm mb-4">
-      <h2 className="text-2xl font-black text-forest">
-        {student.full_name || student.email}
-      </h2>
-      {student.full_name && (
-        <p className="text-forest/50 text-sm">{student.email}</p>
-      )}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-2xl font-black text-forest">
+            {student.full_name || student.email}
+          </h2>
+          {student.full_name && (
+            <p className="text-forest/50 text-sm">{student.email}</p>
+          )}
+        </div>
+        {onRefresh && (
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="shrink-0 text-xs font-bold text-forest/50 hover:text-orange transition-colors"
+            title="Pull the latest preferences from this student's profile"
+          >
+            Refresh ↻
+          </button>
+        )}
+      </div>
 
       {/* Preferences strip — only render when we actually have data so an
           empty profile doesn't show a stub. */}

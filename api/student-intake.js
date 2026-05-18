@@ -495,13 +495,32 @@ async function handleAvailabilityUpdate(req, res, authUser) {
 
     const cleanAddress = sanitizeText(student_address, 300);
 
+    // Pull the role too so we can refuse if anyone but a student hits this
+    // endpoint. That would normally only happen via a cross-tab session swap
+    // (Supabase shares its session via localStorage) — without this guard the
+    // instructor's own row could accidentally end up overwritten with a
+    // student's availability payload.
     const { data: profileRow } = await supabase
       .from("profiles")
-      .select("full_name, email")
+      .select("full_name, email, role")
       .eq("id", authUser.id)
       .maybeSingle();
-    const cleanName = sanitizeText(profileRow?.full_name || authUser.email || "", 100);
-    const cleanEmail = sanitizeText(profileRow?.email || authUser.email || "", 200);
+
+    if (profileRow?.role && profileRow.role !== "student") {
+      return err(
+        res,
+        403,
+        "This endpoint is for student profiles only. Please sign in as the student."
+      );
+    }
+
+    // Email always reflects who the auth token said we are. The fallback used
+    // to be `authUser.email` *as the displayed name* when full_name was empty,
+    // which produced confusing "user@example.com updated their availability"
+    // copy — now we show "(no name on file)" instead so the address bar is
+    // never mistaken for a display name.
+    const cleanEmail = sanitizeText(authUser.email || profileRow?.email || "", 200);
+    const cleanName  = sanitizeText(profileRow?.full_name || "(no name on file)", 100);
 
     const { error: updateErr } = await supabase
       .from("profiles")

@@ -163,6 +163,24 @@ export default function StudentProfileTab({ user }) {
     // Medya in a single trip. Doing the update client-side and the email
     // server-side would risk drift if the email request failed silently.
     const { data: { session } } = await supabase.auth.getSession();
+
+    // Supabase keeps the session in localStorage and shares it across tabs.
+    // If the user signed into a different account in another tab while this
+    // page was open, `session.user.id` no longer matches the `user.id` we
+    // loaded the profile with — saving now would write the new schedule to
+    // the wrong account. Bail out cleanly instead of silently corrupting
+    // another profile.
+    if (!session?.user?.id || session.user.id !== user.id) {
+      setFeedback({
+        type: "error",
+        text:
+          "Your session has changed in another tab. Please refresh this page " +
+          "and sign back in before saving.",
+      });
+      setSaving(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/student-intake?type=availability-update", {
         method: "POST",
