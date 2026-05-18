@@ -37,11 +37,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Read ?verified=pending from the URL — set by Signup.jsx when email
-  // confirmation is required before the account becomes active.
-  // Read ?expired=true — set by useInactivityTimeout after a 30-minute idle.
+  // Read ?verified=pending — set by Register when email confirmation is on.
+  // Read ?registered=1   — set by Register after credentials are created.
+  // Read ?expired=true   — set by useInactivityTimeout after a 30-minute idle.
   const [searchParams] = useSearchParams();
   const pendingVerification = searchParams.get("verified") === "pending";
+  const justRegistered = searchParams.get("registered") === "1";
   const sessionExpired = searchParams.get("expired") === "true";
 
   const handleLogin = async (e) => {
@@ -67,11 +68,11 @@ export default function Login() {
     // ── Step 2: Load profile for role-based redirect ─────────────────────────
     //
     // We query our profiles table (not auth.users) because that's where the
-    // role lives. The RLS policy "students_read_own_profile" allows this —
-    // auth.uid() in the policy matches data.user.id from the session.
+    // role lives. We also read onboarding_complete so we can route fresh
+    // students through the /onboarding wizard before the dashboard.
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, onboarding_complete")
       .eq("id", data.user.id)
       .single();
 
@@ -97,9 +98,12 @@ export default function Login() {
         if (error) console.warn("login_history insert failed:", error.message);
       });
 
-    // ── Step 4: Redirect based on role ───────────────────────────────────────
+    // ── Step 4: Redirect based on role + onboarding state ────────────────────
     if (profile.role === "instructor") {
       navigate("/dashboard/instructor");
+    } else if (!profile.onboarding_complete) {
+      // Fresh student — collect lesson preferences, experience, availability.
+      navigate("/onboarding");
     } else {
       navigate("/dashboard/student");
     }
@@ -124,6 +128,14 @@ export default function Login() {
             </Link>
           </p>
         </div>
+
+        {/* Just-registered banner — shown after Register sends them here */}
+        {justRegistered && (
+          <div className="mb-6 bg-sage/10 border border-sage/30 rounded-2xl px-5 py-4 text-sm text-forest/80 leading-relaxed">
+            <p className="font-bold text-forest mb-1">Account created</p>
+            Sign in to continue and tell us a bit about your handpan goals.
+          </div>
+        )}
 
         {/* Email verification pending banner */}
         {pendingVerification && (

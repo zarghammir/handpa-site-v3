@@ -1,4 +1,4 @@
-// src/pages/Signup.jsx
+// src/pages/Register.jsx
 //
 // ─── What this teaches ────────────────────────────────────────────────────────
 //
@@ -147,16 +147,18 @@ export default function Register() {
 
       // ── Step 3: Redirect ───────────────────────────────────────────────────
       //
-      // If email confirmation is disabled (common in dev), signUp also signs
-      // the user in immediately, so navigate straight to the dashboard.
+      // Flow contract: registration only creates credentials. The student
+      // then signs in explicitly. After login, Login.jsx checks
+      // profiles.onboarding_complete and routes new students to /onboarding.
       //
-      // If email confirmation is ON, the session is null and we should show
-      // a "check your email" message instead.
+      // If email confirmation is OFF, signUp auto-creates a session. We sign
+      // it out so the next page is always /login (no surprise auto-login).
+      // If email confirmation is ON, there's no session yet — the banner on
+      // /login?verified=pending tells them to check their inbox first.
       if (authData.session) {
-        // Signed in immediately — go to dashboard
-        navigate("/dashboard/student");
+        await supabase.auth.signOut();
+        navigate("/login?registered=1");
       } else {
-        // Email confirmation required — tell the user to check their inbox
         navigate("/login?verified=pending");
       }
     } catch (err) {

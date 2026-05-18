@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { handleCors } from "./_lib/cors.js";
 import { escapeHtml, sanitizeText } from "./_lib/sanitize.js";
-import { checkRateLimit, getClientIp } from "./_lib/rateLimit.js";
+import { checkRateLimit } from "./_lib/rateLimit.js";
 import { ok, err } from "./_lib/response.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -61,17 +61,34 @@ export default async function handler(req, res) {
     return err(res, 405, "Method not allowed.");
   }
 
-  const ip = getClientIp(req);
-  const { allowed } = await checkRateLimit(ip, "student-intake", 3, 60 * 60 * 24);
+  // ── Authenticate ────────────────────────────────────────────────────────
+  // Onboarding is gated behind login — the client sends the Supabase access
+  // token in the Authorization header. We verify it server-side so the
+  // service_role write below targets the right profile row.
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const token = typeof authHeader === "string" && authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null;
+
+  if (!token) {
+    return err(res, 401, "You must be signed in to submit this form.");
+  }
+
+  const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+  if (userErr || !userData?.user) {
+    return err(res, 401, "Your session is invalid. Please sign in again.");
+  }
+  const authUser = userData.user;
+
+  // Per-user rate limit (3 onboarding submissions per day) — keyed on user id
+  // rather than IP so the limit follows the account.
+  const { allowed } = await checkRateLimit(`user:${authUser.id}`, "student-intake", 3, 60 * 60 * 24);
   if (!allowed) {
     return err(res, 429, "Too many requests. Please try again later.");
   }
 
   try {
     const {
-      full_name,
-      email,
-      phone,
       lesson_mode,
       in_person_location_type,
       student_address,
@@ -81,7 +98,7 @@ export default async function handler(req, res) {
       message,
     } = req.body ?? {};
 
-    if (!full_name || !email || !lesson_mode || !experience_level) {
+    if (!lesson_mode || !experience_level) {
       return err(res, 400, "Please fill in all required fields.");
     }
 
@@ -113,30 +130,43 @@ export default async function handler(req, res) {
       }
     }
 
-    const cleanName = sanitizeText(full_name, 100);
-    const cleanEmail = sanitizeText(email, 200);
-    const cleanPhone = sanitizeText(phone, 30);
+    // Pull the trusted name/email from the profile row (set at registration),
+    // not the request body — the user shouldn't be able to spoof these.
+    const { data: profileRow, error: profileLookupErr } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", authUser.id)
+      .single();
+
+    if (profileLookupErr || !profileRow) {
+      console.error("Profile lookup error:", profileLookupErr);
+      return err(res, 500, "Could not load your profile. Please try again.");
+    }
+
+    const cleanName = sanitizeText(profileRow.full_name || authUser.user_metadata?.full_name || "", 100);
+    const cleanEmail = sanitizeText(profileRow.email || authUser.email || "", 200);
+    const cleanPhone = "";
     const cleanAddress = sanitizeText(student_address, 300);
     const cleanMessage = sanitizeText(message, 1000);
 
-    const { error } = await supabase.from("student_intakes").insert([
-      {
-        full_name: cleanName,
-        email: cleanEmail,
-        phone: cleanPhone || null,
+    // Write the onboarding answers onto the user's profile and flip the gate.
+    const { error: profileUpdateErr } = await supabase
+      .from("profiles")
+      .update({
         lesson_mode,
         in_person_location_type: in_person_location_type || null,
         student_address: cleanAddress || null,
         experience_level,
         has_handpan,
         availability_preferences,
-        message: cleanMessage || null,
-      },
-    ]);
+        onboarding_message: cleanMessage || null,
+        onboarding_complete: true,
+      })
+      .eq("id", authUser.id);
 
-    if (error) {
-      console.error("Supabase insert error:", error);
-      return err(res, 500, "Could not save your form. Please try again.");
+    if (profileUpdateErr) {
+      console.error("Supabase profile update error:", profileUpdateErr);
+      return err(res, 500, "Could not save your onboarding. Please try again.");
     }
 
     // --- Build shared template parts ---

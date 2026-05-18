@@ -16,7 +16,7 @@ const CTA = () => {
           {/* Right — Button */}
           <div className="flex items-center justify-center shrink-0 w-full md:w-auto">
             <a
-              href="/signup"
+              href="/register"
               className="w-full md:w-auto text-center px-10 py-5 bg-orange text-white text-base md:text-lg font-bold rounded-2xl shadow-md hover:bg-orange/90 hover:-translate-y-1 transition-all duration-300 whitespace-nowrap"
             >
               Enroll for Free →

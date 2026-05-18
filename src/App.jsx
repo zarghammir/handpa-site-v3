@@ -62,7 +62,6 @@ import HandpanExplorer from "./components/HandpanExplorer";
 import HowItWorks from "./components/HowItWorks";
 
 
-import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import GiftRedeem from "./pages/GiftRedeem";
 import Login from "./pages/Login";
@@ -71,13 +70,14 @@ import InstructorDashboard from "./pages/InstructorDashboard";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Onboarding from "./pages/Onboarding";
 
 // lazy() + dynamic import() = code splitting.
 // Vite creates a separate JS chunk for LessonMap that is only loaded when needed.
 // mapbox-gl is ~900KB — this keeps the initial page load fast.
 const LessonMap = lazy(() => import("./components/LessonMap"));
 
-// Scrolls to the hash section after navigation (e.g. /#about from /signup).
+// Scrolls to the hash section after navigation (e.g. /#about from /register).
 // React Router handles navigation in JS, so the browser won't auto-scroll.
 function ScrollToHash() {
   const location = useLocation();
@@ -157,7 +157,7 @@ function App() {
 
         {/*
           Top-level ErrorBoundary catches any crash inside the route components.
-          If HomePage or Signup throws during render, the app shows a fallback
+          If HomePage or any route component throws during render, the app shows a fallback
           instead of a blank white screen.
 
           Route order matters — React Router matches top-to-bottom and stops
@@ -166,15 +166,21 @@ function App() {
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/signup" element={<Signup />} />
             <Route path="/gift" element={<GiftLesson />} />
             <Route path="/gift/success" element={<GiftSuccess />} />
             <Route path="/gift/redeem" element={<GiftRedeem />} />
-            {/* whenever the dashboard is finished replace the signup page with this */}
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute requiredRole="student" allowIncompleteOnboarding>
+                  <Onboarding />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/dashboard/student"
               element={
