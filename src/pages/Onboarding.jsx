@@ -258,12 +258,10 @@ export default function Onboarding() {
                         <label className="block text-sm font-bold text-forest mb-2">
                           Your address
                         </label>
-                        <input
-                          type="text"
+                        <AddressAutocomplete
                           value={form.student_address}
-                          onChange={(e) => setField({ student_address: e.target.value })}
-                          placeholder="Street, city"
-                          className="w-full rounded-2xl border border-forest/15 bg-white px-4 py-3 text-forest outline-none focus:border-orange transition-colors"
+                          onChange={(v) => setField({ student_address: v })}
+                          countryCodes={["ca"]}
                         />
                       </div>
                     </>

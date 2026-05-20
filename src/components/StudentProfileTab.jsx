@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
+import AddressAutocomplete from "./AddressAutocomplete";
 
 const DAYS = [
   "Monday", "Tuesday", "Wednesday", "Thursday",
@@ -335,12 +336,10 @@ export default function StudentProfileTab({ user }) {
             {profile.in_person_location_type === "student_place" && (
               <div>
                 <label className="block text-sm font-bold text-forest mb-2">Address</label>
-                <input
-                  type="text"
+                <AddressAutocomplete
                   value={profile.student_address}
-                  onChange={(e) => setProfile((p) => ({ ...p, student_address: e.target.value }))}
-                  placeholder="Street, city"
-                  className="w-full rounded-2xl border border-forest/15 bg-white px-4 py-3 text-forest outline-none focus:border-orange"
+                  onChange={(v) => setProfile((p) => ({ ...p, student_address: v }))}
+                  countryCodes={["ca"]}
                 />
               </div>
             )}
