@@ -46,15 +46,25 @@ export default function AddressAutocomplete({
   const skipNextFetchRef = useRef(false);
 
   // Load the Maps script once and grab the `places` library handle.
+  // The loader script includes `libraries=places`, so by the time the script
+  // promise resolves the places namespace is already attached at
+  // `google.maps.places` — no need for the separate `importLibrary` bootstrap.
   useEffect(() => {
     const loader = loadGoogleMaps();
     if (!loader) return; // no API key → stay in plain-input mode
 
     let cancelled = false;
     loader
-      .then(async (google) => {
-        const places = await google.maps.importLibrary("places");
+      .then((google) => {
         if (cancelled) return;
+        const places = google.maps.places;
+        if (!places?.AutocompleteSuggestion) {
+          console.warn(
+            "Google Places loaded but AutocompleteSuggestion is missing — " +
+            "make sure 'Places API (New)' is enabled on the Cloud project."
+          );
+          return;
+        }
         placesLibRef.current = places;
         sessionTokenRef.current = new places.AutocompleteSessionToken();
         setReady(true);
