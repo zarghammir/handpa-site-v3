@@ -98,7 +98,7 @@ function ScrollToHash() {
 // Read the site URL from environment at build time.
 // Falls back to a placeholder if VITE_SITE_URL isn't set.
 const SITE_URL =
-  import.meta.env.VITE_SITE_URL ?? "https://handpan-lessons.vercel.app";
+  import.meta.env.VITE_SITE_URL ?? "https://www.medyhandpan.com";
 
 function HomePage() {
   return (
