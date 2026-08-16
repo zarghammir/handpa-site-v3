@@ -9,7 +9,6 @@
 //   → Email notifications: lead captured + booking confirmed
 
 import { createClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
 import { handleCors } from "./_lib/cors.js";
 import { sanitizeText } from "./_lib/sanitize.js";
 import { checkRateLimit, getClientIp } from "./_lib/rateLimit.js";
@@ -20,8 +19,6 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const CAL_API_BASE = "https://api.cal.com/v2";
 const CAL_EVENT_TYPE_ID = process.env.CAL_EVENT_TYPE_ID;
@@ -226,85 +223,6 @@ async function markLeadCompleted(sessionId, bookingUid) {
   if (sessionError) console.error("Session booked update error:", sessionError);
 }
 
-// ─── Email helper ─────────────────────────────────────────────────────────────
-
-async function sendSummaryEmail(sessionId) {
-  const { data: session } = await supabase
-    .from("chat_sessions")
-    .select("messages, booked, created_at")
-    .eq("session_id", sessionId)
-    .maybeSingle();
-
-  if (!session) return;
-
-  const { data: lead } = await supabase
-    .from("chat_leads")
-    .select("name, email, timezone, completed, booking_uid")
-    .eq("session_id", sessionId)
-    .maybeSingle();
-
-  const transcript = (session.messages ?? [])
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .filter((m) => !m.content.startsWith("[SYSTEM ACTION RESULT"))
-    .map((m) => {
-      const label = m.role === "user" ? "👤 Visitor" : "🤖 Assistant";
-      return `<p><strong>${label}:</strong> ${m.content}</p>`;
-    })
-    .join("");
-
-  const bookedStatus = session.booked
-    ? `✅ <strong>Session booked</strong> — Booking ID: ${lead?.booking_uid ?? "N/A"}`
-    : `❌ <strong>Not booked</strong> — ${lead ? "Lead captured, follow up recommended" : "No contact details captured"}`;
-
-  const { error } = await resend.emails.send({
-    from: "Handpan <onboarding@resend.dev>",
-    to: "medy.tutoring@gmail.com",
-    subject: lead
-      ? `Chat summary — ${lead.name} (${session.booked ? "Booked ✅" : "Not booked ❌"})`
-      : `Chat summary — Anonymous visitor`,
-    html: `
-      <h2>Chat Conversation Summary</h2>
-
-      <div style="background:#f5f5f0;padding:16px;border-radius:8px;margin-bottom:20px;">
-        <h3 style="margin:0 0 12px;">Booking Status</h3>
-        <p style="margin:0;font-size:16px;">${bookedStatus}</p>
-      </div>
-
-      ${
-        lead
-          ? `
-      <div style="background:#f5f5f0;padding:16px;border-radius:8px;margin-bottom:20px;">
-        <h3 style="margin:0 0 12px;">Visitor Details</h3>
-        <p><strong>Name:</strong> ${lead.name}</p>
-        <p><strong>Email:</strong> ${lead.email}</p>
-        <p><strong>Timezone:</strong> ${lead.timezone}</p>
-      </div>
-      `
-          : ""
-      }
-
-      <div style="background:#f5f5f0;padding:16px;border-radius:8px;">
-        <h3 style="margin:0 0 12px;">Full Transcript</h3>
-        ${transcript || "<p>No messages recorded.</p>"}
-      </div>
-
-      <p style="color:#999;font-size:12px;margin-top:20px;">
-        Session ID: ${sessionId} — Started: ${new Date(session.created_at).toLocaleString()}
-      </p>
-    `,
-  });
-
-  if (error) {
-    console.error("Summary email error:", error);
-    return;
-  }
-
-  await supabase
-    .from("chat_sessions")
-    .update({ email_sent: true })
-    .eq("session_id", sessionId);
-}
-
 // ─── Action marker parser ─────────────────────────────────────────────────────
 
 function parseAction(text) {
@@ -415,10 +333,15 @@ export default async function handler(req, res) {
 
     const dbMessages = savedSession?.messages;
     if (dbMessages && dbMessages.length > 0) {
-      const sanitized = dbMessages.map((m) => ({
-        role: m.role,
-        content: sanitizeText(String(m.content ?? ""), 1000),
-      }));
+      // Server-authored [SYSTEM ACTION RESULT] messages carry the full
+      // availability list (with the exact ISO timestamps Claude must copy
+      // when booking) and easily exceed 1000 chars — truncating them broke
+      // bookings mid-conversation. Only user-typed content gets the 1000 cap.
+      const sanitized = dbMessages.map((m) => {
+        const raw = String(m.content ?? "");
+        const cap = raw.startsWith("[SYSTEM ACTION RESULT") ? 20000 : 1000;
+        return { role: m.role, content: sanitizeText(raw, cap) };
+      });
 
       // Append the latest user message from the request if the DB doesn't have it yet
       const lastDbMsg = sanitized[sanitized.length - 1];
@@ -483,7 +406,7 @@ export default async function handler(req, res) {
     if (action.type === "CHECK_AVAILABILITY") {
       try {
         const slots = await fetchAvailableSlots(action.timeZone);
-        actionResult = `Available slots for the next 7 days:\n${slots}`;
+        actionResult = `Available slots for the next 14 days:\n${slots}`;
       } catch {
         actionResult =
           "Could not fetch availability. Ask the user to try again or use the contact form.";

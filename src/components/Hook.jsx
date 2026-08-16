@@ -8,8 +8,11 @@ const Hook = () => {
 
         <div className="relative order-2 md:order-1">
           <img
-            src="/images/medya.png"
+            src="/images/medya-web.jpg"
             alt="Handpan player"
+            width="1024"
+            height="1200"
+            fetchPriority="high"
             className="w-full h-[280px] sm:h-[400px] md:h-[600px] object-cover rounded-3xl shadow-lg ring-2 ring-sage/40"
           />
           {/* <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 bg-orange px-3 py-2 md:px-5 md:py-3 rounded-2xl shadow-lg">

@@ -50,9 +50,11 @@ function dayLabel(iso) {
 
 function timeRange(start, end) {
   const opts = { hour: "2-digit", minute: "2-digit" };
-  return `${new Date(start).toLocaleTimeString([], opts)} — ${new Date(
-    end
-  ).toLocaleTimeString([], opts)}`;
+  const startLabel = new Date(start).toLocaleTimeString([], opts);
+  // end_time can be null (some webhook payloads omit it) — show just the
+  // start rather than "… — Invalid Date".
+  if (!end) return startLabel;
+  return `${startLabel} — ${new Date(end).toLocaleTimeString([], opts)}`;
 }
 
 export default function StudentDashboard() {
@@ -60,11 +62,15 @@ export default function StudentDashboard() {
   const [profile, setProfile] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [reloadTick, setReloadTick] = useState(0);
   const [tab, setTab] = useState("lessons");
   const [openBookingId, setOpenBookingId] = useState(null);
 
   useEffect(() => {
     async function load() {
+      setLoadError(null);
+      setLoading(true);
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -90,11 +96,16 @@ export default function StudentDashboard() {
       ]);
 
       if (!profileRes.error) setProfile(profileRes.data);
-      if (!bookingRes.error) setBookings(bookingRes.data ?? []);
+      // A failed query must NOT look like "No lessons yet" — surface it.
+      if (bookingRes.error) {
+        setLoadError("Couldn't load your lessons. Check your connection and retry.");
+      } else {
+        setBookings(bookingRes.data ?? []);
+      }
       setLoading(false);
     }
     load();
-  }, []);
+  }, [reloadTick]);
 
   // Split bookings into upcoming vs past based on end_time. Upcoming is
   // sorted ascending (next session first), past descending (most recent first).
@@ -147,7 +158,11 @@ export default function StudentDashboard() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mb-6 bg-white rounded-2xl p-1 border border-sand">
+        <div
+          className={`grid gap-2 mb-6 bg-white rounded-2xl p-1 border border-sand ${
+            tab === "profile" ? "grid-cols-3" : "grid-cols-2"
+          }`}
+        >
           {TABS.map((t) => {
             const active = tab === t.id;
             return (
@@ -165,6 +180,14 @@ export default function StudentDashboard() {
               </button>
             );
           })}
+          {tab === "profile" && (
+            <button
+              type="button"
+              className="py-2.5 text-sm font-bold rounded-xl bg-forest text-cream shadow-sm"
+            >
+              Profile
+            </button>
+          )}
         </div>
       </div>
 
@@ -172,8 +195,22 @@ export default function StudentDashboard() {
       {tab === "lessons" && (
         <div className="max-w-2xl mx-auto">
           <div className="flex flex-col gap-8">
+            {/* Load error — retryable, never disguised as an empty state */}
+            {loadError && (
+              <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
+                <p className="text-sm text-red-600">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={() => setReloadTick((t) => t + 1)}
+                  className="shrink-0 text-sm font-bold text-red-600 border border-red-300 rounded-xl px-4 py-1.5 hover:bg-red-100 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
             {/* Empty state */}
-            {bookings.length === 0 && (
+            {!loadError && bookings.length === 0 && (
               <div className="bg-white rounded-3xl border border-sand p-8 text-center">
                 <p className="text-forest/60 font-bold">No lessons yet</p>
                 <p className="text-forest/40 text-sm mt-2">

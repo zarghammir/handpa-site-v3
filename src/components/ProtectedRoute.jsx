@@ -42,6 +42,18 @@ export default function ProtectedRoute({ children, requiredRole, allowIncomplete
     }
 
     checkAuth()
+
+    // Re-evaluate when auth changes elsewhere — a sign-out in another tab
+    // used to leave this dashboard rendered until an API call failed.
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setSession(null)
+        setRole(null)
+      } else if (event === 'SIGNED_IN') {
+        checkAuth()
+      }
+    })
+    return () => sub.subscription.unsubscribe()
   }, [])
 
   if (loading) {

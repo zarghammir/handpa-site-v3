@@ -1,0 +1,72 @@
+- generic [ref=f6e3]:
+  - navigation [ref=f6e5]:
+    - generic [ref=f6e6]:
+      - link "🎵 Medya Handpan" [ref=f6e7] [cursor=pointer]:
+        - /url: /
+        - text: 🎵
+        - generic [ref=f6e8]: Medya Handpan
+      - link "Home" [ref=f6e9] [cursor=pointer]:
+        - /url: /
+      - link "About" [ref=f6e10] [cursor=pointer]:
+        - /url: /#about
+      - link "Lessons" [ref=f6e11] [cursor=pointer]:
+        - /url: /#video
+      - link "Explorer" [ref=f6e12] [cursor=pointer]:
+        - /url: /#explorer
+      - link "How It Works" [ref=f6e13] [cursor=pointer]:
+        - /url: /#how-it-works
+      - link "Students" [ref=f6e14] [cursor=pointer]:
+        - /url: /#testimonials
+      - link "Contact" [ref=f6e15] [cursor=pointer]:
+        - /url: /#contact
+    - link "Login" [ref=f6e17] [cursor=pointer]:
+      - /url: /login
+  - button "Open chat" [ref=f6e18]
+  - generic [ref=f6e82]:
+    - generic [ref=f6e83]:
+      - generic [ref=f6e84]: Welcome aboard
+      - heading "Let's set up your handpan journey" [level=1] [ref=f6e85]
+      - paragraph [ref=f6e86]: A few quick questions so I can prepare your first session.
+    - paragraph [ref=f6e92]: Step 2 of 4
+    - generic [ref=f6e93]:
+      - generic [ref=f6e108]:
+        - generic [ref=f6e109]:
+          - heading "Where are you starting from?" [level=2] [ref=f6e110]
+          - paragraph [ref=f6e111]: No wrong answers — just helps me tailor your first session.
+        - generic [ref=f6e112]:
+          - button [active] [ref=f6e113]:
+            - paragraph [ref=f6e114]: Complete beginner
+            - paragraph [ref=f6e115]: Never touched a handpan.
+          - button [ref=f6e116]:
+            - paragraph [ref=f6e117]: Some musical experience
+            - paragraph [ref=f6e118]: I play another instrument.
+          - button [ref=f6e119]:
+            - paragraph [ref=f6e120]: Already playing handpan
+            - paragraph [ref=f6e121]: Looking to go deeper.
+        - generic [ref=f6e122]:
+          - generic [ref=f6e123]: Do you own a handpan?
+          - generic [ref=f6e124]:
+            - button [ref=f6e125]:
+              - paragraph [ref=f6e126]: "Yes"
+            - button [ref=f6e127]:
+              - paragraph [ref=f6e128]: "No"
+      - generic [ref=f6e105]:
+        - button "← Back" [ref=f6e106]
+        - button "Continue →" [disabled] [ref=f6e107]
+  - contentinfo [ref=f6e44]:
+    - generic [ref=f6e45]:
+      - generic [ref=f6e46]:
+        - link "Lessons" [ref=f6e47] [cursor=pointer]:
+          - /url: "#video"
+        - link "Students" [ref=f6e48] [cursor=pointer]:
+          - /url: "#testimonials"
+        - link "About" [ref=f6e49] [cursor=pointer]:
+          - /url: "#about"
+        - link "Book a Session" [ref=f6e50] [cursor=pointer]:
+          - /url: "#signup"
+      - generic [ref=f6e51]:
+        - link "Instagram" [ref=f6e52] [cursor=pointer]:
+          - /url: https://www.instagram.com/handpan_with_medy?igsh=MWkyazNkZDd3Ymg0cw==
+        - link "YouTube" [ref=f6e55] [cursor=pointer]:
+          - /url: https://www.youtube.com/@Handpan_With_Medy
+      - paragraph [ref=f6e58]: © 2026 Medya Shadabi. All rights reserved.

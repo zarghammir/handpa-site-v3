@@ -8,6 +8,7 @@ import { Resend } from "resend";
 import { handleCors } from "./_lib/cors.js";
 import { sanitizeText, escapeHtml } from "./_lib/sanitize.js";
 import { ok, err } from "./_lib/response.js";
+import { EMAIL_FROM, OWNER_EMAIL } from "./_lib/email.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -162,7 +163,7 @@ async function sendSummaryEmail(sessionId) {
           <!-- Header -->
           <tr>
             <td style="background:#0d0d1a;border-radius:14px 14px 0 0;padding:44px 44px 36px;text-align:center;">
-              <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Handpan Lessons</p>
+              <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Medya Handpan</p>
               <h1 style="margin:0 0 10px 0;font-size:26px;font-weight:700;color:#f7f4ef;line-height:1.2;">Chat Summary</h1>
               <p style="margin:0;font-size:13px;color:#6b7a99;">${sessionDate}</p>
             </td>
@@ -212,7 +213,7 @@ async function sendSummaryEmail(sessionId) {
           <tr>
             <td style="padding:22px 0 8px 0;text-align:center;">
               <p style="margin:0 0 4px 0;font-size:12px;color:#b0aaa0;">Session ID: ${escapeHtml(sessionId)}</p>
-              <p style="margin:0;font-size:12px;color:#b0aaa0;">Sent automatically from your Handpan Lessons chat widget</p>
+              <p style="margin:0;font-size:12px;color:#b0aaa0;">Sent automatically from your Medya Handpan chat widget</p>
             </td>
           </tr>
 
@@ -224,8 +225,8 @@ async function sendSummaryEmail(sessionId) {
 </html>`;
 
   const { error } = await resend.emails.send({
-    from: "Handpan <onboarding@resend.dev>",
-    to: "medy.tutoring@gmail.com",
+    from: EMAIL_FROM,
+    to: OWNER_EMAIL,
     subject: lead
       ? `Chat summary — ${lead.name} (${isBooked ? "Booked ✅" : "Not booked ❌"})`
       : `Chat summary — Anonymous visitor`,

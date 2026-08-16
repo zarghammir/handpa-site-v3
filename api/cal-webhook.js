@@ -21,6 +21,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { createHmac, timingSafeEqual } from "crypto";
+import { escapeHtml } from "./_lib/sanitize.js";
+import { EMAIL_FROM, OWNER_EMAIL } from "./_lib/email.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -32,7 +34,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const SITE_URL =
   process.env.SITE_URL ||
   process.env.VITE_SITE_URL ||
-  "https://handpan-lessons.vercel.app";
+  "https://www.medyhandpan.com";
 
 // ── Event-type filter ────────────────────────────────────────────────────────
 // The 45-min "free intro" event is a top-of-funnel booking from the marketing
@@ -79,6 +81,13 @@ export default async function handler(req, res) {
   const signature = req.headers["x-cal-signature-256"];
   if (!signature) {
     return res.status(401).json({ message: "Missing signature." });
+  }
+
+  // Without the secret, createHmac(..., undefined) throws an unhandled 500 —
+  // fail cleanly and loudly instead so a missing env var is obvious in logs.
+  if (!process.env.CAL_WEBHOOK_SECRET) {
+    console.error("CAL_WEBHOOK_SECRET is not configured.");
+    return res.status(500).json({ message: "Webhook secret not configured." });
   }
 
   const rawBody = JSON.stringify(req.body);
@@ -186,16 +195,16 @@ async function handleCreated(payload, res) {
   // For the 45-min flow, the booking landed without an approval step.
   const dashboardUrl = `${SITE_URL}/dashboard/instructor`;
   await resend.emails.send({
-    from: "Handpan <onboarding@resend.dev>",
-    to: "medy.tutoring@gmail.com",
+    from: EMAIL_FROM,
+    to: OWNER_EMAIL,
     subject: `New session — ${studentName}${
       giftCodeMatch ? " (Gift lesson)" : ""
     }`,
     html: `
       <h2>New session confirmed${giftCodeMatch ? " 🎁 Gift lesson" : ""}</h2>
-      <p><strong>Student:</strong> ${studentName}</p>
-      <p><strong>Email:</strong> ${studentEmail ?? "N/A"}</p>
-      <p><strong>Session:</strong> ${eventType}</p>
+      <p><strong>Student:</strong> ${escapeHtml(studentName)}</p>
+      <p><strong>Email:</strong> ${escapeHtml(studentEmail ?? "N/A")}</p>
+      <p><strong>Session:</strong> ${escapeHtml(eventType)}</p>
       <p><strong>Start:</strong> ${
         startTime ? new Date(startTime).toLocaleString() : "N/A"
       }</p>
@@ -263,12 +272,12 @@ async function handleRescheduled(payload, res) {
   // Email Medya about the reschedule
   const studentName = payload?.attendees?.[0]?.name ?? "Student";
   await resend.emails.send({
-    from: "Handpan <onboarding@resend.dev>",
-    to: "medy.tutoring@gmail.com",
+    from: EMAIL_FROM,
+    to: OWNER_EMAIL,
     subject: `Booking rescheduled — ${studentName}`,
     html: `
       <h2>Session rescheduled</h2>
-      <p><strong>Student:</strong> ${studentName}</p>
+      <p><strong>Student:</strong> ${escapeHtml(studentName)}</p>
       <p><strong>New start:</strong> ${
         startTime ? new Date(startTime).toLocaleString() : "N/A"
       }</p>
@@ -302,12 +311,12 @@ async function handleCancelled(payload, res) {
   // Optional notice to Medya
   const studentName = payload?.attendees?.[0]?.name ?? "Student";
   await resend.emails.send({
-    from: "Handpan <onboarding@resend.dev>",
-    to: "medy.tutoring@gmail.com",
+    from: EMAIL_FROM,
+    to: OWNER_EMAIL,
     subject: `Booking cancelled — ${studentName}`,
     html: `
       <h2>Session cancelled</h2>
-      <p><strong>Student:</strong> ${studentName}</p>
+      <p><strong>Student:</strong> ${escapeHtml(studentName)}</p>
       <p>The student cancelled this session via cal.com.</p>
       <p style="margin-top:24px"><a href="${SITE_URL}/dashboard/instructor" style="background:#0a3a2a;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:bold">Open dashboard</a></p>
     `,

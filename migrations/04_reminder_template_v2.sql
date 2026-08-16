@@ -4,7 +4,7 @@
 -- WHAT THIS DOES
 --   Replaces the default reminder email body + subject seeded in
 --   migrations/03_reminders.sql with a nicer branded version. The HTML uses
---   the same Lotus Handpan brand colors as the dashboard (forest, orange,
+--   the same Medya Handpan brand colors as the dashboard (forest, orange,
 --   sand, cream) and is formatted with line breaks + indentation so Medya
 --   can read and edit it in the textarea without it looking like one wall
 --   of code.
@@ -27,7 +27,7 @@ set
 
   <div style="background: #2D3B1F; color: #FAFAF5; padding: 24px 32px; border-radius: 12px 12px 0 0;">
     <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px;">
-      Lotus Handpan
+      Medya Handpan
     </h1>
   </div>
 
@@ -47,7 +47,7 @@ set
     </div>
 
     <p style="margin: 0 0 8px;">See you soon!</p>
-    <p style="margin: 0; color: #A6B28B; font-size: 14px;">— Lotus Handpan</p>
+    <p style="margin: 0; color: #A6B28B; font-size: 14px;">— Medya Handpan</p>
 
   </div>
 

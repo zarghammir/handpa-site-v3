@@ -11,12 +11,12 @@
 //   → <Route path="*"> is the catch-all — matches any URL not matched above it
 //
 // ── Lazy loading + Suspense ───────────────────────────────────────────────────
-// By default, Vite bundles everything into one JS file. Mapbox GL alone is
-// ~900KB — it would delay the page even for users who never scroll to the map.
+// By default, Vite bundles everything into one JS file. three.js alone is
+// ~700KB — it would delay the page even for users who never scroll that far.
 //
-//   lazy(() => import('./components/LessonMap'))
-//     → tells Vite to split LessonMap into its own separate chunk
-//     → that chunk is only downloaded when LessonMap is about to render
+//   lazy(() => import('./pages/Login'))
+//     → tells Vite to split the page into its own separate chunk
+//     → that chunk is only downloaded when the route is about to render
 //
 //   <Suspense fallback={...}>
 //     → while the chunk downloads, renders the fallback (a skeleton)
@@ -51,31 +51,55 @@ import Testimonial from "./components/Testimonial";
 import CTA from "./components/CTA";
 import SignupForm from "./components/SignupForm";
 import Footer from "./components/Footer";
-// import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
 import ContactForm from "./components/ContactForm";
 import ErrorBoundary from "./components/ErrorBoundary";
-import GiftLesson from "./components/GiftLesson";
-import GiftSuccess from "./components/GiftSuccess";
 import ChatWidget from "./components/ChatWidget";
 import ProtectedRoute from "./components/ProtectedRoute";
-import HandpanExplorer from "./components/HandpanExplorer";
 import HowItWorks from "./components/HowItWorks";
 
+// lazy() + dynamic import() = code splitting: each of these becomes its own
+// chunk that is only downloaded when its route (or scroll position) needs it.
+// Homepage visitors no longer download the dashboards, auth pages, or the
+// three.js-powered explorer up front — that alone halves the initial bundle.
+const HandpanExplorer = lazy(() => import("./components/HandpanExplorer"));
+const GiftLesson = lazy(() => import("./components/GiftLesson"));
+const GiftSuccess = lazy(() => import("./components/GiftSuccess"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const GiftRedeem = lazy(() => import("./pages/GiftRedeem"));
+const Login = lazy(() => import("./pages/Login"));
+const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
+const InstructorDashboard = lazy(() => import("./pages/InstructorDashboard"));
+const Register = lazy(() => import("./pages/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 
-import NotFound from "./pages/NotFound";
-import GiftRedeem from "./pages/GiftRedeem";
-import Login from "./pages/Login";
-import StudentDashboard from "./pages/StudentDashboard";
-import InstructorDashboard from "./pages/InstructorDashboard";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Onboarding from "./pages/Onboarding";
+// Minimal route-transition fallback — pages load in well under a second.
+function RouteFallback() {
+  return (
+    <div className="min-h-[50vh] flex items-center justify-center text-forest/50">
+      Loading…
+    </div>
+  );
+}
 
-// lazy() + dynamic import() = code splitting.
-// Vite creates a separate JS chunk for LessonMap that is only loaded when needed.
-// mapbox-gl is ~900KB — this keeps the initial page load fast.
-const LessonMap = lazy(() => import("./components/LessonMap"));
+// The public lead-gen chat assistant belongs on marketing pages only. On the
+// dashboards it floated over the instructor's own tools (and collided with
+// toasts); on auth pages it distracted from the task at hand.
+const CHATLESS_PATHS = new Set([
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/onboarding",
+]);
+
+function SiteChat() {
+  const { pathname } = useLocation();
+  const lower = pathname.toLowerCase();
+  if (lower.startsWith("/dashboard") || CHATLESS_PATHS.has(lower)) return null;
+  return <ChatWidget />;
+}
 
 // Scrolls to the hash section after navigation (e.g. /#about from /register).
 // React Router handles navigation in JS, so the browser won't auto-scroll.
@@ -106,7 +130,9 @@ function HomePage() {
       <Hook />
       <About />
       <Video />
-      <HandpanExplorer />
+      <Suspense fallback={<RouteFallback />}>
+        <HandpanExplorer />
+      </Suspense>
       <HowItWorks />
       <Testimonial />
       <CTA />
@@ -146,14 +172,13 @@ function App() {
             property="og:description"
             content="Free 45-minute intro session. Book now."
           />
-          <meta property="og:image" content={`${SITE_URL}/images/medya.png`} />
+          <meta property="og:image" content={`${SITE_URL}/images/medya-web.jpg`} />
           <meta property="og:url" content={SITE_URL} />
         </Helmet>
 
         <ScrollToHash />
         <Navbar />
-        {/* <GlobalAudioPlayer /> */}
-        <ChatWidget />
+        <SiteChat />
 
         {/*
           Top-level ErrorBoundary catches any crash inside the route components.
@@ -164,6 +189,7 @@ function App() {
           at the first match. path="*" must be last.
         */}
         <ErrorBoundary>
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/gift" element={<GiftLesson />} />
@@ -199,6 +225,7 @@ function App() {
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </ErrorBoundary>
 
         <Footer />

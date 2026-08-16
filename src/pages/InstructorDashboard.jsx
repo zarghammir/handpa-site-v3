@@ -14,8 +14,10 @@
 //   the moment a cal.com webhook fires (BOOKING_CREATED / _RESCHEDULED /
 //   _CANCELLED). Cleaner than polling, and matches the SessionNotes pattern.
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase";
+import { authedFetch } from "../lib/api";
+import { useToast } from "../hooks/useToast.jsx";
 import SessionNotes from "../components/SessionNotes";
 import BookingAgenda from "../components/BookingAgenda";
 import RemindersSettings from "../components/RemindersSettings";
@@ -38,6 +40,12 @@ export default function InstructorDashboard() {
   // Agenda state — all upcoming bookings for any student
   const [allBookings, setAllBookings] = useState([]);
   const [loadingAgenda, setLoadingAgenda] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [reloadTick, setReloadTick] = useState(0);
+  // Which booking currently has a status update in flight — disables its
+  // Confirm/Cancel buttons so double-clicks can't fire duplicate updates.
+  const [updatingId, setUpdatingId] = useState(null);
+  const { show: showToast } = useToast();
   const [openNotesAgenda, setOpenNotesAgenda] = useState(null);
 
   // Students-tab state — same per-student drill-down as before
@@ -57,6 +65,9 @@ export default function InstructorDashboard() {
   // ── Load instructor + agenda + roster on mount ───────────────────────────
   useEffect(() => {
     async function load() {
+      setLoadError(null);
+      setLoadingAgenda(true);
+      setLoadingStudents(true);
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -80,6 +91,11 @@ export default function InstructorDashboard() {
           .single(),
       ]);
 
+      // A failed query must NOT masquerade as "no bookings yet" — show a
+      // real error with a retry instead of a false empty state.
+      if (bookingsRes.error || studentsRes.error) {
+        setLoadError("Couldn't load your dashboard. Check your connection and retry.");
+      }
       if (!bookingsRes.error) setAllBookings(bookingsRes.data ?? []);
       if (!studentsRes.error) setStudents(studentsRes.data ?? []);
       if (!myProfileRes.error) setMyProfile(myProfileRes.data);
@@ -87,7 +103,7 @@ export default function InstructorDashboard() {
       setLoadingStudents(false);
     }
     load();
-  }, []);
+  }, [reloadTick]);
 
   // ── Realtime: bookings INSERT + UPDATE ───────────────────────────────────
   // Cal.com webhook fires → row appears here within ~1s. No refresh needed.
@@ -198,29 +214,28 @@ export default function InstructorDashboard() {
 
   // ── Status updates (instructor confirm/cancel) ───────────────────────────
   async function updateStatus(bookingId, status) {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const res = await fetch("/api/bookings", {
+    if (updatingId) return;
+    setUpdatingId(bookingId);
+    const result = await authedFetch("/api/bookings", {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ id: bookingId, status }),
+      body: { id: bookingId, status },
     });
-    const json = await res.json();
-    if (!json.success) {
-      alert(json.error || "Could not update booking.");
+    setUpdatingId(null);
+
+    if (!result.ok) {
+      showToast(result.error, "error");
       return;
     }
     // calSyncWarning is set when our DB updated but cal.com didn't accept the
     // change — Medya needs to fix it manually in cal.com to avoid divergence.
-    if (json.calSyncWarning) {
-      alert(
-        `Saved in dashboard, but cal.com didn't accept the change. ` +
-        `Open cal.com to update there too. (${json.calSyncWarning})`
+    if (result.data?.calSyncWarning) {
+      showToast(
+        "Saved here, but cal.com didn't accept the change — open cal.com to update it there too.",
+        "error",
+        8000
       );
+    } else {
+      showToast(status === "confirmed" ? "Booking confirmed." : "Booking cancelled.");
     }
     // Realtime UPDATE event will refresh the local state — no manual setBookings
   }
@@ -240,7 +255,16 @@ export default function InstructorDashboard() {
     );
   }, [allBookings]);
 
-  const pendingCount = allBookings.filter((b) => b.status === "pending").length;
+  // Only count pendings that are still upcoming — a stale pending from last
+  // month shouldn't keep a red badge on the Agenda tab forever.
+  const pendingCount = useMemo(() => {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    return allBookings.filter(
+      (b) =>
+        b.status === "pending" &&
+        new Date(b.end_time || b.start_time).getTime() > cutoff
+    ).length;
+  }, [allBookings]);
 
   function formatDate(iso) {
     return new Date(iso).toLocaleDateString("en-CA", {
@@ -303,7 +327,29 @@ export default function InstructorDashboard() {
               )}
             </button>
           ))}
+          {tab === "profile" && (
+            <button
+              type="button"
+              className="px-4 py-2 text-sm font-bold border-b-2 -mb-[1px] border-orange text-forest"
+            >
+              Profile
+            </button>
+          )}
         </div>
+
+        {/* Load error — retryable, instead of a false "no bookings" state */}
+        {loadError && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
+            <p className="text-sm text-red-600">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => setReloadTick((t) => t + 1)}
+              className="shrink-0 text-sm font-bold text-red-600 border border-red-300 rounded-xl px-4 py-1.5 hover:bg-red-100 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         {/* ── Agenda tab ────────────────────────────────────────────── */}
         {tab === "agenda" && (
@@ -358,21 +404,23 @@ export default function InstructorDashboard() {
                     {booking.status !== "confirmed" && (
                       <button
                         type="button"
+                        disabled={updatingId === booking.id}
                         onClick={() =>
                           updateStatus(booking.id, "confirmed")
                         }
-                        className="text-xs font-bold px-3 py-1.5 bg-sage text-cream rounded-full hover:bg-forest transition-colors"
+                        className="text-xs font-bold px-3 py-1.5 bg-sage text-cream rounded-full hover:bg-forest transition-colors disabled:opacity-50"
                       >
-                        Confirm
+                        {updatingId === booking.id ? "Saving…" : "Confirm"}
                       </button>
                     )}
                     {booking.status !== "cancelled" && (
                       <button
                         type="button"
+                        disabled={updatingId === booking.id}
                         onClick={() =>
                           updateStatus(booking.id, "cancelled")
                         }
-                        className="text-xs font-bold px-3 py-1.5 bg-white border border-forest/15 text-forest/60 rounded-full hover:border-red-300 hover:text-red-500 transition-colors"
+                        className="text-xs font-bold px-3 py-1.5 bg-white border border-forest/15 text-forest/60 rounded-full hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
                       >
                         Cancel
                       </button>
@@ -417,6 +465,14 @@ export default function InstructorDashboard() {
                 {!loadingStudents && students.length === 0 && (
                   <p className="text-xs text-forest/50 px-2">No students yet.</p>
                 )}
+
+                {!loadingStudents &&
+                  students.length > 0 &&
+                  filteredStudents.length === 0 && (
+                    <p className="text-xs text-forest/50 px-2">
+                      No students match "{search.trim()}".
+                    </p>
+                  )}
 
                 <div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
                   {filteredStudents.map((s) => {
@@ -519,21 +575,23 @@ export default function InstructorDashboard() {
                           {booking.status !== "confirmed" && (
                             <button
                               type="button"
+                              disabled={updatingId === booking.id}
                               onClick={() =>
                                 updateStatus(booking.id, "confirmed")
                               }
-                              className="text-xs font-bold px-3 py-1.5 bg-sage text-cream rounded-full hover:bg-forest transition-colors"
+                              className="text-xs font-bold px-3 py-1.5 bg-sage text-cream rounded-full hover:bg-forest transition-colors disabled:opacity-50"
                             >
-                              Confirm
+                              {updatingId === booking.id ? "Saving…" : "Confirm"}
                             </button>
                           )}
                           {booking.status !== "cancelled" && (
                             <button
                               type="button"
+                              disabled={updatingId === booking.id}
                               onClick={() =>
                                 updateStatus(booking.id, "cancelled")
                               }
-                              className="text-xs font-bold px-3 py-1.5 bg-white border border-forest/15 text-forest/60 rounded-full hover:border-red-300 hover:text-red-500 transition-colors"
+                              className="text-xs font-bold px-3 py-1.5 bg-white border border-forest/15 text-forest/60 rounded-full hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-50"
                             >
                               Cancel
                             </button>

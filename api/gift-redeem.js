@@ -67,18 +67,25 @@ export default async function handler(req, res) {
       return err(res, 400, "This gift code has expired.");
     }
 
-    // All checks passed — mark as redeemed
-    const { error: updateError } = await supabase
+    // All checks passed — mark as redeemed. The extra .eq("status", "active")
+    // makes this atomic: two concurrent requests can both pass the checks
+    // above, but only one row transition wins; the loser matches 0 rows.
+    const { data: updated, error: updateError } = await supabase
       .from("gift_codes")
       .update({
         status: "redeemed",
         redeemed_at: new Date().toISOString(),
       })
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .eq("status", "active")
+      .select("id");
 
     if (updateError) {
       console.error("Update error:", updateError);
       return err(res, 500, "Could not redeem code. Please try again.");
+    }
+    if (!updated || updated.length === 0) {
+      return err(res, 400, "This gift code has already been redeemed.");
     }
 
     return ok(res, {

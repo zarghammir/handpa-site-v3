@@ -31,6 +31,7 @@ import { handleCors } from "./_lib/cors.js";
 import { escapeHtml, sanitizeText } from "./_lib/sanitize.js";
 import { checkRateLimit, getClientIp } from "./_lib/rateLimit.js";
 import { ok, err } from "./_lib/response.js";
+import { EMAIL_FROM, OWNER_EMAIL } from "./_lib/email.js";
 
 // Resend client is initialized once at module load, not inside the handler.
 // This is more efficient — the SDK object is reused across warm invocations.
@@ -70,9 +71,9 @@ export default async function handler(req, res) {
     // escapeHtml() wraps every variable that goes into the HTML string
     // — if name is "<script>", it becomes "&lt;script&gt;" in the email
     const { error } = await resend.emails.send({
-      from: "Handpan <onboarding@resend.dev>",
-      to: "medy.tutoring@gmail.com",
-      subject: `New message from ${escapeHtml(name)}`,
+      from: EMAIL_FROM,
+      to: OWNER_EMAIL,
+      subject: `New message from ${name}`,
       replyTo: email, // lets instructor hit Reply and it goes to the student
       html: `
         <h2>New Contact Message</h2>

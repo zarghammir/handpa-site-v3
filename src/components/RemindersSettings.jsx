@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase";
+import { authedFetch } from "../lib/api";
 
 // Placeholder reference — also acts as documentation for Medya. The same
 // substitutions happen server-side in api/bookings.js so what you see here
@@ -68,22 +69,14 @@ export default function RemindersSettings() {
   // ── Load current settings on mount ────────────────────────────────────────
   useEffect(() => {
     (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const res = await fetch("/api/bookings?action=reminder-settings", {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      const json = await res.json();
-      if (json.success && json.settings) {
-        setEnabled(json.settings.enabled);
-        setOffset(json.settings.reminder_offset_hours);
-        setSubject(json.settings.email_subject);
-        setBody(json.settings.email_body);
+      const result = await authedFetch("/api/bookings?action=reminder-settings");
+      if (result.ok && result.data.settings) {
+        setEnabled(result.data.settings.enabled);
+        setOffset(result.data.settings.reminder_offset_hours);
+        setSubject(result.data.settings.email_subject);
+        setBody(result.data.settings.email_body);
       } else {
-        setMessage({ type: "error", text: json.message || "Could not load settings." });
+        setMessage({ type: "error", text: result.error || "Could not load settings." });
       }
       setLoading(false);
     })();
@@ -100,28 +93,20 @@ export default function RemindersSettings() {
   async function handleSave() {
     setSaving(true);
     setMessage(null);
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const res = await fetch("/api/bookings?action=reminder-settings", {
+    const result = await authedFetch("/api/bookings?action=reminder-settings", {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({
+      body: {
         enabled,
         reminder_offset_hours: offset,
         email_subject: subject,
         email_body: body,
-      }),
+      },
     });
-    const json = await res.json();
     setSaving(false);
-    if (json.success) {
+    if (result.ok) {
       setMessage({ type: "success", text: "Settings saved." });
     } else {
-      setMessage({ type: "error", text: json.message || "Save failed." });
+      setMessage({ type: "error", text: result.error });
     }
   }
 
@@ -131,30 +116,22 @@ export default function RemindersSettings() {
   async function handleSendTest() {
     setTesting(true);
     setMessage(null);
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const res = await fetch("/api/bookings?action=test-reminder", {
+    const result = await authedFetch("/api/bookings?action=test-reminder", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({
+      body: {
         email_subject: subject,
         email_body: body,
         reminder_offset_hours: offset,
-      }),
+      },
     });
-    const json = await res.json();
     setTesting(false);
-    if (json.success) {
+    if (result.ok) {
       setMessage({
         type: "success",
-        text: `Test sent to ${json.to}. Check your inbox.`,
+        text: `Test sent to ${result.data.to}. Check your inbox.`,
       });
     } else {
-      setMessage({ type: "error", text: json.message || "Test failed." });
+      setMessage({ type: "error", text: result.error });
     }
   }
 

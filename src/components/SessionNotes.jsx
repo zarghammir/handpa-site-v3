@@ -21,6 +21,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { authedFetch } from "../lib/api";
 
 const BUCKET = "session-files";
 
@@ -166,7 +167,9 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
 
   // ── Step 3: Auto-scroll on changes ───────────────────────────────────────
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // block:"nearest" scrolls the notes thread itself without yanking the
+    // page viewport every time a card is opened mid-page.
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [notes, files]);
 
   // ── Step 4: Save a new text note ─────────────────────────────────────────
@@ -175,25 +178,19 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
     setSaving(true);
     setError(null);
 
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch("/api/session?type=notes", {
-      method:  "POST",
-      headers: {
-        "Content-Type":  "application/json",
-        "Authorization": `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ booking_id: bookingId, content: text.trim() }),
+    const result = await authedFetch("/api/session?type=notes", {
+      method: "POST",
+      body: { booking_id: bookingId, content: text.trim() },
     });
-    const json = await res.json();
 
-    if (json.success) {
+    if (result.ok) {
       setNotes((prev) => {
-        const exists = prev.some((n) => n.id === json.note.id);
-        return exists ? prev : [...prev, json.note];
+        const exists = prev.some((n) => n.id === result.data.note.id);
+        return exists ? prev : [...prev, result.data.note];
       });
       setText("");
     } else {
-      setError(json.error || "Could not send.");
+      setError(result.error);
     }
     setSaving(false);
   }
@@ -258,35 +255,29 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
   }
   async function saveEdit() {
     if (!editingText.trim()) return;
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch("/api/session?type=notes", {
-      method:  "PATCH",
-      headers: {
-        "Content-Type":  "application/json",
-        "Authorization": `Bearer ${session.access_token}`,
-      },
-      body: JSON.stringify({ id: editingId, content: editingText.trim() }),
+    const result = await authedFetch("/api/session?type=notes", {
+      method: "PATCH",
+      body: { id: editingId, content: editingText.trim() },
     });
-    const json = await res.json();
-    if (json.success) {
-      setNotes((prev) => prev.map((n) => (n.id === editingId ? json.note : n)));
+    if (result.ok) {
+      setNotes((prev) => prev.map((n) => (n.id === editingId ? result.data.note : n)));
       cancelEdit();
+    } else {
+      // Failures used to vanish silently and the edit just didn't stick.
+      setError(result.error);
     }
   }
 
   async function deleteFile(id) {
     if (!isInstructor) return;
     if (!confirm("Delete this file?")) return;
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(`/api/session?type=files&id=${id}`, {
+    const result = await authedFetch(`/api/session?type=files&id=${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${session.access_token}` },
     });
-    const json = await res.json();
-    if (json.success) {
+    if (result.ok) {
       setFiles((prev) => prev.filter((f) => f.id !== id));
     } else {
-      setError(json.error || "Could not delete.");
+      setError(result.error);
     }
   }
 

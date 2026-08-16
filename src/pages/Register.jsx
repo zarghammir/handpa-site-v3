@@ -241,6 +241,7 @@ export default function Register() {
                 value={form.password}
                 onChange={handleChange}
                 required
+                minLength={8}
                 placeholder="At least 8 characters"
                 className="w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 text-forest placeholder:text-forest/35 outline-none focus:border-orange transition-colors"
               />
@@ -257,6 +258,7 @@ export default function Register() {
                 value={form.confirmPassword}
                 onChange={handleChange}
                 required
+                minLength={8}
                 placeholder="Repeat your password"
                 className="w-full rounded-2xl border border-forest/15 bg-cream px-4 py-3 text-forest placeholder:text-forest/35 outline-none focus:border-orange transition-colors"
               />

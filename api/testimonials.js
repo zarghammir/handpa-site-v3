@@ -5,6 +5,7 @@ import { handleCors } from "./_lib/cors.js";
 import { escapeHtml, sanitizeText } from "./_lib/sanitize.js";
 import { checkRateLimit, getClientIp } from "./_lib/rateLimit.js";
 import { ok, err } from "./_lib/response.js";
+import { EMAIL_FROM, OWNER_EMAIL } from "./_lib/email.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -89,7 +90,7 @@ async function handleApprove(req, res) {
     return res.status(500).send(renderApprovePage("Something went wrong. Please try again.", false));
   }
 
-  return res.status(200).send(renderApprovePage(`Testimonial from ${data.name} is now live.`, true));
+  return res.status(200).send(renderApprovePage(`Testimonial from ${escapeHtml(data.name)} is now live.`, true));
 }
 
 async function handlePost(req, res) {
@@ -138,9 +139,9 @@ async function handlePost(req, res) {
   });
 
   await resend.emails.send({
-    from: "Handpan <onboarding@resend.dev>",
-    to: "medy.tutoring@gmail.com",
-    subject: `New testimonial from ${escapeHtml(name)} — approve?`,
+    from: EMAIL_FROM,
+    to: OWNER_EMAIL,
+    subject: `New testimonial from ${name} — approve?`,
     html: `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -157,7 +158,7 @@ async function handlePost(req, res) {
           <!-- Header -->
           <tr>
             <td style="background:#0d0d1a;border-radius:14px 14px 0 0;padding:44px 44px 36px;text-align:center;">
-              <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Handpan Lessons</p>
+              <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Medya Handpan</p>
               <h1 style="margin:0 0 10px 0;font-size:26px;font-weight:700;color:#f7f4ef;line-height:1.2;">New Testimonial</h1>
               <p style="margin:0;font-size:13px;color:#6b7a99;">${submissionDate}</p>
             </td>
@@ -257,7 +258,7 @@ async function handlePost(req, res) {
           <!-- Footer -->
           <tr>
             <td style="padding:22px 0 8px 0;text-align:center;">
-              <p style="margin:0;font-size:12px;color:#b0aaa0;">Sent automatically from your Handpan Lessons website</p>
+              <p style="margin:0;font-size:12px;color:#b0aaa0;">Sent automatically from your Medya Handpan website</p>
             </td>
           </tr>
 

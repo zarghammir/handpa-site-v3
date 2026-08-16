@@ -1,5 +1,5 @@
 import React from "react";
-const handpanImg = "/images/handpan-image.JPG";
+const handpanImg = "/images/handpan-web.jpg";
 import LiveStats from "./LiveStats";
 import GlobeWidget from "./GlobeWidget";
 
@@ -57,6 +57,9 @@ const About = () => {
           <img
             src={handpanImg}
             alt="Medya Shadabi"
+            width="900"
+            height="1200"
+            loading="lazy"
             className="w-full h-[280px] sm:h-[400px] md:h-[600px] object-cover rounded-3xl shadow-lg"
           />
           <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2">

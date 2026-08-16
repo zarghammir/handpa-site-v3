@@ -77,6 +77,10 @@ export default function Login() {
       .single();
 
     if (profileError || !profile) {
+      // The auth session was already created above — drop it, otherwise the
+      // user is stuck half-signed-in: dashboards reject them (no role) but
+      // this form can't help them either.
+      await supabase.auth.signOut();
       setError("Could not load your profile. Please try again.");
       setLoading(false);
       return;
@@ -123,7 +127,7 @@ export default function Login() {
           </h1>
           <p className="text-forest/60 text-sm">
             Don't have an account?{" "}
-            <Link to="/Register" className="text-orange font-semibold hover:underline">
+            <Link to="/register" className="text-orange font-semibold hover:underline">
               Create one free
             </Link>
           </p>

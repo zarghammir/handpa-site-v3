@@ -4,6 +4,7 @@ import { handleCors } from "./_lib/cors.js";
 import { escapeHtml, sanitizeText } from "./_lib/sanitize.js";
 import { checkRateLimit } from "./_lib/rateLimit.js";
 import { ok, err } from "./_lib/response.js";
+import { EMAIL_FROM, OWNER_EMAIL } from "./_lib/email.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -142,13 +143,20 @@ export default async function handler(req, res) {
     // when the row doesn't exist — we'll fall back to upsert below.
     const { data: profileRow, error: profileLookupErr } = await supabase
       .from("profiles")
-      .select("full_name, email")
+      .select("full_name, email, role")
       .eq("id", authUser.id)
       .maybeSingle();
 
     if (profileLookupErr) {
       console.error("Profile lookup error:", profileLookupErr, { userId: authUser.id });
       return err(res, 500, "Could not load your profile. Please try again.");
+    }
+
+    // The upsert below sets role: "student". Without this guard the
+    // instructor account could demote itself by submitting onboarding
+    // (e.g. after a cross-tab session swap) and lose dashboard access.
+    if (profileRow?.role && profileRow.role !== "student") {
+      return err(res, 403, "Onboarding is for student accounts only.");
     }
 
     const cleanName = sanitizeText(
@@ -252,7 +260,7 @@ export default async function handler(req, res) {
           <!-- Header -->
           <tr>
             <td style="background:#0d0d1a;border-radius:14px 14px 0 0;padding:44px 44px 36px;text-align:center;">
-              <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Handpan Lessons</p>
+              <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Medya Handpan</p>
               <h1 style="margin:0 0 10px 0;font-size:28px;font-weight:700;color:#f7f4ef;letter-spacing:-0.3px;line-height:1.2;">New Student Intake</h1>
               <p style="margin:0;font-size:13px;color:#6b7a99;">${submissionDate}</p>
             </td>
@@ -304,7 +312,7 @@ export default async function handler(req, res) {
           <!-- Footer -->
           <tr>
             <td style="padding:22px 0 8px 0;text-align:center;">
-              <p style="margin:0;font-size:12px;color:#b0aaa0;">Sent automatically from your Handpan Lessons website</p>
+              <p style="margin:0;font-size:12px;color:#b0aaa0;">Sent automatically from your Medya Handpan website</p>
             </td>
           </tr>
 
@@ -337,7 +345,7 @@ export default async function handler(req, res) {
           <!-- Header -->
           <tr>
             <td style="background:#0d0d1a;border-radius:14px 14px 0 0;padding:44px 44px 36px;text-align:center;">
-              <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Handpan Lessons</p>
+              <p style="margin:0 0 14px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Medya Handpan</p>
               <h1 style="margin:0 0 10px 0;font-size:26px;font-weight:700;color:#f7f4ef;line-height:1.2;">Request Received!</h1>
               <p style="margin:0;font-size:15px;color:#a0aec0;">We&rsquo;ll be in touch very soon.</p>
             </td>
@@ -405,7 +413,7 @@ export default async function handler(req, res) {
           <!-- Footer -->
           <tr>
             <td style="padding:22px 0 8px 0;text-align:center;">
-              <p style="margin:0;font-size:12px;color:#b0aaa0;">You&rsquo;re receiving this because you submitted a lesson request on the Handpan Lessons website.</p>
+              <p style="margin:0;font-size:12px;color:#b0aaa0;">You&rsquo;re receiving this because you submitted a lesson request on the Medya Handpan website.</p>
             </td>
           </tr>
 
@@ -416,21 +424,24 @@ export default async function handler(req, res) {
 </body>
 </html>`;
 
-    // Email to instructor
-    await resend.emails.send({
-      from: "Handpan <onboarding@resend.dev>",
-      to: ["medy.tutoring@gmail.com"],
-      subject: `New student intake from ${escapeHtml(cleanName)}`,
+    // Email to instructor. Resend reports failures via { error } instead of
+    // throwing, so check it explicitly — otherwise sends fail silently.
+    const { error: instructorMailErr } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [OWNER_EMAIL],
+      subject: `New student intake from ${cleanName}`,
       html: instructorHtml,
     });
+    if (instructorMailErr) console.error("Intake email to instructor failed:", instructorMailErr);
 
     // Confirmation email to student
-    await resend.emails.send({
-      from: "Medya Handpan <onboarding@resend.dev>",
+    const { error: studentMailErr } = await resend.emails.send({
+      from: EMAIL_FROM,
       to: [cleanEmail],
       subject: "Your handpan lesson request received",
       html: studentHtml,
     });
+    if (studentMailErr) console.error("Intake confirmation to student failed:", studentMailErr);
 
     return ok(res, { message: "Your request has been submitted successfully." });
   } catch (error) {
@@ -561,7 +572,7 @@ async function handleAvailabilityUpdate(req, res, authUser) {
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
         <tr><td style="background:#0d0d1a;border-radius:14px 14px 0 0;padding:36px 44px 28px;text-align:center;">
-          <p style="margin:0 0 12px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Handpan Lessons</p>
+          <p style="margin:0 0 12px 0;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c9a044;font-weight:700;">Medya Handpan</p>
           <h1 style="margin:0;font-size:24px;font-weight:700;color:#f7f4ef;line-height:1.2;">Availability updated</h1>
         </td></tr>
         <tr><td style="background:linear-gradient(90deg,#b8882a,#d4a840);padding:14px 44px;text-align:center;">
@@ -587,7 +598,7 @@ async function handleAvailabilityUpdate(req, res, authUser) {
           </td></tr>
         </td></tr>
         <tr><td style="padding:22px 0 8px 0;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#b0aaa0;">Sent automatically from your Handpan Lessons dashboard</p>
+          <p style="margin:0;font-size:12px;color:#b0aaa0;">Sent automatically from your Medya Handpan dashboard</p>
         </td></tr>
       </table>
     </td></tr>
@@ -598,8 +609,8 @@ async function handleAvailabilityUpdate(req, res, authUser) {
     // cares about. We still await so Resend errors surface in logs.
     try {
       await resend.emails.send({
-        from: "Handpan <onboarding@resend.dev>",
-        to: ["medy.tutoring@gmail.com"],
+        from: EMAIL_FROM,
+        to: [OWNER_EMAIL],
         subject: `${cleanName} updated their availability`,
         html,
       });

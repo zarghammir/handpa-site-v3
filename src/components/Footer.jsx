@@ -1,16 +1,22 @@
 import React from 'react'
+import { useLocation } from 'react-router-dom'
 
 const Footer = () => {
+  // Dashboards are a focused workspace — the marketing footer (and its
+  // homepage anchors) only belongs on public pages.
+  const { pathname } = useLocation()
+  if (pathname.toLowerCase().startsWith('/dashboard')) return null
+
   return (
     <footer className="bg-forest py-12 px-8">
       <div className="max-w-7xl mx-auto flex flex-col items-center gap-8">
 
         {/* Nav Links */}
         <div className="flex flex-wrap justify-center gap-8">
-          <a href="#video" className="text-cream/50 hover:text-cream text-sm transition-colors">Lessons</a>
-          <a href="#testimonials" className="text-cream/50 hover:text-cream text-sm transition-colors">Students</a>
-          <a href="#about" className="text-cream/50 hover:text-cream text-sm transition-colors">About</a>
-          <a href="#signup" className="text-cream/50 hover:text-cream text-sm transition-colors">Book a Session</a>
+          <a href="/#video" className="text-cream/50 hover:text-cream text-sm transition-colors">Lessons</a>
+          <a href="/#testimonials" className="text-cream/50 hover:text-cream text-sm transition-colors">Students</a>
+          <a href="/#about" className="text-cream/50 hover:text-cream text-sm transition-colors">About</a>
+          <a href="/#signup" className="text-cream/50 hover:text-cream text-sm transition-colors">Book a Session</a>
         </div>
 
         {/* Social Icons */}

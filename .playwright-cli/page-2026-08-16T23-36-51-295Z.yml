@@ -1,0 +1,103 @@
+- generic [ref=f7e3]:
+  - button "Open chat" [ref=f7e4]
+  - generic [ref=f7e7]:
+    - generic [ref=f7e8]:
+      - generic [ref=f7e9]:
+        - heading "Your Lessons" [level=1] [ref=f7e10]
+        - button "Account menu" [ref=f7e12]:
+          - generic [ref=f7e13]: Q
+      - generic [ref=f7e14]:
+        - button "Lessons" [ref=f7e15]
+        - button "Book" [ref=f7e16]
+    - generic [ref=f7e69]:
+      - generic [ref=f7e70]:
+        - heading "Profile photo" [level=2] [ref=f7e71]
+        - generic [ref=f7e72]:
+          - generic [ref=f7e73]: Q
+          - generic [ref=f7e74]:
+            - button "Change photo" [ref=f7e75]
+            - paragraph [ref=f7e76]: PNG, JPEG, or WEBP. Max 2 MB.
+      - generic [ref=f7e77]:
+        - heading "Account" [level=2] [ref=f7e78]
+        - generic [ref=f7e79]:
+          - generic [ref=f7e80]:
+            - term [ref=f7e81]: Name
+            - definition [ref=f7e82]: QA Test Claude
+          - generic [ref=f7e83]:
+            - term [ref=f7e84]: Email
+            - definition [ref=f7e85]: claude.qa.test.medya@gmail.com
+          - generic [ref=f7e86]:
+            - term [ref=f7e87]: Member since
+            - definition [ref=f7e88]: August 2026
+      - generic [ref=f7e89]:
+        - heading "Lesson preference" [level=2] [ref=f7e90]
+        - generic [ref=f7e91]:
+          - generic [ref=f7e92]: Mode
+          - combobox [ref=f7e93]:
+            - option "Online" [selected]
+            - option "In-person"
+      - generic [ref=f7e94]:
+        - heading "Availability" [level=2] [ref=f7e95]
+        - generic [ref=f7e96]:
+          - button "Monday" [ref=f7e97]
+          - button "Tuesday" [ref=f7e98]
+          - button "Wednesday" [ref=f7e99]
+          - button "Thursday" [ref=f7e100]
+          - button "Friday" [ref=f7e101]
+          - button "Saturday" [ref=f7e102]
+          - button "Sunday" [ref=f7e103]
+        - generic [ref=f7e105]:
+          - paragraph [ref=f7e106]: Saturday
+          - generic [ref=f7e107]:
+            - combobox [ref=f7e108]:
+              - option "Start"
+              - option "08:00"
+              - option "09:00"
+              - option "10:00" [selected]
+              - option "11:00"
+              - option "12:00"
+              - option "13:00"
+              - option "14:00"
+              - option "15:00"
+              - option "16:00"
+              - option "17:00"
+              - option "18:00"
+              - option "19:00"
+              - option "20:00"
+            - combobox [ref=f7e109]:
+              - option "End"
+              - option "08:00"
+              - option "09:00"
+              - option "10:00"
+              - option "11:00"
+              - option "12:00" [selected]
+              - option "13:00"
+              - option "14:00"
+              - option "15:00"
+              - option "16:00"
+              - option "17:00"
+              - option "18:00"
+              - option "19:00"
+              - option "20:00"
+      - button "Save changes" [ref=f7e110]
+      - generic [ref=f7e111]:
+        - heading "Password" [level=2] [ref=f7e112]
+        - paragraph [ref=f7e113]: We'll email you a link to set a new password.
+        - button "Send reset email" [ref=f7e114]
+  - contentinfo [ref=f7e22]:
+    - generic [ref=f7e23]:
+      - generic [ref=f7e24]:
+        - link "Lessons" [ref=f7e25] [cursor=pointer]:
+          - /url: "#video"
+        - link "Students" [ref=f7e26] [cursor=pointer]:
+          - /url: "#testimonials"
+        - link "About" [ref=f7e27] [cursor=pointer]:
+          - /url: "#about"
+        - link "Book a Session" [ref=f7e28] [cursor=pointer]:
+          - /url: "#signup"
+      - generic [ref=f7e29]:
+        - link "Instagram" [ref=f7e30] [cursor=pointer]:
+          - /url: https://www.instagram.com/handpan_with_medy?igsh=MWkyazNkZDd3Ymg0cw==
+        - link "YouTube" [ref=f7e33] [cursor=pointer]:
+          - /url: https://www.youtube.com/@Handpan_With_Medy
+      - paragraph [ref=f7e36]: © 2026 Medya Shadabi. All rights reserved.

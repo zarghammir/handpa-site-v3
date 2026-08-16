@@ -1,0 +1,419 @@
+- generic [ref=f12e3]:
+  - navigation [ref=f12e5]:
+    - generic [ref=f12e6]:
+      - link "🎵 Medya Handpan" [ref=f12e7] [cursor=pointer]:
+        - /url: /
+        - text: 🎵
+        - generic [ref=f12e8]: Medya Handpan
+      - link "Home" [ref=f12e9] [cursor=pointer]:
+        - /url: /
+      - link "About" [ref=f12e10] [cursor=pointer]:
+        - /url: "#about"
+      - link "Lessons" [ref=f12e11] [cursor=pointer]:
+        - /url: "#video"
+      - link "Explorer" [ref=f12e12] [cursor=pointer]:
+        - /url: "#explorer"
+      - link "How It Works" [ref=f12e13] [cursor=pointer]:
+        - /url: "#how-it-works"
+      - link "Students" [ref=f12e14] [cursor=pointer]:
+        - /url: "#testimonials"
+      - link "Contact" [ref=f12e15] [cursor=pointer]:
+        - /url: "#contact"
+    - link "Login" [ref=f12e17] [cursor=pointer]:
+      - /url: /login
+  - generic [ref=f12e263]:
+    - generic [ref=f12e264]:
+      - generic [ref=f12e265]:
+        - generic [ref=f12e266]: M
+        - generic [ref=f12e267]:
+          - paragraph [ref=f12e268]: Nava
+          - paragraph [ref=f12e269]: Ask me anything
+      - button "Close chat" [ref=f12e270]: ✕
+    - generic [ref=f12e271]:
+      - generic [ref=f12e272]: Howdy! 👋 I'm Nava, Medya's assistant. Ask me anything about handpan lessons, or I can help you book a free session!
+      - generic [ref=f12e384]: How much does a lesson cost?
+      - generic [ref=f12e386]: Great question! A free 45-minute intro session is the perfect way to start, and then ongoing lessons are $50 per session. You don't even need to own a handpan to get started — we've got that covered!
+    - generic [ref=f12e274]:
+      - textbox "Type a message..." [active] [ref=f12e275]
+      - button "Send message" [disabled] [ref=f12e276]
+  - button "Close chat" [ref=f12e279]
+  - generic [ref=f12e22]:
+    - img "Handpan player" [ref=f12e24]
+    - generic [ref=f12e25]:
+      - generic [ref=f12e26]: Your handpan journey starts here
+      - heading "Discover the handpan's magic" [level=1] [ref=f12e28]
+      - paragraph [ref=f12e29]: Even if you've never touched an instrument before, I'll guide you from your first note to beautiful flowing melodies in weeks, not years.
+      - generic [ref=f12e30]:
+        - generic [ref=f12e31]:
+          - paragraph [ref=f12e32]: 28+
+          - paragraph [ref=f12e33]: Students
+        - generic [ref=f12e35]:
+          - paragraph [ref=f12e36]: 125+
+          - paragraph [ref=f12e37]: Lessons
+        - generic [ref=f12e39]:
+          - paragraph [ref=f12e40]: 210+
+          - paragraph [ref=f12e41]: Class Hours
+      - generic [ref=f12e42]:
+        - link "Start Free Today" [ref=f12e43] [cursor=pointer]:
+          - /url: "#signup"
+        - link "Watch Me Play" [ref=f12e44] [cursor=pointer]:
+          - /url: "#video"
+  - generic [ref=f12e46]:
+    - generic [ref=f12e47]:
+      - generic [ref=f12e48]: About Your Teacher
+      - heading "Why I teach handpan" [level=2] [ref=f12e50]
+      - paragraph [ref=f12e51]: I'm Medya — a passionate handpan instructor dedicated to helping you find your own musical voice. With years of experience, I guide students from their very first note to flowing melodies, online or in-person.
+      - generic [ref=f12e52]:
+        - generic [ref=f12e53]:
+          - paragraph [ref=f12e54]: 10+
+          - paragraph [ref=f12e55]: Years playing
+        - generic [ref=f12e56]:
+          - paragraph [ref=f12e57]: 27+
+          - paragraph [ref=f12e58]: Students taught
+        - generic [ref=f12e60]:
+          - paragraph [ref=f12e61]: In-person in Vancouver · Online worldwide
+          - paragraph [ref=f12e62]: Local sessions in Vancouver or join remotely from anywhere on the globe
+    - img "Medya Shadabi" [ref=f12e65]
+  - generic [ref=f12e67]:
+    - generic [ref=f12e68]:
+      - heading "Handpan learning at your fingertips" [level=2] [ref=f12e69]
+      - generic [ref=f12e70]:
+        - generic [ref=f12e71]:
+          - generic [ref=f12e72]: "\""
+          - paragraph [ref=f12e73]: I absolutely adore this course and feel such a progress with my playing 🙏 It really gave me tools to develop my own creativity and have fun with the instrument, I highly recommend it to every Handpan player!
+        - generic [ref=f12e74]:
+          - generic [ref=f12e75]: KA
+          - generic [ref=f12e77]:
+            - paragraph [ref=f12e78]: Kim Azulay
+            - paragraph [ref=f12e79]: Netherlands
+      - link "More student feedback →" [ref=f12e81] [cursor=pointer]:
+        - /url: "#testimonials"
+    - iframe [ref=f12e84]:
+      - generic [ref=f13e1]:
+        - generic "YouTube Video Player" [ref=f13e3]
+        - generic [ref=f13e5]:
+          - generic:
+            - generic:
+              - generic [ref=f13e6] [cursor=pointer]
+              - button "Play video" [ref=f13e10] [cursor=pointer]
+              - button "Hide player controls" [ref=f13e12] [cursor=pointer]
+              - generic [ref=f13e14]:
+                - generic [ref=f13e19]:
+                  - generic [ref=f13e20]:
+                    - link "Watch me playing the beautiful instrument 🎶" [ref=f13e21] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=20Y8F7h_PSE
+                    - link "Handpan With Medy" [ref=f13e22] [cursor=pointer]:
+                      - /url: /channel/UCoJKTThORJ8mgnGnKDYkPEQ
+                  - generic [ref=f13e24]:
+                    - button [ref=f13e25] [cursor=pointer]
+                    - generic [ref=f13e27]:
+                      - generic: Handpan With Medy
+                      - generic: 2 subscribers
+                - generic [ref=f13e28]:
+                  - button "Share" [ref=f13e31] [cursor=pointer]
+                  - link "Watch on YouTube" [ref=f13e42] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=20Y8F7h_PSE
+                    - generic [ref=f13e43]: Watch on
+  - generic [ref=f12e86]:
+    - generic [ref=f12e87]:
+      - generic [ref=f12e88]: Try it now
+      - heading "Play a real handpan" [level=2] [ref=f12e89]
+      - paragraph [ref=f12e90]: Drag to rotate · tap any field to hear it · every note sounds good together
+    - generic [ref=f12e92]:
+      - button "Your Name" [ref=f12e93]
+      - button "Pattern" [ref=f12e94]
+      - button "Explore" [ref=f12e95]
+    - generic [ref=f12e96]:
+      - generic [ref=f12e97]:
+        - img "Interactive 3D handpan — tap any tone field to play" [ref=f12e98]
+        - paragraph [ref=f12e100]: Tap any field to begin
+      - generic [ref=f12e102]:
+        - generic [ref=f12e103]:
+          - paragraph [ref=f12e104]: Type your name
+          - generic [ref=f12e105]:
+            - textbox "e.g. Medya" [ref=f12e106]
+            - button "Play" [disabled] [ref=f12e107]
+        - generic [ref=f12e108]:
+          - paragraph [ref=f12e109]: How it works
+          - paragraph [ref=f12e110]: Each letter maps to one of the 9 notes. Same name, same melody — always. Watch the 3D handpan light up as your name plays.
+  - generic [ref=f12e112]:
+    - generic [ref=f12e113]:
+      - generic [ref=f12e114]: How it works
+      - heading "From first click to playing music" [level=2] [ref=f12e115]: From first click toplaying music
+      - paragraph [ref=f12e116]: Five steps. The first one costs nothing and takes 45 minutes. The last one never ends.
+    - generic [ref=f12e117]:
+      - generic [ref=f12e118]:
+        - generic [ref=f12e119]:
+          - img [ref=f12e120]:
+            - generic [ref=f12e124]: ✓
+          - generic [ref=f12e129]: "01"
+        - generic [ref=f12e130]: Free
+        - heading "Book your free intro" [level=3] [ref=f12e131]
+        - paragraph [ref=f12e132]: No experience, no commitment, no cost. Pick a time, show up, and meet Medya. That's all step one requires.
+        - paragraph [ref=f12e133]: 45 min · zero cost
+      - generic [ref=f12e134]:
+        - generic [ref=f12e135]: "02"
+        - generic [ref=f12e145]: Intro call
+        - heading "Medya learns about you" [level=3] [ref=f12e146]
+        - paragraph [ref=f12e147]: She listens first — your background, your goals, what music moves you. She meets you exactly where you are.
+        - paragraph [ref=f12e148]: No judgment · tailored from day one
+      - generic [ref=f12e149]:
+        - generic [ref=f12e150]: "03"
+        - generic [ref=f12e164]: Same session
+        - heading "Play your first notes" [level=3] [ref=f12e165]
+        - paragraph [ref=f12e166]: Right in the intro, you'll make real music. Not scales — an actual melody. The handpan guides you before technique does.
+        - paragraph [ref=f12e167]: First melody in session 1
+      - generic [ref=f12e168]:
+        - generic [ref=f12e169]:
+          - img [ref=f12e170]:
+            - generic [ref=f12e175]: ★
+          - generic [ref=f12e178]: "04"
+        - generic [ref=f12e179]: After intro
+        - heading "Get your personal plan" [level=3] [ref=f12e180]
+        - paragraph [ref=f12e181]: Based on what she learned, Medya designs a lesson path that fits your pace and goals. Meditative or performance-ready — both valid.
+        - paragraph [ref=f12e182]: Weekly or bi-weekly · your pace
+    - generic [ref=f12e184]:
+      - generic [ref=f12e185]:
+        - generic [ref=f12e186]: "05"
+        - generic [ref=f12e187]:
+          - generic [ref=f12e188]: Ongoing
+          - heading "Show up, play, grow" [level=3] [ref=f12e189]
+      - generic [ref=f12e191]:
+        - paragraph [ref=f12e192]: Each session builds on the last. Medya tracks your progress, adjusts as you evolve, and keeps lessons feeling alive — not like homework. Most students are playing full songs within their first month.
+        - paragraph [ref=f12e193]: Full songs within month one · progress you can feel
+      - img [ref=f12e195]:
+        - generic [ref=f12e201]: ★
+  - generic [ref=f12e203]:
+    - generic [ref=f12e204]:
+      - heading "Testimonials from our students" [level=2] [ref=f12e206]
+      - button "Share your experience →" [ref=f12e208]
+    - generic [ref=f12e280]:
+      - generic [ref=f12e281]:
+        - generic [ref=f12e284] [cursor=pointer]:
+          - generic [ref=f12e285]: "\""
+          - paragraph [ref=f12e286]: She has a unique and engaging approach to teaching the handpan, making lessons both stress-free and enjoyable. I highly recommend her!
+          - generic [ref=f12e287]:
+            - generic [ref=f12e288]: K
+            - generic [ref=f12e289]:
+              - paragraph [ref=f12e290]: Kimia
+              - paragraph [ref=f12e291]: 🇨🇦 Canada
+        - generic [ref=f12e294] [cursor=pointer]:
+          - generic [ref=f12e295]: "\""
+          - paragraph [ref=f12e296]: Medya is such a wonderful teacher! I first came just for a trial lesson, because I wanted to understand whether handpan was really for me or not. But already by the second lesson I was playing a melody, and that was the moment I really felt this instrument was mine. Now I’m even choosing my own handpan, which says a lot. I’m so happy I found Medya and that she opened this beautiful musical world for me.
+          - generic [ref=f12e297]:
+            - generic [ref=f12e298]: O
+            - generic [ref=f12e299]:
+              - paragraph [ref=f12e300]: Olha
+              - paragraph [ref=f12e301]: 🇨🇦 Canada
+        - generic [ref=f12e304] [cursor=pointer]:
+          - generic [ref=f12e305]: "\""
+          - paragraph [ref=f12e306]: Medy is an outstanding handpan teacher. Their expertise, personalized instruction, and passion for music make learning both rewarding and enjoyable. Highly recommended!
+          - generic [ref=f12e307]:
+            - generic [ref=f12e308]: M
+            - generic [ref=f12e309]:
+              - paragraph [ref=f12e310]: Maryam
+              - paragraph [ref=f12e311]: 🇩🇪 Germany
+        - generic [ref=f12e314] [cursor=pointer]:
+          - generic [ref=f12e315]: "\""
+          - paragraph [ref=f12e316]: I highly recommend Medy as a handpan teacher. Their exceptional skills, personalized approach, and genuine passion make learning a joyous experience.
+          - generic [ref=f12e317]:
+            - generic [ref=f12e318]: D
+            - generic [ref=f12e319]:
+              - paragraph [ref=f12e320]: Donya
+              - paragraph [ref=f12e321]: 🇫🇷 France
+        - generic [ref=f12e324] [cursor=pointer]:
+          - generic [ref=f12e325]: "\""
+          - paragraph [ref=f12e326]: She is kind, friendly and patient with me. She has vast musical experience and is an excellent teacher.
+          - generic [ref=f12e327]:
+            - generic [ref=f12e328]: L
+            - generic [ref=f12e329]:
+              - paragraph [ref=f12e330]: Ling
+              - paragraph [ref=f12e331]: 🇺🇸 USA
+        - generic [ref=f12e334] [cursor=pointer]:
+          - generic [ref=f12e335]: "\""
+          - paragraph [ref=f12e336]: Medy is super sweet and extremely professional. I Enjoyed my class and would highly recommend her
+          - generic [ref=f12e337]:
+            - generic [ref=f12e338]: R
+            - generic [ref=f12e339]:
+              - paragraph [ref=f12e340]: Rawan
+              - paragraph [ref=f12e341]: 🇺🇸 USA
+        - generic [ref=f12e344] [cursor=pointer]:
+          - generic [ref=f12e345]: "\""
+          - paragraph [ref=f12e346]: Medy is great! She's skilled and delightful to spend time with. I like how her approach to handpan gives a lot of space to personal expression
+          - generic [ref=f12e347]:
+            - generic [ref=f12e348]: J
+            - generic [ref=f12e349]:
+              - paragraph [ref=f12e350]: Julie
+              - paragraph [ref=f12e351]: 🇺🇸 USA
+        - generic [ref=f12e354] [cursor=pointer]:
+          - generic [ref=f12e355]: "\""
+          - paragraph [ref=f12e356]: She was fantastic. Super patient and excited to teach
+          - generic [ref=f12e357]:
+            - generic [ref=f12e358]: A
+            - generic [ref=f12e359]:
+              - paragraph [ref=f12e360]: Alex
+              - paragraph [ref=f12e361]: 🇨🇦 Canada
+        - generic [ref=f12e364] [cursor=pointer]:
+          - generic [ref=f12e365]: "\""
+          - paragraph [ref=f12e366]: I had zero musical background and within weeks I was playing real melodies. Medya's approach is so clear and encouraging — I never felt lost.
+          - generic [ref=f12e367]:
+            - generic [ref=f12e368]: S
+            - generic [ref=f12e369]:
+              - paragraph [ref=f12e370]: Sarah
+              - paragraph [ref=f12e371]: 🇨🇦 Canada
+        - generic [ref=f12e374] [cursor=pointer]:
+          - generic [ref=f12e375]: "\""
+          - paragraph [ref=f12e376]: The course is very well thought out and truly enjoyable. Every step is just challenging enough without being demotivating. The melodies are lovely.
+          - generic [ref=f12e377]:
+            - generic [ref=f12e378]: E
+            - generic [ref=f12e379]:
+              - paragraph [ref=f12e380]: Edsko
+              - paragraph [ref=f12e381]: 🇳🇱 Netherlands
+      - paragraph: drag to spin · tap a card to read
+  - generic [ref=f12e215]:
+    - heading "Ready for your journey? Enroll now and get one session for free." [level=2] [ref=f12e216]
+    - link "Enroll for Free →" [ref=f12e218] [cursor=pointer]:
+      - /url: /register
+  - generic [ref=f12e220]:
+    - generic [ref=f12e221]:
+      - generic [ref=f12e222]: Get Started
+      - heading "Claim your free session" [level=2] [ref=f12e224]
+      - paragraph [ref=f12e225]: Book your free 45-minute intro session directly with Medya.
+    - iframe [ref=f12e383]:
+      - generic [ref=f14e1]:
+        - main [ref=f14e3]:
+          - generic [ref=f14e4]:
+            - generic [ref=f14e5]:
+              - generic [ref=f14e9]:
+                - list [ref=f14e10]:
+                  - listitem [ref=f14e11]:
+                    - link [ref=f14e12] [cursor=pointer]:
+                      - /url: https://cal.com/medya?redirect=false
+                      - img "Medya" [ref=f14e14]
+                - paragraph [ref=f14e15]: Medya
+                - heading "45 min meeting" [level=1] [ref=f14e16]
+                - generic [ref=f14e17]:
+                  - generic [ref=f14e18]: 45m
+                  - generic [ref=f14e26]:
+                    - img "Cal Video icon" [ref=f14e27]
+                    - paragraph [ref=f14e28]: Cal Video
+                  - combobox "Timezone Select" [ref=f14e41]
+              - generic [ref=f14e43]:
+                - generic [ref=f14e44]:
+                  - time [ref=f14e46]:
+                    - strong [ref=f14e47]: August
+                    - text: "2026"
+                  - generic [ref=f14e49]:
+                    - button "View previous month" [disabled] [ref=f14e50]
+                    - button "View next month" [ref=f14e53] [cursor=pointer]
+                - generic [ref=f14e56]:
+                  - generic [ref=f14e57]: Sun
+                  - generic [ref=f14e58]: Mon
+                  - generic [ref=f14e59]: Tue
+                  - generic [ref=f14e60]: Wed
+                  - generic [ref=f14e61]: Thu
+                  - generic [ref=f14e62]: Fri
+                  - generic [ref=f14e63]: Sat
+                - generic [ref=f14e64]:
+                  - button "8" [disabled] [ref=f14e72]
+                  - button "9" [disabled] [ref=f14e74]
+                  - button "10" [disabled] [ref=f14e76]
+                  - button "11" [disabled] [ref=f14e78]
+                  - button "12" [disabled] [ref=f14e80]
+                  - button "13" [disabled] [ref=f14e82]
+                  - button "14" [disabled] [ref=f14e84]
+                  - button "15" [disabled] [ref=f14e86]
+                  - button "16 Today" [disabled] [ref=f14e88]:
+                    - text: "16"
+                    - generic [ref=f14e89]: Today
+                  - button "17" [disabled] [ref=f14e92]
+                  - button "18" [disabled] [ref=f14e94]
+                  - button "19" [disabled] [ref=f14e96]
+                  - button "20" [disabled] [ref=f14e98]
+                  - button "21" [disabled] [ref=f14e100]
+                  - button "22" [ref=f14e102]
+                  - button "23" [disabled] [ref=f14e104]
+                  - button "24" [disabled] [ref=f14e106]
+                  - button "25" [ref=f14e108]
+                  - button "26" [disabled] [ref=f14e110]
+                  - button "27" [ref=f14e112]
+                  - button "28" [ref=f14e114]
+                  - button "29" [ref=f14e116]
+                  - button "30" [disabled] [ref=f14e118]
+                  - button "31" [disabled] [ref=f14e120]
+                  - generic [ref=f14e121]:
+                    - generic [ref=f14e122]: Sep
+                    - button "1" [ref=f14e123]
+                  - button "2" [disabled] [ref=f14e125]
+                  - button "3" [ref=f14e127]
+                  - button "4" [ref=f14e129]
+                  - button "5" [ref=f14e131]
+                  - button "6" [disabled] [ref=f14e133]
+                  - button "7" [disabled] [ref=f14e135]
+                  - button "8" [ref=f14e137]
+                  - button "9" [disabled] [ref=f14e139]
+                  - button "10" [ref=f14e141]
+                  - button "11" [ref=f14e143]
+                  - button "12" [ref=f14e145]
+              - generic [ref=f14e146]:
+                - generic [ref=f14e148]:
+                  - generic [ref=f14e149]:
+                    - text: Sat
+                    - generic [ref=f14e150]: "22"
+                  - group "Time format" [ref=f14e152]:
+                    - radio "12h" [checked] [ref=f14e153] [cursor=pointer]
+                    - radio "24h" [ref=f14e155] [cursor=pointer]
+                - generic [ref=f14e160]:
+                  - button "10:00am" [ref=f14e162] [cursor=pointer]
+                  - button "10:45am" [ref=f14e167] [cursor=pointer]
+                  - button "11:30am" [ref=f14e172] [cursor=pointer]
+                  - button "12:15pm" [ref=f14e177] [cursor=pointer]
+                  - button "1:00pm" [ref=f14e182] [cursor=pointer]
+                  - button "1:45pm" [ref=f14e187] [cursor=pointer]
+                  - button "2:30pm" [ref=f14e192] [cursor=pointer]
+                  - button "3:15pm" [ref=f14e197] [cursor=pointer]
+            - link [ref=f14e203] [cursor=pointer]:
+              - /url: https://go.cal.com/booking
+              - img "Cal.com Logo" [ref=f14e204]
+        - alert [ref=f14e205]
+        - generic:
+          - region "Notifications"
+        - generic:
+          - region "Notifications"
+    - paragraph [ref=f12e228]: No credit card required. No spam. Ever!
+  - generic [ref=f12e230]:
+    - generic [ref=f12e231]:
+      - generic [ref=f12e232]: Contact
+      - heading "Got a question?" [level=2] [ref=f12e234]
+      - paragraph [ref=f12e235]: Not ready to book yet? You can send a message here for questions about lessons, level, scheduling, or anything else.
+    - generic [ref=f12e237]:
+      - generic [ref=f12e238]:
+        - generic [ref=f12e239]: Name
+        - textbox "Name" [ref=f12e240]:
+          - /placeholder: Your name
+      - generic [ref=f12e241]:
+        - generic [ref=f12e242]: Email
+        - textbox "Email" [ref=f12e243]:
+          - /placeholder: you@example.com
+      - generic [ref=f12e244]:
+        - generic [ref=f12e245]: Message
+        - textbox "Message" [ref=f12e246]:
+          - /placeholder: Write your message here...
+      - button "Send Message" [ref=f12e247]
+  - contentinfo [ref=f12e248]:
+    - generic [ref=f12e249]:
+      - generic [ref=f12e250]:
+        - link "Lessons" [ref=f12e251] [cursor=pointer]:
+          - /url: "#video"
+        - link "Students" [ref=f12e252] [cursor=pointer]:
+          - /url: "#testimonials"
+        - link "About" [ref=f12e253] [cursor=pointer]:
+          - /url: "#about"
+        - link "Book a Session" [ref=f12e254] [cursor=pointer]:
+          - /url: "#signup"
+      - generic [ref=f12e255]:
+        - link "Instagram" [ref=f12e256] [cursor=pointer]:
+          - /url: https://www.instagram.com/handpan_with_medy?igsh=MWkyazNkZDd3Ymg0cw==
+        - link "YouTube" [ref=f12e259] [cursor=pointer]:
+          - /url: https://www.youtube.com/@Handpan_With_Medy
+      - paragraph [ref=f12e262]: © 2026 Medya Shadabi. All rights reserved.

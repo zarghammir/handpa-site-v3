@@ -1,0 +1,31 @@
+- generic [ref=f7e3]:
+  - button "Open chat" [ref=f7e4]
+  - generic [ref=f7e7]:
+    - generic [ref=f7e8]:
+      - generic [ref=f7e9]:
+        - heading "Your Lessons" [level=1] [ref=f7e10]
+        - button "Account menu" [ref=f7e12]:
+          - generic [ref=f7e13]: Q
+      - generic [ref=f7e14]:
+        - button "Lessons" [ref=f7e15]
+        - button "Book" [active] [ref=f7e16]
+    - generic [ref=f7e37]:
+      - paragraph [ref=f7e38]: Pick a 60-minute slot below. Your instructor will confirm it shortly afterwards, then it'll show up under Lessons.
+      - status "Loading" [ref=f7e44]
+  - contentinfo [ref=f7e22]:
+    - generic [ref=f7e23]:
+      - generic [ref=f7e24]:
+        - link "Lessons" [ref=f7e25] [cursor=pointer]:
+          - /url: "#video"
+        - link "Students" [ref=f7e26] [cursor=pointer]:
+          - /url: "#testimonials"
+        - link "About" [ref=f7e27] [cursor=pointer]:
+          - /url: "#about"
+        - link "Book a Session" [ref=f7e28] [cursor=pointer]:
+          - /url: "#signup"
+      - generic [ref=f7e29]:
+        - link "Instagram" [ref=f7e30] [cursor=pointer]:
+          - /url: https://www.instagram.com/handpan_with_medy?igsh=MWkyazNkZDd3Ymg0cw==
+        - link "YouTube" [ref=f7e33] [cursor=pointer]:
+          - /url: https://www.youtube.com/@Handpan_With_Medy
+      - paragraph [ref=f7e36]: © 2026 Medya Shadabi. All rights reserved.

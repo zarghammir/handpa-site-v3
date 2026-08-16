@@ -1,0 +1,20 @@
+- generic [ref=f10e3]:
+  - button "Open chat" [ref=f10e4]
+  - paragraph [ref=f10e8]: Loading...
+  - contentinfo [ref=f10e9]:
+    - generic [ref=f10e10]:
+      - generic [ref=f10e11]:
+        - link "Lessons" [ref=f10e12] [cursor=pointer]:
+          - /url: "#video"
+        - link "Students" [ref=f10e13] [cursor=pointer]:
+          - /url: "#testimonials"
+        - link "About" [ref=f10e14] [cursor=pointer]:
+          - /url: "#about"
+        - link "Book a Session" [ref=f10e15] [cursor=pointer]:
+          - /url: "#signup"
+      - generic [ref=f10e16]:
+        - link "Instagram" [ref=f10e17] [cursor=pointer]:
+          - /url: https://www.instagram.com/handpan_with_medy?igsh=MWkyazNkZDd3Ymg0cw==
+        - link "YouTube" [ref=f10e20] [cursor=pointer]:
+          - /url: https://www.youtube.com/@Handpan_With_Medy
+      - paragraph [ref=f10e23]: © 2026 Medya Shadabi. All rights reserved.

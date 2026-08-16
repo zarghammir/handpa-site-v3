@@ -39,6 +39,16 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Supabase redirects expired/used links here with an error described in
+    // the hash (#error_code=otp_expired&error_description=...). Surface that
+    // message instead of the generic copy, and clean the hash off the URL.
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    if (hash.get("error_code") || hash.get("error")) {
+      const description = hash.get("error_description");
+      if (description) setError(description.replace(/\+/g, " "));
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+
     // The Supabase client parses the URL hash on load. If a recovery token is
     // present it emits PASSWORD_RECOVERY synchronously, but we also check
     // getSession() so this works if the user refreshes after the token has
@@ -115,8 +125,12 @@ export default function ResetPassword() {
             <div className="space-y-4 text-center">
               <div className="bg-orange/10 border border-orange/30 rounded-2xl px-5 py-4 text-sm text-forest/80 leading-relaxed">
                 <p className="font-bold text-forest mb-1">Link invalid or expired</p>
-                Reset links are valid for 1 hour and can only be used once.
-                Request a new one to continue.
+                {error || (
+                  <>
+                    Reset links are valid for 1 hour and can only be used once.
+                    Request a new one to continue.
+                  </>
+                )}
               </div>
               <Link
                 to="/forgot-password"

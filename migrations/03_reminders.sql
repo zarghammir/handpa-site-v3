@@ -37,7 +37,7 @@ create table if not exists public.reminder_settings (
     '<strong>{{hours_until}} hours</strong>.</p>'
     '<p><strong>When:</strong> {{session_date}} at {{session_time}}<br>'
     '<strong>Instructor:</strong> {{instructor_name}}</p>'
-    '<p>See you soon!<br>— Lotus Handpan</p>',
+    '<p>See you soon!<br>— Medya Handpan</p>',
   updated_at            timestamptz  not null default now(),
   updated_by            uuid         references auth.users(id),
   constraint reminder_settings_singleton check (id = 1)

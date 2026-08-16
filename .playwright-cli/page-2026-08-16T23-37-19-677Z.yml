@@ -1,0 +1,41 @@
+- generic [ref=f10e3]:
+  - button "Open chat" [ref=f10e4]
+  - generic [ref=f10e24]:
+    - generic [ref=f10e25]:
+      - generic [ref=f10e26]:
+        - heading "Your Lessons" [level=1] [ref=f10e27]
+        - generic [ref=f10e28]:
+          - button "Account menu" [expanded] [active] [ref=f10e29]:
+            - generic [ref=f10e30]: Q
+          - menu [ref=f10e39]:
+            - generic [ref=f10e40]:
+              - generic [ref=f10e41]: Q
+              - generic [ref=f10e43]:
+                - paragraph [ref=f10e44]: QA Test Claude
+                - paragraph [ref=f10e45]: claude.qa.test.medya@gmail.com
+            - generic [ref=f10e46]:
+              - menuitem "Profile" [ref=f10e47]
+              - menuitem "Log out" [ref=f10e48]
+      - generic [ref=f10e31]:
+        - button "Lessons" [ref=f10e32]
+        - button "Book" [ref=f10e33]
+    - generic [ref=f10e36]:
+      - paragraph [ref=f10e37]: No lessons yet
+      - paragraph [ref=f10e38]: Tap the Book tab above to schedule your first session.
+  - contentinfo [ref=f10e9]:
+    - generic [ref=f10e10]:
+      - generic [ref=f10e11]:
+        - link "Lessons" [ref=f10e12] [cursor=pointer]:
+          - /url: "#video"
+        - link "Students" [ref=f10e13] [cursor=pointer]:
+          - /url: "#testimonials"
+        - link "About" [ref=f10e14] [cursor=pointer]:
+          - /url: "#about"
+        - link "Book a Session" [ref=f10e15] [cursor=pointer]:
+          - /url: "#signup"
+      - generic [ref=f10e16]:
+        - link "Instagram" [ref=f10e17] [cursor=pointer]:
+          - /url: https://www.instagram.com/handpan_with_medy?igsh=MWkyazNkZDd3Ymg0cw==
+        - link "YouTube" [ref=f10e20] [cursor=pointer]:
+          - /url: https://www.youtube.com/@Handpan_With_Medy
+      - paragraph [ref=f10e23]: © 2026 Medya Shadabi. All rights reserved.

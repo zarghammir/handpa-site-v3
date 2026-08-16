@@ -1,9 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  // Where the CTA should send the user: their dashboard when signed in,
+  // /login otherwise. Without this the navbar said "Login" to people who
+  // were already signed in.
+  const [dashPath, setDashPath] = useState(null);
   const location = useLocation();
+
+  useEffect(() => {
+    let mounted = true;
+    async function check() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        if (mounted) setDashPath(null);
+        return;
+      }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
+      if (mounted) {
+        setDashPath(
+          profile?.role === "instructor"
+            ? "/dashboard/instructor"
+            : "/dashboard/student"
+        );
+      }
+    }
+    check();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => check());
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   // Dashboard pages are a focused workspace — no marketing nav, no Book CTA.
   // The dashboards have their own header with sign-out and any role-specific
@@ -85,14 +119,13 @@ const Navbar = () => {
           </span>
         </Link>
 
-        {/* Right — Login button. Routes to /login; if already signed in,
-            ProtectedRoute on the dashboard handles the role-based redirect. */}
+        {/* Right — Login when signed out, Dashboard when signed in. */}
         <div className="hidden md:flex items-center gap-3">
           <Link
-            to="/login"
+            to={dashPath ?? "/login"}
             className="px-5 py-2 bg-orange text-white text-sm font-bold rounded-xl hover:bg-orange/90 transition-all duration-200"
           >
-            Login
+            {dashPath ? "Dashboard" : "Login"}
           </Link>
         </div>
 
@@ -193,11 +226,11 @@ const Navbar = () => {
 
           <div className="pt-2 border-t border-sand">
             <Link
-              to="/login"
+              to={dashPath ?? "/login"}
               onClick={() => setOpen(false)}
               className="block text-center px-4 py-2.5 bg-orange text-white text-sm font-bold rounded-xl hover:bg-orange/90 transition-all"
             >
-              Login
+              {dashPath ? "Dashboard" : "Login"}
             </Link>
           </div>
         </div>

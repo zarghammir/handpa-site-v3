@@ -17,6 +17,8 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { handleCors } from "./_lib/cors.js";
 import { ok, err } from "./_lib/response.js";
+import { escapeHtml } from "./_lib/sanitize.js";
+import { EMAIL_FROM } from "./_lib/email.js";
 import { cancelCalBooking, confirmCalBooking } from "./_lib/calcom.js";
 
 const supabase = createClient(
@@ -29,14 +31,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const SITE_URL =
   process.env.SITE_URL ||
   process.env.VITE_SITE_URL ||
-  "https://handpan-lessons.vercel.app";
+  "https://www.medyhandpan.com";
 
 const VALID_STATUSES = ["pending", "confirmed", "cancelled"];
-
-// Reminders use the verified lotushandpan.com domain in Resend. The other
-// email handlers in this codebase still send from onboarding@resend.dev —
-// that's a separate cleanup tracked for a follow-up PR.
-const REMINDER_FROM = "Lotus Handpan <hello@lotushandpan.com>";
 
 export default async function handler(req, res) {
   if (handleCors(req, res)) return;
@@ -169,12 +166,12 @@ async function handleBookingPatch(req, res, profile) {
     // Fire and forget — don't block the response
     resend.emails
       .send({
-        from: "Handpan <onboarding@resend.dev>",
+        from: EMAIL_FROM,
         to: data.student_email,
         subject: "Your handpan session has been cancelled",
         html: `
           <h2>Session cancelled</h2>
-          <p>Hi ${data.student_name ?? "there"},</p>
+          <p>Hi ${escapeHtml(data.student_name ?? "there")},</p>
           <p>
             Unfortunately, your handpan session scheduled for
             <strong>${startStr}</strong> has been cancelled by your instructor.
@@ -184,8 +181,12 @@ async function handleBookingPatch(req, res, profile) {
             <a href="${SITE_URL}">our website</a>.
             If you have any questions, just reply to this email.
           </p>
-          <p>— ${profile.full_name ?? "Medya"}</p>
+          <p>— ${escapeHtml(profile.full_name ?? "Medya")}</p>
         `,
+      })
+      .then(({ error }) => {
+        // Resend's SDK reports failures via { error }, it does not throw.
+        if (error) console.error("Cancel email failed:", error);
       })
       .catch((e) => console.error("Cancel email failed:", e));
   }
@@ -314,7 +315,7 @@ async function handleSendReminders(req, res) {
 
     try {
       await resend.emails.send({
-        from: REMINDER_FROM,
+        from: EMAIL_FROM,
         to: booking.student_email,
         subject,
         html,
@@ -432,7 +433,7 @@ async function handleTestReminder(req, res, user, profile) {
 
   try {
     await resend.emails.send({
-      from: REMINDER_FROM,
+      from: EMAIL_FROM,
       to: user.email,
       subject,
       html,
