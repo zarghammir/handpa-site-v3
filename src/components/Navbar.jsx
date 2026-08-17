@@ -12,8 +12,7 @@ const Navbar = () => {
 
   useEffect(() => {
     let mounted = true;
-    async function check() {
-      const { data: { session } } = await supabase.auth.getSession();
+    async function applySession(session) {
       if (!session) {
         if (mounted) setDashPath(null);
         return;
@@ -31,8 +30,13 @@ const Navbar = () => {
         );
       }
     }
-    check();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => check());
+    // onAuthStateChange emits INITIAL_SESSION with the current session as
+    // soon as we subscribe — the supabase-recommended way to read auth state
+    // on mount (a bare getSession() here can stall behind the client's
+    // startup lock and never resolve).
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySession(session);
+    });
     return () => {
       mounted = false;
       sub.subscription.unsubscribe();
