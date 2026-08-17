@@ -61,6 +61,37 @@ function isIgnoredEvent(payload) {
   return IGNORED_EVENT_SLUGS.has(slug);
 }
 
+// The video-call link for the booking: Google Meet reports a meet.google.com
+// URL, Cal Video an app.cal.com/video URL. Non-URL locations (in person,
+// "integrations:daily") return null and the dashboard derives a fallback.
+function getMeetingUrl(payload) {
+  const candidates = [
+    payload?.metadata?.videoCallUrl,
+    payload?.videoCallData?.url,
+    payload?.location,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string" && /^https?:\/\//.test(c)) return c;
+  }
+  return null;
+}
+
+// Upsert that tolerates the meeting_url column not existing yet (the
+// migration is applied by hand) — retries once without the field so a
+// pending migration can never break booking ingestion.
+async function upsertBooking(row) {
+  let { error } = await supabase
+    .from("bookings")
+    .upsert(row, { onConflict: "booking_id" });
+  if (error && /meeting_url/.test(error.message || "")) {
+    const { meeting_url, ...rest } = row;
+    ({ error } = await supabase
+      .from("bookings")
+      .upsert(rest, { onConflict: "booking_id" }));
+  }
+  return error;
+}
+
 // ── HMAC verification ────────────────────────────────────────────────────────
 // Cal.com signs every webhook with HMAC-SHA256 of the raw body. We recompute
 // and compare in constant time so an attacker can't time-attack the secret.
@@ -145,18 +176,16 @@ async function handleCreated(payload, res) {
   const endTime = payload?.endTime ?? null;
   const bookingId = payload?.uid ?? null;
 
-  const { error: dbError } = await supabase.from("bookings").upsert(
-    {
-      booking_id: bookingId,
-      student_name: studentName,
-      student_email: studentEmail,
-      event_type: eventType,
-      start_time: startTime,
-      end_time: endTime,
-      status: "confirmed",
-    },
-    { onConflict: "booking_id" }
-  );
+  const dbError = await upsertBooking({
+    booking_id: bookingId,
+    student_name: studentName,
+    student_email: studentEmail,
+    event_type: eventType,
+    start_time: startTime,
+    end_time: endTime,
+    status: "confirmed",
+    meeting_url: getMeetingUrl(payload),
+  });
 
   if (dbError) {
     console.error("Supabase upsert error:", dbError);
@@ -255,18 +284,16 @@ async function handleRescheduled(payload, res) {
 
   if (!data || data.length === 0) {
     // Old uid not found — insert defensively
-    await supabase.from("bookings").upsert(
-      {
-        booking_id: newBookingId ?? oldBookingId,
-        student_name: payload?.attendees?.[0]?.name ?? "Unknown",
-        student_email: payload?.attendees?.[0]?.email ?? null,
-        event_type: payload?.title ?? "Session",
-        start_time: startTime,
-        end_time: endTime,
-        status: "confirmed",
-      },
-      { onConflict: "booking_id" }
-    );
+    await upsertBooking({
+      booking_id: newBookingId ?? oldBookingId,
+      student_name: payload?.attendees?.[0]?.name ?? "Unknown",
+      student_email: payload?.attendees?.[0]?.email ?? null,
+      event_type: payload?.title ?? "Session",
+      start_time: startTime,
+      end_time: endTime,
+      status: "confirmed",
+      meeting_url: getMeetingUrl(payload),
+    });
   }
 
   // Email Medya about the reschedule

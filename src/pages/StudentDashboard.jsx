@@ -78,6 +78,14 @@ function countdownLabel(iso) {
   return `in ${days} days`;
 }
 
+// Where the student joins the call: the URL cal.com reported (Google Meet
+// once connected), else cal.com's video room for the booking uid.
+function joinUrl(booking) {
+  if (booking.meeting_url) return booking.meeting_url;
+  if (booking.booking_id) return `https://app.cal.com/video/${booking.booking_id}`;
+  return null;
+}
+
 // Google Calendar wants a prefilled-event URL; Apple (and Outlook) want a
 // downloadable .ics. We offer both from one "Add to calendar" menu.
 function googleCalendarUrl(booking) {
@@ -368,6 +376,17 @@ export default function StudentDashboard() {
                     {timeRange(next.start_time, next.end_time)} · with Medya
                   </p>
                   <div className="mt-4 flex items-center gap-2.5 flex-wrap">
+                    {joinUrl(next) && (
+                      <a
+                        href={joinUrl(next)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full bg-cream text-forest px-4 py-1.5 text-[13.5px] font-extrabold shadow-[0_4px_14px_-4px_rgba(0,0,0,0.35)] hover:bg-sand transition-colors"
+                      >
+                        <VideoIcon className="w-[15px] h-[15px]" />
+                        Join lesson
+                      </a>
+                    )}
                     <span className="inline-flex items-center gap-2 rounded-full bg-cream/15 border border-cream/20 px-3.5 py-1.5 text-[13.5px] font-bold text-sand">
                       <span className="w-[7px] h-[7px] rounded-full bg-orange shadow-[0_0_8px_1px_rgba(230,126,34,0.8)]" />
                       {countdownLabel(next.start_time)}
@@ -580,29 +599,42 @@ function JourneyStop({ booking, lessonNo, latest, upcoming, delayIndex = 0, coun
             : "border-sage"
         }`}
       />
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        className="w-full flex items-baseline justify-between gap-3 text-left mb-3 group"
-      >
-        <span className="text-[16.5px] font-extrabold text-forest tracking-tight">
-          {dayLabel(booking.start_time)} · Lesson {lessonNo}
-          {upcoming && (
-            <span className="ml-2 align-middle text-[11px] font-bold uppercase tracking-wide text-orange/80">
-              upcoming
-            </span>
-          )}
-        </span>
-        <span className="shrink-0 text-[13px] font-semibold text-forest/70 whitespace-nowrap group-hover:text-forest transition-colors">
-          {metaLabel}
-          <ChevronIcon
-            className={`inline-block w-3 h-3 ml-1.5 transition-transform ${
-              isOpen ? "rotate-180" : ""
-            }`}
-          />
-        </span>
-      </button>
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          className="flex-1 min-w-0 flex items-baseline justify-between gap-3 text-left group"
+        >
+          <span className="text-[16.5px] font-extrabold text-forest tracking-tight">
+            {dayLabel(booking.start_time)} · Lesson {lessonNo}
+            {upcoming && (
+              <span className="ml-2 align-middle text-[11px] font-bold uppercase tracking-wide text-orange/80">
+                upcoming
+              </span>
+            )}
+          </span>
+          <span className="shrink-0 text-[13px] font-semibold text-forest/70 whitespace-nowrap group-hover:text-forest transition-colors">
+            {metaLabel}
+            <ChevronIcon
+              className={`inline-block w-3 h-3 ml-1.5 transition-transform ${
+                isOpen ? "rotate-180" : ""
+              }`}
+            />
+          </span>
+        </button>
+        {upcoming && joinUrl(booking) && (
+          <a
+            href={joinUrl(booking)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-forest text-cream px-3 py-1 text-[12.5px] font-extrabold hover:bg-sage transition-colors"
+          >
+            <VideoIcon className="w-[13px] h-[13px]" />
+            Join
+          </a>
+        )}
+      </div>
 
       {isOpen && user && (
         <>
@@ -650,6 +682,14 @@ function CalendarPlusIcon({ className }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className={className}>
       <rect x="3" y="5" width="18" height="16" rx="3" />
       <path d="M8 3v4M16 3v4M3 10h18M12 13v6M9 16h6" />
+    </svg>
+  );
+}
+function VideoIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect x="2" y="6" width="13" height="12" rx="3" />
+      <path d="m15 10 5-3v10l-5-3" />
     </svg>
   );
 }
