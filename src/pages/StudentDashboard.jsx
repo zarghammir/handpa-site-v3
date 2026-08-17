@@ -78,6 +78,24 @@ function countdownLabel(iso) {
   return `in ${days} days`;
 }
 
+// Google Calendar wants a prefilled-event URL; Apple (and Outlook) want a
+// downloadable .ics. We offer both from one "Add to calendar" menu.
+function googleCalendarUrl(booking) {
+  const fmt = (iso) =>
+    new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const end =
+    booking.end_time ||
+    new Date(new Date(booking.start_time).getTime() + 3_600_000).toISOString();
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: "Handpan lesson with Medya",
+    dates: `${fmt(booking.start_time)}/${fmt(end)}`,
+    details:
+      "Your handpan lesson — notes live at https://www.medyhandpan.com/dashboard/student",
+  });
+  return `https://calendar.google.com/calendar/render?${params}`;
+}
+
 // Build a downloadable .ics so "Add to calendar" works on every device
 // without any third-party link.
 function downloadIcs(booking) {
@@ -121,6 +139,7 @@ export default function StudentDashboard() {
   // booking_id → { notes, files } so collapsed stops can say what Medya
   // left there instead of repeating the booking's time slot.
   const [threadCounts, setThreadCounts] = useState({});
+  const [calMenuOpen, setCalMenuOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -331,14 +350,51 @@ export default function StudentDashboard() {
                       <span className="w-[7px] h-[7px] rounded-full bg-orange shadow-[0_0_8px_1px_rgba(230,126,34,0.8)]" />
                       {countdownLabel(next.start_time)}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => downloadIcs(next)}
-                      className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-cream/35 px-3.5 py-1.5 text-[13.5px] font-bold text-cream hover:bg-cream/10 hover:border-cream/60 transition-colors"
-                    >
-                      <CalendarIcon className="w-[15px] h-[15px]" />
-                      Add to calendar
-                    </button>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setCalMenuOpen((v) => !v)}
+                        aria-expanded={calMenuOpen}
+                        aria-haspopup="menu"
+                        className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-cream/35 px-3.5 py-1.5 text-[13.5px] font-bold text-cream hover:bg-cream/10 hover:border-cream/60 transition-colors"
+                      >
+                        <CalendarIcon className="w-[15px] h-[15px]" />
+                        Add to calendar
+                        <ChevronIcon
+                          className={`w-3 h-3 transition-transform ${
+                            calMenuOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                      {calMenuOpen && (
+                        <div
+                          role="menu"
+                          className="absolute left-0 top-[calc(100%+8px)] z-20 min-w-[210px] rounded-2xl bg-white border border-forest/10 shadow-[0_12px_30px_-10px_rgba(45,59,31,0.4)] p-1.5 flex flex-col"
+                        >
+                          <a
+                            role="menuitem"
+                            href={googleCalendarUrl(next)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setCalMenuOpen(false)}
+                            className="rounded-xl px-3.5 py-2.5 text-[14px] font-bold text-forest hover:bg-cream transition-colors"
+                          >
+                            Google Calendar
+                          </a>
+                          <button
+                            role="menuitem"
+                            type="button"
+                            onClick={() => {
+                              downloadIcs(next);
+                              setCalMenuOpen(false);
+                            }}
+                            className="rounded-xl px-3.5 py-2.5 text-[14px] font-bold text-forest text-left hover:bg-cream transition-colors"
+                          >
+                            Apple / Outlook (.ics)
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </>
               ) : (
