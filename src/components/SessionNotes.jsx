@@ -306,7 +306,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
   return (
     <div className="flex flex-col gap-3">
       {/* Thread */}
-      <div className="flex flex-col gap-2 max-h-80 overflow-y-auto py-1">
+      <div className="flex flex-col gap-2.5 max-h-[420px] overflow-y-auto py-1 pr-1">
         {items.length === 0 && (
           <p className="text-xs text-forest/50">
             {isInstructor
@@ -327,7 +327,24 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
       {/* Input row — text + attach */}
       {canPost ? (
         <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
+          <div className="flex items-end gap-2">
+            {isInstructor && (
+              <label
+                className="shrink-0 w-[42px] h-[42px] grid place-items-center rounded-full bg-white border-[1.5px] border-forest/15 text-forest/60 hover:text-orange hover:border-orange/50 cursor-pointer transition-colors"
+                title="Attach a file"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[17px] h-[17px]">
+                  <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                </svg>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileChange}
+                  disabled={uploading}
+                  className="hidden"
+                />
+              </label>
+            )}
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -339,42 +356,30 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
               }}
               placeholder={
                 isInstructor
-                  ? "Write a note for the student..."
-                  : "Reply to your instructor..."
+                  ? "Write a note for the student…"
+                  : "Write to Medya…"
               }
-              rows={2}
-              className="flex-1 rounded-2xl border border-forest/15 bg-cream px-3 py-2 text-sm text-forest placeholder:text-forest/35 outline-none focus:border-orange resize-none"
+              rows={1}
+              className="flex-1 rounded-3xl border-[1.5px] border-forest/12 bg-white px-4 py-2.5 text-[14.5px] text-forest placeholder:text-forest/40 outline-none focus:border-sage resize-none caret-orange transition-colors"
             />
             <button
               type="button"
               onClick={handleSaveText}
               disabled={saving || !text.trim()}
-              className="px-4 py-2 bg-forest text-cream font-bold text-sm rounded-2xl hover:bg-sage transition-colors disabled:opacity-50"
+              aria-label="Send"
+              className="shrink-0 w-[42px] h-[42px] grid place-items-center rounded-full bg-forest text-cream hover:bg-sage transition-colors disabled:opacity-40"
             >
-              {saving ? "..." : "Send"}
+              {saving ? (
+                <span className="w-4 h-4 border-2 border-cream/40 border-t-cream rounded-full animate-spin" />
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-[17px] h-[17px]">
+                  <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                </svg>
+              )}
             </button>
           </div>
-
-          {/* Instructor-only file attach row */}
-          {isInstructor && (
-            <div className="flex items-center gap-3">
-              <label className="inline-flex items-center gap-2 text-xs font-bold text-forest/70 hover:text-orange cursor-pointer">
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-cream border border-forest/15">
-                  📎
-                </span>
-                Attach file
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handleFileChange}
-                  disabled={uploading}
-                  className="hidden"
-                />
-              </label>
-              {uploading && (
-                <span className="text-xs text-forest/50">Uploading...</span>
-              )}
-            </div>
+          {isInstructor && uploading && (
+            <span className="text-xs text-forest/50 px-1">Uploading…</span>
           )}
         </div>
       ) : (
@@ -422,16 +427,18 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
 
     const bubble = (
       <div
-        className={`max-w-[85%] rounded-2xl border border-sand px-3 py-2 ${
-          isInstructorNote ? "bg-sage/10" : "bg-orange/10"
+        className={`max-w-[85%] px-3.5 py-2.5 shadow-[0_3px_10px_-4px_rgba(45,59,31,0.14)] ${
+          isMine
+            ? "bg-[#F0EAD8] border border-sage/40 rounded-[18px_4px_18px_18px]"
+            : "bg-white border border-forest/10 rounded-[4px_18px_18px_18px]"
         }`}
       >
         <p
-          className={`text-xs font-bold mb-1 ${
-            isInstructorNote ? "text-sage" : "text-orange"
+          className={`text-xs font-extrabold mb-0.5 ${
+            isMine ? "text-forest/45" : "text-sage"
           }`}
         >
-          {isInstructorNote ? "Medya" : isMine ? "You" : "Student"}
+          {isMine ? "You" : isInstructorNote ? "Medya" : "Student"}
         </p>
 
         {isEditing ? (
@@ -489,11 +496,11 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
     return (
       <div
         key={`note-${note.id}`}
-        className={`flex items-end gap-2 ${
-          isInstructorNote ? "self-start flex-row" : "self-end flex-row-reverse"
+        className={`flex items-start gap-2 ${
+          isMine ? "self-end flex-row-reverse" : "self-start flex-row"
         } max-w-[95%]`}
       >
-        {renderAvatar(note.author_id, fallbackName)}
+        {!isMine && renderAvatar(note.author_id, fallbackName)}
         {bubble}
       </div>
     );
@@ -505,22 +512,28 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
     const showDelete = isInstructor;
 
     const bubble = (
-      <div className="max-w-[85%] rounded-2xl border border-sand bg-sage/10 px-3 py-2">
-        <p className="text-xs font-bold mb-1 text-sage">Medya · file</p>
+      <div className="max-w-[85%] rounded-[4px_18px_18px_18px] border border-forest/10 bg-white px-3.5 py-2.5 shadow-[0_3px_10px_-4px_rgba(45,59,31,0.14)]">
+        <p className="text-xs font-extrabold mb-1 text-sage">Medya</p>
 
         <a
           href={file.signed_url || "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-xl bg-white border border-sand px-3 py-2 hover:border-orange transition-colors"
+          className="flex w-fit items-center gap-2.5 rounded-xl bg-cream border border-forest/10 py-2 pl-2 pr-3.5 hover:border-sage hover:-translate-y-px transition-all"
         >
-          <span className="text-lg">📎</span>
+          <span className="w-[30px] h-[30px] shrink-0 grid place-items-center rounded-[9px] bg-sand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2D3B1F" strokeWidth="2" strokeLinecap="round" className="w-[15px] h-[15px]">
+              <path d="M9 18V6l10-2v11" />
+              <circle cx="6.5" cy="18" r="2.5" />
+              <circle cx="16.5" cy="15" r="2.5" />
+            </svg>
+          </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-forest truncate" title={file.file_name}>
+            <p className="text-[13.5px] font-bold text-forest truncate" title={file.file_name}>
               {file.file_name}
             </p>
-            <p className="text-[11px] text-forest/50">
-              {formatBytes(file.file_size)} · click to open
+            <p className="text-[11px] text-forest/50 font-semibold">
+              {formatBytes(file.file_size)} · tap to open
             </p>
           </div>
         </a>
@@ -545,7 +558,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
     return (
       <div
         key={`file-${file.id}`}
-        className="flex items-end gap-2 self-start max-w-[95%]"
+        className="flex items-start gap-2 self-start max-w-[95%]"
       >
         {renderAvatar(file.uploader_id, "Medya")}
         {bubble}

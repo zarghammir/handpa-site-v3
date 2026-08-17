@@ -90,3 +90,53 @@ html {
     font-size: 13px;
   }
 } */
+/* ── Student journey timeline (StudentDashboard) ─────────────────────────── */
+.timeline-spine::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 8px;
+  bottom: 8px;
+  width: 2.5px;
+  border-radius: 2px;
+  background: linear-gradient(#a6b28b, rgba(166, 178, 139, 0.25));
+  transform-origin: top;
+  animation: spine-draw 0.9s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.origin-dot::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  top: 8px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #a6b28b;
+}
+.animate-hero-rise {
+  animation: hero-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.journey-stop {
+  animation: stop-fadeup 0.6s both;
+}
+.journey-stop:nth-child(1) { animation-delay: 0.3s; }
+.journey-stop:nth-child(2) { animation-delay: 0.42s; }
+.journey-stop:nth-child(3) { animation-delay: 0.54s; }
+.journey-stop:nth-child(4) { animation-delay: 0.66s; }
+
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(16px); }
+}
+@keyframes stop-fadeup {
+  from { opacity: 0; transform: translateY(10px); }
+}
+@keyframes spine-draw {
+  from { transform: scaleY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-rise,
+  .journey-stop,
+  .timeline-spine::before {
+    animation: none;
+  }
+}
