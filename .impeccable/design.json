@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-16T00:00:00Z",
+  "title": "Design System: Medya Handpan",
+  "extensions": {
+    "colorMeta": {
+      "forest": {
+        "role": "primary",
+        "displayName": "Forest",
+        "canonical": "#2D3B1F",
+        "tonalRamp": ["oklch(18% 0.05 130)", "oklch(28% 0.06 130)", "oklch(38% 0.07 130)", "oklch(48% 0.07 130)", "oklch(58% 0.07 130)", "oklch(70% 0.06 130)", "oklch(82% 0.05 130)", "oklch(94% 0.02 130)"]
+      },
+      "sage": {
+        "role": "secondary",
+        "displayName": "Sage",
+        "canonical": "#A6B28B",
+        "tonalRamp": ["oklch(25% 0.05 125)", "oklch(35% 0.06 125)", "oklch(45% 0.06 125)", "oklch(55% 0.06 125)", "oklch(65% 0.06 125)", "oklch(74% 0.055 125)", "oklch(85% 0.04 125)", "oklch(95% 0.02 125)"]
+      },
+      "orange": {
+        "role": "secondary",
+        "displayName": "Burnt Orange",
+        "canonical": "#E67E22",
+        "tonalRamp": ["oklch(30% 0.1 55)", "oklch(40% 0.13 55)", "oklch(50% 0.15 55)", "oklch(60% 0.16 55)", "oklch(66% 0.16 55)", "oklch(75% 0.12 55)", "oklch(85% 0.08 55)", "oklch(95% 0.03 55)"]
+      },
+      "sand": {
+        "role": "neutral",
+        "displayName": "Sand",
+        "canonical": "#EBD5AB",
+        "tonalRamp": ["oklch(30% 0.05 90)", "oklch(42% 0.07 90)", "oklch(54% 0.08 90)", "oklch(66% 0.09 90)", "oklch(78% 0.09 90)", "oklch(87% 0.08 90)", "oklch(92% 0.06 90)", "oklch(97% 0.02 90)"]
+      },
+      "cream": {
+        "role": "neutral",
+        "displayName": "Cream",
+        "canonical": "#FAFAF5",
+        "tonalRamp": ["oklch(20% 0.005 110)", "oklch(35% 0.005 110)", "oklch(50% 0.005 110)", "oklch(65% 0.005 110)", "oklch(78% 0.005 110)", "oklch(88% 0.005 110)", "oklch(95% 0.005 110)", "oklch(98.5% 0.005 110)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The hero's lesson date — biggest element on the page; text-wrap: balance." },
+      "headline": { "displayName": "Headline", "purpose": "Page title (font-black, tracking-tight)." },
+      "title": { "displayName": "Title", "purpose": "Journey-stop titles and CTA label (extrabold 16.5px)." },
+      "body": { "displayName": "Body", "purpose": "Note text and helper copy; times set tabular-nums; muted small text ≥ forest/70 on light grounds." },
+      "label": { "displayName": "Label", "purpose": "Timestamps, counts, chips; only uppercase is the 11px 'upcoming' status tag." }
+    },
+    "shadows": [
+      { "name": "card-rest", "value": "0 3px 10px -4px rgba(45,59,31,0.12)", "purpose": "Default resting shadow for cards; chat bubbles use 0.14 alpha." },
+      { "name": "hero-depth", "value": "0 18px 40px -18px rgba(45,59,31,0.55), 0 4px 12px -6px rgba(45,59,31,0.35)", "purpose": "The forest Next Lesson panel only." },
+      { "name": "cta-glow", "value": "0 10px 26px -10px rgba(230,126,34,0.65), 0 3px 8px -4px rgba(45,59,31,0.3)", "purpose": "Orange sticky book bar at rest; deepens on hover with a -2px lift." },
+      { "name": "live-dot-glow", "value": "0 0 8px 1px rgba(230,126,34,0.8)", "purpose": "The 7px live countdown dot." },
+      { "name": "dot-halo", "value": "0 0 0 5px rgba(230,126,34,0.15)", "purpose": "Halo ring around the latest lesson's spine dot (0.12 alpha on the empty-state dot)." },
+      { "name": "tone-circle-etch", "value": "inset 0 0 0 28px rgba(250,250,245,0.035), inset 0 0 0 62px rgba(250,250,245,0.03)", "purpose": "Concentric etched rings forming the handpan tone-circle on the hero panel." }
+    ],
+    "motion": [
+      { "name": "ease-settle", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "The system's entrance easing (hero rise, spine draw)." },
+      { "name": "hero-rise", "value": "0.7s ease-settle; from { opacity: 0; transform: translateY(16px) }", "purpose": "Hero panel entrance." },
+      { "name": "spine-draw", "value": "0.9s 0.25s ease-settle; scaleY(0) → 1, transform-origin top", "purpose": "Timeline spine draws downward." },
+      { "name": "stop-fadeup", "value": "0.6s both; from { opacity: 0; transform: translateY(10px) }; delay 0.3s + 0.12s × index, capped 0.9s (origin line capped 1s)", "purpose": "Index-staggered journey stop entrance." },
+      { "name": "reduced-motion", "value": "@media (prefers-reduced-motion: reduce) { animation: none }", "purpose": "All entrance animation zeroed — a hard opt-out, not a shortening." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Sticky Book Bar",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one orange element — thumb-zone booking CTA fixed to the viewport bottom over a cream gradient scrim.",
+      "html": "<button class=\"ds-book-bar\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"3\"/><path d=\"M8 3v4M16 3v4M3 10h18M12 13v6M9 16h6\"/></svg>Book your next lesson</button>",
+      "css": ".ds-book-bar { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 672px; background: #E67E22; color: #fff; font-size: 16.5px; font-weight: 800; padding: 16px 20px; border: none; border-radius: 16px; cursor: pointer; box-shadow: 0 10px 26px -10px rgba(230,126,34,0.65), 0 3px 8px -4px rgba(45,59,31,0.3); transition: all 0.15s ease; } .ds-book-bar:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -10px rgba(230,126,34,0.7), 0 4px 10px -4px rgba(45,59,31,0.3); } .ds-book-bar:focus-visible { outline: 2px solid #2D3B1F; outline-offset: 2px; }"
+    },
+    {
+      "name": "Countdown Chip",
+      "kind": "chip",
+      "refersTo": "chip-countdown",
+      "description": "Live-status pill on the forest hero: glowing orange dot + sand text on translucent cream.",
+      "html": "<div class=\"ds-chip-wrap\"><span class=\"ds-chip-countdown\"><span class=\"ds-chip-dot\"></span>in 3 days</span></div>",
+      "css": ".ds-chip-wrap { display: inline-block; background: linear-gradient(160deg, #3A4C28, #2D3B1F 60%); padding: 14px; border-radius: 16px; } .ds-chip-countdown { display: inline-flex; align-items: center; gap: 8px; border-radius: 9999px; background: rgba(250,250,245,0.15); border: 1px solid rgba(250,250,245,0.2); padding: 6px 14px; font-size: 13.5px; font-weight: 700; color: #EBD5AB; } .ds-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: #E67E22; box-shadow: 0 0 8px 1px rgba(230,126,34,0.8); }"
+    },
+    {
+      "name": "Ghost Pill (on forest)",
+      "kind": "button",
+      "refersTo": "button-ghost-on-forest",
+      "description": "Secondary action on the dark hero panel — cream outline pill with a one-stroke icon.",
+      "html": "<div class=\"ds-ghost-wrap\"><button class=\"ds-ghost-pill\"><svg viewBox=\"0 0 24 24\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"3\"/><path d=\"M8 3v4M16 3v4M3 10h18M12 14v4M10 16h4\"/></svg>Add to calendar</button></div>",
+      "css": ".ds-ghost-wrap { display: inline-block; background: linear-gradient(160deg, #3A4C28, #2D3B1F 60%); padding: 14px; border-radius: 16px; } .ds-ghost-pill { display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1.5px solid rgba(250,250,245,0.35); border-radius: 9999px; padding: 6px 14px; font-size: 13.5px; font-weight: 700; color: #FAFAF5; cursor: pointer; transition: background-color 0.15s, border-color 0.15s; } .ds-ghost-pill:hover { background: rgba(250,250,245,0.1); border-color: rgba(250,250,245,0.6); } .ds-ghost-pill:focus-visible { outline: 2px solid #EBD5AB; outline-offset: 2px; }"
+    },
+    {
+      "name": "Journey Card (empty state)",
+      "kind": "card",
+      "refersTo": "card-journey",
+      "description": "Sand-tint 22px card used on the timeline; the resting card language of the light ground.",
+      "html": "<div class=\"ds-journey-card\"><p class=\"ds-journey-card-title\">Your first lesson goes here</p><p class=\"ds-journey-card-body\">Once Medya confirms a booking it appears on this timeline, with her notes and practice files after each session.</p></div>",
+      "css": ".ds-journey-card { background: rgba(235,213,171,0.3); border: 1px solid #EBD5AB; border-radius: 22px; padding: 20px; box-shadow: 0 3px 10px -4px rgba(45,59,31,0.12); max-width: 420px; } .ds-journey-card-title { font-weight: 800; color: #2D3B1F; margin: 0; font-size: 15px; } .ds-journey-card-body { font-size: 14px; color: rgba(45,59,31,0.7); margin: 4px 0 0; max-width: 42ch; line-height: 1.4; }"
+    },
+    {
+      "name": "Chat Bubble — Mine",
+      "kind": "custom",
+      "refersTo": "bubble-mine",
+      "description": "The sender's own message: parchment fill, sage border, speaker-side corner collapsed to 4px (right).",
+      "html": "<div class=\"ds-bubble-mine\"><p class=\"ds-bubble-author-mine\">You</p><p class=\"ds-bubble-text\">Thank you! I'll practice the ostinato before Thursday.</p><p class=\"ds-bubble-time\">4:32 PM</p></div>",
+      "css": ".ds-bubble-mine { max-width: 85%; background: #F0EAD8; border: 1px solid rgba(166,178,139,0.4); border-radius: 18px 4px 18px 18px; padding: 10px 14px; box-shadow: 0 3px 10px -4px rgba(45,59,31,0.14); } .ds-bubble-author-mine { font-size: 12px; font-weight: 800; color: rgba(45,59,31,0.7); margin: 0 0 2px; } .ds-bubble-text { font-size: 14px; color: #2D3B1F; line-height: 1.375; margin: 0; white-space: pre-wrap; } .ds-bubble-time { font-size: 10px; font-weight: 600; color: rgba(45,59,31,0.7); margin: 4px 0 0; }"
+    },
+    {
+      "name": "Chat Bubble — Theirs",
+      "kind": "custom",
+      "refersTo": "bubble-theirs",
+      "description": "The other party's message with its 28px avatar circle; white fill, muted-green author line, corner collapsed toward the avatar (left).",
+      "html": "<div class=\"ds-bubble-row\"><div class=\"ds-bubble-avatar\">M</div><div class=\"ds-bubble-theirs\"><p class=\"ds-bubble-author-theirs\">Medya</p><p class=\"ds-bubble-text2\">Beautiful progress today — keep the left hand light on the ding.</p><p class=\"ds-bubble-time2\">3:05 PM</p></div></div>",
+      "css": ".ds-bubble-row { display: flex; align-items: flex-start; gap: 8px; max-width: 95%; } .ds-bubble-avatar { width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; background: #EBD5AB; color: #2D3B1F; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; } .ds-bubble-theirs { max-width: 85%; background: #fff; border: 1px solid rgba(45,59,31,0.1); border-radius: 4px 18px 18px 18px; padding: 10px 14px; box-shadow: 0 3px 10px -4px rgba(45,59,31,0.14); } .ds-bubble-author-theirs { font-size: 12px; font-weight: 800; color: #5F6F49; margin: 0 0 2px; } .ds-bubble-text2 { font-size: 14px; color: #2D3B1F; line-height: 1.375; margin: 0; } .ds-bubble-time2 { font-size: 10px; font-weight: 600; color: rgba(45,59,31,0.7); margin: 4px 0 0; }"
+    },
+    {
+      "name": "Chat Input Row",
+      "kind": "input",
+      "refersTo": "input-chat",
+      "description": "Pill textarea with orange caret and sage focus border, plus the 42px forest send circle that hovers to sage.",
+      "html": "<div class=\"ds-input-row\"><textarea class=\"ds-input-chat\" rows=\"1\" placeholder=\"Write to Medya…\"></textarea><button class=\"ds-send-btn\" aria-label=\"Send\"><svg viewBox=\"0 0 24 24\" width=\"17\" height=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z\"/></svg></button></div>",
+      "css": ".ds-input-row { display: flex; align-items: flex-end; gap: 8px; background: #FAFAF5; padding: 8px; border-radius: 16px; } .ds-input-chat { flex: 1; border-radius: 24px; border: 1.5px solid rgba(45,59,31,0.12); background: #fff; padding: 10px 16px; font-size: 14.5px; font-family: inherit; color: #2D3B1F; caret-color: #E67E22; resize: none; outline: none; transition: border-color 0.15s; } .ds-input-chat::placeholder { color: rgba(45,59,31,0.7); } .ds-input-chat:focus { border-color: #A6B28B; } .ds-send-btn { flex-shrink: 0; width: 42px; height: 42px; display: grid; place-items: center; border: none; border-radius: 50%; background: #2D3B1F; color: #FAFAF5; cursor: pointer; transition: background-color 0.15s; } .ds-send-btn:hover { background: #A6B28B; } .ds-send-btn:disabled { opacity: 0.4; } .ds-send-btn:focus-visible { outline: 2px solid #E67E22; outline-offset: 2px; }"
+    },
+    {
+      "name": "Spine Dot Set",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Timeline state markers: 13px cream circles whose 3px border encodes state — orange + halo (latest), orange/50 (upcoming), sage (past).",
+      "html": "<div class=\"ds-spine-demo\"><span class=\"ds-dot ds-dot-latest\"></span><span class=\"ds-dot ds-dot-upcoming\"></span><span class=\"ds-dot ds-dot-past\"></span></div>",
+      "css": ".ds-spine-demo { display: flex; gap: 20px; align-items: center; background: #FAFAF5; padding: 14px; border-radius: 12px; } .ds-dot { width: 13px; height: 13px; border-radius: 50%; background: #FAFAF5; } .ds-dot-latest { border: 3px solid #E67E22; box-shadow: 0 0 0 5px rgba(230,126,34,0.15); } .ds-dot-upcoming { border: 3px solid rgba(230,126,34,0.5); } .ds-dot-past { border: 3px solid #A6B28B; }"
+    },
+    {
+      "name": "Error Card (terracotta)",
+      "kind": "card",
+      "refersTo": null,
+      "description": "The warm failure state: clay-toned card with an outlined retry pill, inside the normal 22px card language.",
+      "html": "<div class=\"ds-error-card\"><p class=\"ds-error-text\">Couldn't load your lessons. Check your connection and retry.</p><button class=\"ds-error-retry\">Retry</button></div>",
+      "css": ".ds-error-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: #FBF0E9; border: 1px solid #E5BFAE; border-radius: 22px; padding: 16px 20px; box-shadow: 0 3px 10px -4px rgba(45,59,31,0.12); } .ds-error-text { font-size: 14px; font-weight: 600; color: #8A3B24; margin: 0; } .ds-error-retry { flex-shrink: 0; font-size: 14px; font-weight: 800; color: #8A3B24; background: transparent; border: 1.5px solid #D9A78F; border-radius: 9999px; padding: 6px 16px; cursor: pointer; transition: background-color 0.15s; } .ds-error-retry:hover { background: #F5E0D2; } .ds-error-retry:focus-visible { outline: 2px solid #8A3B24; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Lesson with a Friend",
+    "overview": "Medya Handpan is a one-teacher music site that reads like the instrument sounds: warm, resonant, unhurried. The ground is near-white cream, the ink is a deep forest green, and everything structural (borders, timelines, growth markers) is sage. The deepest committed surface — the student dashboard — treats a student's lessons as a conversation with their teacher, not a table of bookings: a dark forest hero panel greets you with your next lesson, a sage spine carries the journey downward, and notes render as chat bubbles between two people. It explicitly refuses the flat white admin-card idiom.\n\nDensity is low and mobile-first: one centered column, generous card padding, one thing per viewport band. Color discipline is the system's spine — orange exists for exactly one job per screen (the booking action and its live-status echoes), so the page always has a single obvious next step. Depth is soft and tinted, never gray; motion is a gentle rise-and-settle that respects reduced-motion.",
+    "keyCharacteristics": [
+      "Cream ground, forest ink, sage structure, orange reserved for the single primary action",
+      "Large soft radii (18–26px) — nothing sharp, nothing fully square",
+      "Weight-driven type hierarchy on a system sans (800–900 for headings, no display webfont)",
+      "Shadows tinted with forest or orange, never neutral gray",
+      "Hand-drawn single-stroke inline SVG icons (round caps, stroke 2–2.5)",
+      "Index-staggered entrance motion with a full prefers-reduced-motion opt-out"
+    ],
+    "rules": [
+      { "name": "The One Orange Rule", "body": "Orange is the booking action and its live echoes (countdown dot, upcoming markers, caret). One filled orange element per screen; everything else asking for attention must use weight, size, or sage.", "section": "colors" },
+      { "name": "The Contrast Floor Rule", "body": "Muted text is forest at reduced opacity, and on light grounds (cream, white, sand tints) small text never drops below forest/70 (rgba(45,59,31,0.7)). forest/60 is permitted only at 14px+; decorative etching on the dark panel may go fainter.", "section": "colors" },
+      { "name": "The Warm Failure Rule", "body": "Errors render in the terracotta family (#FBF0E9 / #E5BFAE / #8A3B24), inside the same 22px-radius card language as everything else.", "section": "colors" },
+      { "name": "The Heavy Whisper Rule", "body": "Headings are extrabold-to-black and tight; supporting text is small and semibold at forest/70. Nothing in between — no medium-weight 18px middle register.", "section": "typography" },
+      { "name": "The Tabular Time Rule", "body": "Times and countdowns set tabular-nums.", "section": "typography" },
+      { "name": "The Tinted Shadow Rule", "body": "Shadows are forest-tinted; only orange elements may add an orange glow. Never rgba(0,0,0,…).", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep exactly one orange-filled element per screen, in the thumb zone when it's the primary action.",
+      "Do tint every shadow with forest rgba(45,59,31,…) (orange glow allowed only under orange elements).",
+      "Do hold muted small text at forest/70 or darker on light grounds (the Contrast Floor).",
+      "Do stagger entrance motion by index (0.12s steps from 0.3s, capped ≤1s) using the cubic-bezier(0.16, 1, 0.3, 1) settle, and zero all of it under prefers-reduced-motion: reduce.",
+      "Do draw new icons in the one-stroke family: inline SVG, currentColor stroke 2–2.5, round caps, 15–18px.",
+      "Do collapse the speaker-side bubble corner to 4px and keep instructor content left / student content right.",
+      "Do state honest empties (\"no notes yet\", \"Your instructor hasn't added anything yet\") and claim nothing while counts are unknown."
+    ],
+    "donts": [
+      "Don't use flat white admin-card lists for lesson data — the journey/conversation form is the committed refusal of that idiom (direction contract, seed 8ce413f2).",
+      "Don't introduce gray or black shadows, gray borders, or cool neutrals; every neutral in this world is warm (cream, sand, forest opacities).",
+      "Don't use stock red alert styling; failures use the terracotta family inside the normal card language.",
+      "Don't add a second accent, a webfont, an icon package, or uppercase display text (uppercase is reserved for the single 11px status tag).",
+      "Don't put a countdown, glow, or orange ring on anything that isn't live or next — orange state markers mean \"happening/soonest\", not decoration."
+    ]
+  }
+}
