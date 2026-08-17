@@ -317,7 +317,7 @@ export default function StudentDashboard() {
             {/* Next lesson hero */}
             <section
               aria-label="Your next lesson"
-              className="relative overflow-hidden rounded-[26px] text-cream px-6 py-6 shadow-[0_18px_40px_-18px_rgba(45,59,31,0.55),0_4px_12px_-6px_rgba(45,59,31,0.35)] animate-hero-rise"
+              className="relative rounded-[26px] text-cream px-6 py-6 shadow-[0_18px_40px_-18px_rgba(45,59,31,0.55),0_4px_12px_-6px_rgba(45,59,31,0.35)] animate-hero-rise"
               style={{
                 background:
                   "radial-gradient(120% 90% at 85% -10%, rgba(166,178,139,0.35), transparent 55%)," +
@@ -325,15 +325,20 @@ export default function StudentDashboard() {
                   "linear-gradient(160deg, #3A4C28, #2D3B1F 60%)",
               }}
             >
-              {/* faint handpan tone-circle etched into the panel */}
+              {/* faint handpan tone-circle etched into the panel — clipped in
+                  its own layer so the calendar menu can overflow the card */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute -right-[70px] -top-[70px] w-[230px] h-[230px] rounded-full border border-cream/10"
-                style={{
-                  boxShadow:
-                    "inset 0 0 0 28px rgba(250,250,245,0.035), inset 0 0 0 62px rgba(250,250,245,0.03)",
-                }}
-              />
+                className="pointer-events-none absolute inset-0 rounded-[26px] overflow-hidden"
+              >
+                <div
+                  className="absolute -right-[70px] -top-[70px] w-[230px] h-[230px] rounded-full border border-cream/10"
+                  style={{
+                    boxShadow:
+                      "inset 0 0 0 28px rgba(250,250,245,0.035), inset 0 0 0 62px rgba(250,250,245,0.03)",
+                  }}
+                />
+              </div>
               {next ? (
                 <>
                   <h2 className="text-[15px] font-semibold text-cream/75 mb-3">
