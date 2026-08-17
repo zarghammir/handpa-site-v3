@@ -242,7 +242,9 @@ export default function StudentDashboard() {
       .reverse(); // ascending source → newest first
     return {
       next: upcoming[0] ?? null,
-      upcomingRest: upcoming.slice(1),
+      // Reversed so the whole spine reads one direction — furthest future at
+      // the top, then down through the hero's date into the past, oldest last.
+      upcomingRest: upcoming.slice(1).reverse(),
       past,
       numberById,
     };
