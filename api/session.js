@@ -55,7 +55,52 @@ export default async function handler(req, res) {
   if (type === "notes")        return handleNotes(req, res, user);
   if (type === "files")        return handleFiles(req, res, user);
   if (type === "participants") return handleParticipants(req, res, user);
-  return err(res, 400, "Pass ?type=notes, ?type=files, or ?type=participants");
+  if (type === "summary")      return handleSummary(req, res, user);
+  return err(res, 400, "Pass ?type=notes, ?type=files, ?type=participants, or ?type=summary");
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// SUMMARY
+// ─────────────────────────────────────────────────────────────────────────
+// Per-booking note + file counts for the student journey's collapsed stops
+// ("2 notes · 1 file"). One round-trip for all of the caller's bookings —
+// students can't read session_notes directly under RLS, so this goes
+// through the service role scoped to bookings the caller owns.
+async function handleSummary(req, res, user) {
+  if (req.method !== "GET") return err(res, 405, "Method not allowed.");
+
+  // Scope strictly to the caller's own bookings (or all, for the instructor).
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, email")
+    .eq("id", user.id)
+    .single();
+
+  let bookingQuery = supabase.from("bookings").select("id");
+  if (profile?.role !== "instructor") {
+    bookingQuery = bookingQuery.eq("student_email", profile?.email || user.email);
+  }
+  const { data: bookingRows, error: bookingErr } = await bookingQuery;
+  if (bookingErr) return err(res, 500, "Could not load bookings.");
+
+  const ids = (bookingRows ?? []).map((b) => b.id);
+  if (ids.length === 0) return ok(res, { counts: {} });
+
+  const [notesRes, filesRes] = await Promise.all([
+    supabase.from("session_notes").select("booking_id").in("booking_id", ids),
+    supabase.from("session_files").select("booking_id").in("booking_id", ids),
+  ]);
+
+  const counts = {};
+  for (const n of notesRes.data ?? []) {
+    counts[n.booking_id] = counts[n.booking_id] || { notes: 0, files: 0 };
+    counts[n.booking_id].notes++;
+  }
+  for (const f of filesRes.data ?? []) {
+    counts[f.booking_id] = counts[f.booking_id] || { notes: 0, files: 0 };
+    counts[f.booking_id].files++;
+  }
+  return ok(res, { counts });
 }
 
 // ─────────────────────────────────────────────────────────────────────────

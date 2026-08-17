@@ -20,6 +20,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "../lib/supabase";
+import { authedFetch } from "../lib/api";
 import SessionNotes from "../components/SessionNotes";
 import BookingEmbed from "../components/BookingEmbed";
 import StudentProfileTab from "../components/StudentProfileTab";
@@ -162,25 +163,13 @@ export default function StudentDashboard() {
     load();
   }, [reloadTick]);
 
-  // Two RLS-scoped queries give every stop its "2 notes · 1 file" summary.
-  // Best-effort: on failure the stops just show their fallback label.
+  // One API round-trip gives every stop its "2 notes · 1 file" summary
+  // (students can't read session_notes directly under RLS). Best-effort:
+  // while unknown, stops show a quiet chevron rather than a wrong claim.
   async function loadThreadCounts(rows) {
     if (!rows.length) return;
-    const ids = rows.map((b) => b.id);
-    const [notesRes, filesRes] = await Promise.all([
-      supabase.from("session_notes").select("booking_id").in("booking_id", ids),
-      supabase.from("session_files").select("booking_id").in("booking_id", ids),
-    ]);
-    const counts = {};
-    for (const n of notesRes.data ?? []) {
-      counts[n.booking_id] = counts[n.booking_id] || { notes: 0, files: 0 };
-      counts[n.booking_id].notes++;
-    }
-    for (const f of filesRes.data ?? []) {
-      counts[f.booking_id] = counts[f.booking_id] || { notes: 0, files: 0 };
-      counts[f.booking_id].files++;
-    }
-    setThreadCounts(counts);
+    const result = await authedFetch("/api/session?type=summary");
+    if (result.ok && result.data.counts) setThreadCounts(result.data.counts);
   }
 
   // Chronological lesson numbers, then split around "now". Upcoming beyond
@@ -413,7 +402,11 @@ export default function StudentDashboard() {
                       lessonNo={numberById[b.id]}
                       latest={i === 0}
                       delayIndex={upcomingRest.length + i}
-                      counts={threadCounts[b.id]}
+                      counts={
+                        Object.keys(threadCounts).length
+                          ? threadCounts[b.id] ?? { notes: 0, files: 0 }
+                          : undefined
+                      }
                       isOpen={openBookingId === b.id}
                       onToggle={() =>
                         setOpenBookingId(openBookingId === b.id ? null : b.id)
@@ -478,7 +471,9 @@ function JourneyStop({ booking, lessonNo, latest, upcoming, delayIndex = 0, coun
     ? timeRange(booking.start_time, booking.end_time)
     : metaParts.length
     ? metaParts.join(" · ")
-    : "no notes yet";
+    : counts
+    ? "no notes yet"
+    : ""; // counts still loading/unavailable — claim nothing
 
   return (
     <div
