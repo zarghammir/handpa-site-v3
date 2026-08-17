@@ -40,7 +40,9 @@ import {
   Routes,
   Route,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
+import { supabase } from "./lib/supabase";
 import { lazy, Suspense, useEffect } from "react";
 
 import Navbar from "./components/Navbar";
@@ -93,6 +95,27 @@ const CHATLESS_PATHS = new Set([
   "/reset-password",
   "/onboarding",
 ]);
+
+// If a password-recovery link lands anywhere other than /reset-password
+// (e.g. Supabase's redirect allow-list rejects the path and falls back to
+// the bare Site URL), the token still gets consumed on that page — the user
+// ends up "logged in" on the homepage with no reset form in sight. Catch
+// the PASSWORD_RECOVERY event globally and take them to the reset page.
+function RecoveryRedirect() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY" && pathname !== "/reset-password") {
+        navigate("/reset-password", { replace: true });
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [navigate, pathname]);
+
+  return null;
+}
 
 function SiteChat() {
   const { pathname } = useLocation();
@@ -177,6 +200,7 @@ function App() {
         </Helmet>
 
         <ScrollToHash />
+        <RecoveryRedirect />
         <Navbar />
         <SiteChat />
 
