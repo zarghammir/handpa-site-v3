@@ -167,9 +167,18 @@ export default function StudentDashboard() {
   // (students can't read session_notes directly under RLS). Best-effort:
   // while unknown, stops show a quiet chevron rather than a wrong claim.
   async function loadThreadCounts(rows) {
-    if (!rows.length) return;
+    if (!rows?.length) return;
     const result = await authedFetch("/api/session?type=summary");
     if (result.ok && result.data.counts) setThreadCounts(result.data.counts);
+  }
+
+  // Keep collapsed counts truthful when the student posts into a thread.
+  function bumpThreadCount(bookingId, kind) {
+    setThreadCounts((prev) => {
+      const cur = prev[bookingId] ?? { notes: 0, files: 0 };
+      const key = kind === "file" ? "files" : "notes";
+      return { ...prev, [bookingId]: { ...cur, [key]: cur[key] + 1 } };
+    });
   }
 
   // Chronological lesson numbers, then split around "now". Upcoming beyond
@@ -393,6 +402,7 @@ export default function StudentDashboard() {
                         setOpenBookingId(openBookingId === b.id ? null : b.id)
                       }
                       user={user}
+                      onThreadChange={(kind) => bumpThreadCount(b.id, kind)}
                     />
                   ))}
                   {past.map((b, i) => (
@@ -412,6 +422,7 @@ export default function StudentDashboard() {
                         setOpenBookingId(openBookingId === b.id ? null : b.id)
                       }
                       user={user}
+                      onThreadChange={(kind) => bumpThreadCount(b.id, kind)}
                     />
                   ))}
                   {origin && (
@@ -461,7 +472,7 @@ export default function StudentDashboard() {
 }
 
 // ── JourneyStop ── one lesson on the spine ────────────────────────────────
-function JourneyStop({ booking, lessonNo, latest, upcoming, delayIndex = 0, counts, isOpen, onToggle, user }) {
+function JourneyStop({ booking, lessonNo, latest, upcoming, delayIndex = 0, counts, isOpen, onToggle, user, onThreadChange }) {
   // Collapsed stops advertise the conversation, not the booking slot:
   // "2 notes · 1 file", or an honest quiet fallback.
   const metaParts = [];
@@ -526,6 +537,7 @@ function JourneyStop({ booking, lessonNo, latest, upcoming, delayIndex = 0, coun
             bookingId={booking.id}
             currentUser={user}
             userRole="student"
+            onThreadChange={onThreadChange}
           />
         </>
       )}

@@ -43,7 +43,7 @@ function sanitizeFilename(name) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-export default function SessionNotes({ bookingId, currentUser, userRole = "student" }) {
+export default function SessionNotes({ bookingId, currentUser, userRole = "student", onThreadChange }) {
   const [notes, setNotes] = useState([]);
   const [files, setFiles] = useState([]);
   const [text, setText] = useState("");
@@ -189,6 +189,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
         return exists ? prev : [...prev, result.data.note];
       });
       setText("");
+      onThreadChange?.("note");
     } else {
       setError(result.error);
     }
@@ -300,7 +301,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
 
   // ── Render ───────────────────────────────────────────────────────────────
   if (loading) {
-    return <p className="text-xs text-forest/50">Loading...</p>;
+    return <p className="text-xs text-forest/70">Loading…</p>;
   }
 
   return (
@@ -308,7 +309,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
       {/* Thread */}
       <div className="flex flex-col gap-2.5 max-h-[420px] overflow-y-auto py-1 pr-1">
         {items.length === 0 && (
-          <p className="text-xs text-forest/50">
+          <p className="text-xs text-forest/70">
             {isInstructor
               ? "Empty thread. Send a message or upload a file to start."
               : "Your instructor hasn't added anything yet."}
@@ -379,11 +380,11 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
             </button>
           </div>
           {isInstructor && uploading && (
-            <span className="text-xs text-forest/50 px-1">Uploading…</span>
+            <span className="text-xs text-forest/70 px-1">Uploading…</span>
           )}
         </div>
       ) : (
-        <p className="text-xs text-forest/40 italic px-1">
+        <p className="text-xs text-forest/70 italic px-1">
           You'll be able to reply once your instructor adds something.
         </p>
       )}
@@ -472,7 +473,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
               {note.content}
             </p>
             <div className="flex items-center justify-between mt-1">
-              <p className="text-[10px] font-semibold text-forest/65">
+              <p className="text-[10px] font-semibold text-forest/70">
                 {timeStr(note.created_at)}
                 {note.updated_at && " · edited"}
               </p>
@@ -480,7 +481,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
                 <button
                   type="button"
                   onClick={() => startEdit(note)}
-                  className="text-[10px] font-bold text-forest/50 hover:text-orange"
+                  className="text-[10px] font-bold text-forest/70 hover:text-orange"
                 >
                   Edit
                 </button>
@@ -539,14 +540,14 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
         </a>
 
         <div className="flex items-center justify-between mt-1">
-          <p className="text-[10px] font-semibold text-forest/65">
+          <p className="text-[10px] font-semibold text-forest/70">
             {timeStr(file.uploaded_at)}
           </p>
           {showDelete && (
             <button
               type="button"
               onClick={() => deleteFile(file.id)}
-              className="text-[10px] font-bold text-forest/50 hover:text-red-500"
+              className="text-[10px] font-bold text-forest/70 hover:text-red-500"
             >
               Delete
             </button>
