@@ -141,6 +141,23 @@ export default function StudentDashboard() {
   const [threadCounts, setThreadCounts] = useState({});
   const [calMenuOpen, setCalMenuOpen] = useState(false);
 
+  // The calendar menu closes like every native menu: outside tap or Escape.
+  useEffect(() => {
+    if (!calMenuOpen) return;
+    const onDown = (e) => {
+      if (!e.target.closest?.("[data-cal-menu]")) setCalMenuOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setCalMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [calMenuOpen]);
+
   useEffect(() => {
     async function load() {
       setLoadError(null);
@@ -355,7 +372,7 @@ export default function StudentDashboard() {
                       <span className="w-[7px] h-[7px] rounded-full bg-orange shadow-[0_0_8px_1px_rgba(230,126,34,0.8)]" />
                       {countdownLabel(next.start_time)}
                     </span>
-                    <div className="relative">
+                    <div className="relative" data-cal-menu>
                       <button
                         type="button"
                         onClick={() => setCalMenuOpen((v) => !v)}
