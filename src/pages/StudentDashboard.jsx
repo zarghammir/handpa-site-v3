@@ -117,6 +117,9 @@ export default function StudentDashboard() {
   const [reloadTick, setReloadTick] = useState(0);
   const [view, setView] = useState("journey");
   const [openBookingId, setOpenBookingId] = useState(null);
+  // booking_id → { notes, files } so collapsed stops can say what Medya
+  // left there instead of repeating the booking's time slot.
+  const [threadCounts, setThreadCounts] = useState({});
 
   useEffect(() => {
     async function load() {
@@ -150,12 +153,35 @@ export default function StudentDashboard() {
       if (bookingRes.error) {
         setLoadError("Couldn't load your lessons. Check your connection and retry.");
       } else {
-        setBookings(bookingRes.data ?? []);
+        const rows = bookingRes.data ?? [];
+        setBookings(rows);
+        loadThreadCounts(rows);
       }
       setLoading(false);
     }
     load();
   }, [reloadTick]);
+
+  // Two RLS-scoped queries give every stop its "2 notes · 1 file" summary.
+  // Best-effort: on failure the stops just show their fallback label.
+  async function loadThreadCounts(rows) {
+    if (!rows.length) return;
+    const ids = rows.map((b) => b.id);
+    const [notesRes, filesRes] = await Promise.all([
+      supabase.from("session_notes").select("booking_id").in("booking_id", ids),
+      supabase.from("session_files").select("booking_id").in("booking_id", ids),
+    ]);
+    const counts = {};
+    for (const n of notesRes.data ?? []) {
+      counts[n.booking_id] = counts[n.booking_id] || { notes: 0, files: 0 };
+      counts[n.booking_id].notes++;
+    }
+    for (const f of filesRes.data ?? []) {
+      counts[f.booking_id] = counts[f.booking_id] || { notes: 0, files: 0 };
+      counts[f.booking_id].files++;
+    }
+    setThreadCounts(counts);
+  }
 
   // Chronological lesson numbers, then split around "now". Upcoming beyond
   // the hero renders at the top of the spine; past renders newest-first.
@@ -189,12 +215,19 @@ export default function StudentDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [past]);
 
-  const memberSince = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-      })
-    : null;
+  // The journey's origin must never postdate its own first stop: anchor on
+  // whichever is earliest — the first lesson or the account creation.
+  const origin = useMemo(() => {
+    const fmt = (iso) =>
+      new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+    const firstLesson = bookings[0]?.start_time ?? null;
+    const joined = profile?.created_at ?? null;
+    if (firstLesson && (!joined || new Date(joined) > new Date(firstLesson))) {
+      return `your first lesson · ${fmt(firstLesson)}`;
+    }
+    if (joined) return `you joined · ${fmt(joined)}`;
+    return null;
+  }, [bookings, profile]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -230,12 +263,12 @@ export default function StudentDashboard() {
 
         {/* ── Load error ─────────────────────────────────────── */}
         {loadError && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
-            <p className="text-sm text-red-600">{loadError}</p>
+          <div className="mb-6 rounded-[22px] border border-[#E5BFAE] bg-[#FBF0E9] px-5 py-4 flex items-center justify-between gap-4 shadow-[0_3px_10px_-4px_rgba(45,59,31,0.12)]">
+            <p className="text-sm font-semibold text-[#8A3B24]">{loadError}</p>
             <button
               type="button"
               onClick={() => setReloadTick((t) => t + 1)}
-              className="shrink-0 text-sm font-bold text-red-600 border border-red-300 rounded-xl px-4 py-1.5 hover:bg-red-100 transition-colors"
+              className="shrink-0 text-sm font-extrabold text-[#8A3B24] border-[1.5px] border-[#D9A78F] rounded-full px-4 py-1.5 hover:bg-[#F5E0D2] transition-colors"
             >
               Retry
             </button>
@@ -336,25 +369,36 @@ export default function StudentDashboard() {
               </p>
 
               {bookings.length === 0 && !loadError && (
-                <div className="rounded-3xl border border-sand bg-white px-6 py-8 text-center shadow-sm">
-                  <p className="font-bold text-forest/70">
-                    Your journey starts with your first lesson
-                  </p>
-                  <p className="text-sm text-forest/45 mt-1.5">
-                    Once Medya confirms a booking it appears here, with her
-                    notes after each session.
-                  </p>
+                <div className="relative pl-[30px] timeline-spine pb-2">
+                  <div className="relative journey-stop" style={{ animationDelay: "0.3s" }}>
+                    <span
+                      aria-hidden="true"
+                      className="absolute -left-[27px] top-[7px] w-[13px] h-[13px] rounded-full bg-cream border-[3px] border-orange/60 shadow-[0_0_0_5px_rgba(230,126,34,0.12)]"
+                    />
+                    <div className="rounded-[22px] border border-sand bg-sand/30 px-5 py-5 shadow-[0_3px_10px_-4px_rgba(45,59,31,0.12)]">
+                      <p className="font-extrabold text-forest">
+                        Your first lesson goes here
+                      </p>
+                      <p className="text-sm text-forest/70 mt-1 max-w-[42ch]">
+                        Once Medya confirms a booking it appears on this
+                        timeline, with her notes and practice files after each
+                        session.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {bookings.length > 0 && (
                 <div className="relative pl-[30px] timeline-spine">
-                  {upcomingRest.map((b) => (
+                  {upcomingRest.map((b, i) => (
                     <JourneyStop
                       key={b.id}
                       booking={b}
                       lessonNo={numberById[b.id]}
                       upcoming
+                      delayIndex={i}
+                      counts={threadCounts[b.id]}
                       isOpen={openBookingId === b.id}
                       onToggle={() =>
                         setOpenBookingId(openBookingId === b.id ? null : b.id)
@@ -368,6 +412,8 @@ export default function StudentDashboard() {
                       booking={b}
                       lessonNo={numberById[b.id]}
                       latest={i === 0}
+                      delayIndex={upcomingRest.length + i}
+                      counts={threadCounts[b.id]}
                       isOpen={openBookingId === b.id}
                       onToggle={() =>
                         setOpenBookingId(openBookingId === b.id ? null : b.id)
@@ -375,9 +421,12 @@ export default function StudentDashboard() {
                       user={user}
                     />
                   ))}
-                  {memberSince && (
-                    <p className="relative py-1 text-[13.5px] font-semibold text-forest/40 origin-dot">
-                      Where it started — you joined · {memberSince}
+                  {origin && (
+                    <p
+                      className="relative py-1 text-[13.5px] font-semibold text-forest/70 origin-dot journey-origin"
+                      style={{ animationDelay: `${Math.min(0.3 + (upcomingRest.length + past.length) * 0.12, 1)}s` }}
+                    >
+                      Where it started — {origin}
                     </p>
                   )}
                 </div>
@@ -419,9 +468,23 @@ export default function StudentDashboard() {
 }
 
 // ── JourneyStop ── one lesson on the spine ────────────────────────────────
-function JourneyStop({ booking, lessonNo, latest, upcoming, isOpen, onToggle, user }) {
+function JourneyStop({ booking, lessonNo, latest, upcoming, delayIndex = 0, counts, isOpen, onToggle, user }) {
+  // Collapsed stops advertise the conversation, not the booking slot:
+  // "2 notes · 1 file", or an honest quiet fallback.
+  const metaParts = [];
+  if (counts?.notes) metaParts.push(`${counts.notes} note${counts.notes > 1 ? "s" : ""}`);
+  if (counts?.files) metaParts.push(`${counts.files} file${counts.files > 1 ? "s" : ""}`);
+  const metaLabel = upcoming
+    ? timeRange(booking.start_time, booking.end_time)
+    : metaParts.length
+    ? metaParts.join(" · ")
+    : "no notes yet";
+
   return (
-    <div className="relative pb-8 journey-stop">
+    <div
+      className="relative pb-8 journey-stop"
+      style={{ animationDelay: `${Math.min(0.3 + delayIndex * 0.12, 0.9)}s` }}
+    >
       {/* spine dot */}
       <span
         aria-hidden="true"
@@ -447,8 +510,8 @@ function JourneyStop({ booking, lessonNo, latest, upcoming, isOpen, onToggle, us
             </span>
           )}
         </span>
-        <span className="shrink-0 text-[13px] font-semibold text-forest/40 whitespace-nowrap group-hover:text-forest/70 transition-colors">
-          {timeRange(booking.start_time, booking.end_time)}
+        <span className="shrink-0 text-[13px] font-semibold text-forest/70 whitespace-nowrap group-hover:text-forest transition-colors">
+          {metaLabel}
           <ChevronIcon
             className={`inline-block w-3 h-3 ml-1.5 transition-transform ${
               isOpen ? "rotate-180" : ""
@@ -458,11 +521,18 @@ function JourneyStop({ booking, lessonNo, latest, upcoming, isOpen, onToggle, us
       </button>
 
       {isOpen && user && (
-        <SessionNotes
-          bookingId={booking.id}
-          currentUser={user}
-          userRole="student"
-        />
+        <>
+          {!upcoming && (
+            <p className="text-[12.5px] font-semibold text-forest/70 -mt-1 mb-2.5">
+              {timeRange(booking.start_time, booking.end_time)}
+            </p>
+          )}
+          <SessionNotes
+            bookingId={booking.id}
+            currentUser={user}
+            userRole="student"
+          />
+        </>
       )}
     </div>
   );

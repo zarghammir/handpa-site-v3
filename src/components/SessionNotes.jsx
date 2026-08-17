@@ -360,7 +360,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
                   : "Write to Medya…"
               }
               rows={1}
-              className="flex-1 rounded-3xl border-[1.5px] border-forest/12 bg-white px-4 py-2.5 text-[14.5px] text-forest placeholder:text-forest/40 outline-none focus:border-sage resize-none caret-orange transition-colors"
+              className="flex-1 rounded-3xl border-[1.5px] border-forest/12 bg-white px-4 py-2.5 text-[14.5px] text-forest placeholder:text-forest/70 outline-none focus:border-sage resize-none caret-orange transition-colors"
             />
             <button
               type="button"
@@ -435,7 +435,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
       >
         <p
           className={`text-xs font-extrabold mb-0.5 ${
-            isMine ? "text-forest/45" : "text-sage"
+            isMine ? "text-forest/70" : "text-[#5F6F49]"
           }`}
         >
           {isMine ? "You" : isInstructorNote ? "Medya" : "Student"}
@@ -472,7 +472,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
               {note.content}
             </p>
             <div className="flex items-center justify-between mt-1">
-              <p className="text-[10px] text-forest/40">
+              <p className="text-[10px] font-semibold text-forest/65">
                 {timeStr(note.created_at)}
                 {note.updated_at && " · edited"}
               </p>
@@ -513,7 +513,7 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
 
     const bubble = (
       <div className="max-w-[85%] rounded-[4px_18px_18px_18px] border border-forest/10 bg-white px-3.5 py-2.5 shadow-[0_3px_10px_-4px_rgba(45,59,31,0.14)]">
-        <p className="text-xs font-extrabold mb-1 text-sage">Medya</p>
+        <p className="text-xs font-extrabold mb-1 text-[#5F6F49]">Medya</p>
 
         <a
           href={file.signed_url || "#"}
@@ -532,14 +532,14 @@ export default function SessionNotes({ bookingId, currentUser, userRole = "stude
             <p className="text-[13.5px] font-bold text-forest truncate" title={file.file_name}>
               {file.file_name}
             </p>
-            <p className="text-[11px] text-forest/50 font-semibold">
+            <p className="text-[11px] text-forest/70 font-semibold">
               {formatBytes(file.file_size)} · tap to open
             </p>
           </div>
         </a>
 
         <div className="flex items-center justify-between mt-1">
-          <p className="text-[10px] text-forest/40">
+          <p className="text-[10px] font-semibold text-forest/65">
             {timeStr(file.uploaded_at)}
           </p>
           {showDelete && (
